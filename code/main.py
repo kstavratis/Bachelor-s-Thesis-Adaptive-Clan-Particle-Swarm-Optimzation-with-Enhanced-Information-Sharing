@@ -1,7 +1,10 @@
 from classes.classicPSOswarm import ClassicSwarm
 from classes.clanPSOswarm import ClanSwarm
 from classes.particle import Particle
-from numpy import cos,pi, e, sqrt, inf
+from numpy import cos,pi, e, sqrt, inf, array as vector
+from numpy.linalg import norm
+import matplotlib.pyplot as plt
+
 
 
 # Theorem: min g(x) = -max (-g(x))
@@ -45,6 +48,8 @@ def styblinski_tang_function(x: list):
 def main():
     domain_dimensions = 10
 
+    fig, axis = plt.subplots()
+
 
     rastrigin_function_search_domain = [[-5.12, 5.12] for i in range(domain_dimensions)]
     ackley_function_search_domain = [[-32.768, 32.768] for i in range(domain_dimensions)]
@@ -56,25 +61,36 @@ def main():
     rosenbrock_function_search_domain = [[-10**2, 10**2] for i in range(domain_dimensions)]
     styblinski_tang_function_search_domain = [[-5, 5] for i in range(domain_dimensions)]
 
+
+    rastigin_function_goal_point = vector([0 for i in range(domain_dimensions)])
+    ackley_function_goal_point = vector([0 for i in range(domain_dimensions)])
+    sphere_function_goal_point = vector([0 for i in range(domain_dimensions)])
+    rosenbrock_function_goal_point = vector([1 for i in range(domain_dimensions)])
+
     # To achieve a balance between global and local exploration to speed up convergence to the true optimum,
     # an inertia weight whose value decreases linearly with the iteration number has been used.
     # The values of w_min = 0.4 and w_max = 0.9 are widely used.
     w_min, w_max = 0.4, 0.9
+
 
     repetitions = 5000
     loop_stop_condition_limit = 5 * 10**(-7)
 
     print("Classic Particle Swarm Optimization: Rastrigin Function")
     print("-------------------------------------------------------")
-    rastrigin_classic_swarm = ClassicSwarm(rastrigin_function, rastrigin_function_search_domain, w=w_max)
-    loop_stop_condition_value = inf
-    iteration = 0  # Counter used for changing inertia constants.
-    while not(loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
-        # Linear decrease of (velocity) inertia weight.
-        Particle.w = w_max - ((w_max - w_min)/repetitions) * iteration
-        rastrigin_classic_swarm.update_swarm()
-        loop_stop_condition_value = rastrigin_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
-        iteration += 1
+    rastrigin_classic_divergences = []
+    for i in range(30):  # Thirty (30) repetitions are considered enough for analysis/observations.
+        rastrigin_classic_swarm = ClassicSwarm(rastrigin_function, rastrigin_function_search_domain, w=w_max, swarm_size=60)
+        iteration = 0  # Counter used for changing inertia constants.
+        loop_stop_condition_value = inf
+        while not(loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
+            # Linear decrease of (velocity) inertia weight.
+            Particle.w = w_max - ((w_max - w_min)/repetitions) * iteration
+            rastrigin_classic_swarm.update_swarm()
+            loop_stop_condition_value = rastrigin_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
+            iteration += 1
+        rastrigin_classic_divergences.append(norm(rastrigin_classic_swarm.global_best_position - rastigin_function_goal_point))
+
     print("Rastrigin function optimizing point x = " + str(rastrigin_classic_swarm.global_best_position))
     print("Rastrigin value = " + str(rastrigin_function(rastrigin_classic_swarm.global_best_position)))
     print("iterations = " + str(iteration))
@@ -85,15 +101,19 @@ def main():
 
     print("Clan Particle Swarm Optimization: Rastrigin Function")
     print("----------------------------------------------------")
-    rastrigin_clan_swarm = ClanSwarm(rastrigin_function, rastrigin_function_search_domain, w=w_max)
-    loop_stop_condition_value = inf
-    iteration = 0  # Counter used for changing inertia constants.
-    while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
-        # Linear decrease of (velocity) inertia weight.
-        Particle.w = w_max - ((w_max - w_min) / repetitions) * iteration
-        rastrigin_clan_swarm.update_swarm()
-        loop_stop_condition_value = rastrigin_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
-        iteration += 1
+    rastrigin_clan_divergences = []
+    for i in range(30):  # Thirty (30) repetitions are considered enough for analysis/observations.
+        rastrigin_clan_swarm = ClanSwarm(rastrigin_function, rastrigin_function_search_domain, w=w_max, swarm_size=15, number_of_clans=4)
+        iteration = 0  # Counter used for changing inertia constants.
+        loop_stop_condition_value = inf
+        while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
+            # Linear decrease of (velocity) inertia weight.
+            Particle.w = w_max - ((w_max - w_min) / repetitions) * iteration
+            rastrigin_clan_swarm.update_swarm()
+            loop_stop_condition_value = rastrigin_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
+            iteration += 1
+        rastrigin_clan_divergences.append(norm(rastrigin_clan_swarm.find_population_global_best_position() - rastigin_function_goal_point))
+
     print("Rastrigin function optimizing point x = " + str(rastrigin_clan_swarm.find_population_global_best_position()))
     print("Rastrigin value = " + str(rastrigin_function(rastrigin_clan_swarm.find_population_global_best_position())))
     print("iterations = " + str(iteration))
@@ -101,6 +121,13 @@ def main():
     print("----------------------------------------------------")
 
 
+    axis.set_ylabel("Distance from target")
+    axis.plot(rastrigin_classic_divergences, marker=".", label="Classic PSO")
+    axis.plot(rastrigin_clan_divergences, marker=".", label="Clan PSO")
+    # axis.plot(rastrigin_classic_iterations,rastrigin_classic_errors, label="Classic PSO")
+    # axis.plot(rastrigin_clan_iterations, rastrigin_clan_errors, label="Clan PSO")
+    axis.legend()
+    plt.show()
 
     [print() for i in range(6)]
 

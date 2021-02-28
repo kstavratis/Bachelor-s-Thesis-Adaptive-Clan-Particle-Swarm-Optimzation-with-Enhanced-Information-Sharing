@@ -3,9 +3,10 @@ from numpy import array_equal
 
 
 class ClanSwarm:
-    def __init__(self, fitness_function, convex_boundaries: list, w: float, c1: float = 2, c2: float = 2,
+    def __init__(self, fitness_function, convex_boundaries: list, w: float,
+                 c1: float = 2, c2: float = 2, c3: float = None,
                  swarm_size: int = 15, number_of_clans: int = 4):
-        self.clans = [ClassicSwarm(fitness_function, convex_boundaries, w, c1, c2, swarm_size)
+        self.clans = [ClassicSwarm(fitness_function, convex_boundaries, w, c1, c2, c3, swarm_size)
                       for i in range(number_of_clans)]
         self.__fitness_function = fitness_function
 

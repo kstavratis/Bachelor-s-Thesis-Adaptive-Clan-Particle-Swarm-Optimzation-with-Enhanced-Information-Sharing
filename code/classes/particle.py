@@ -4,7 +4,7 @@ from numpy import array as vector
 
 
 class Particle:
-    w, c1, c2, r1, r2 = None, None, None, None, None
+    w, c1, c2, c3, r1, r2, r3 = None, None, None, None, None, None, None
     fitness_function = None
 
     def __init__(self, fitness_function, convex_boundaries: list):
@@ -22,16 +22,26 @@ class Particle:
         #  will have a larger velocity, tending at the global optimum
         # self.__velocity: vector = vector([particle_position_and_velocity_initializer(0, 1)
         #                                  for vector_space_dimension in range(len(convex_boundaries))])
-        self.__velocity: vector = vector([0 for vector_space_dimension in range(len(convex_boundaries))]) # Initialize the particles as being still.
+        self.__velocity: vector = vector(
+            [0 for vector_space_dimension in range(len(convex_boundaries))])  # Initialize the particles as being still.
 
         Particle.fitness_function = fitness_function
 
     def _update_position(self, global_best_position: vector):
-        def update_velocity():
-            # Note: global_best_position is calculated in class "ClassicSwarm" -> "_find_global_best_position" function.
-            self.__velocity = self.w * self.__velocity \
-                              + self.c1 * self.r1 * (self._personal_best_position - self._position) \
-                              + self.c2 * self.r2 * (global_best_position - self._position)
+        if self.c3 is None and self.r3 is None:
+            def update_velocity():
+                self.__velocity = self.w * self.__velocity \
+                                  + self.c1 * self.r1 * (self._personal_best_position - self._position) \
+                                  + self.c2 * self.r2 * (global_best_position - self._position)
+        else:
+            # Enhanced information sharing is enabled.
+            # For details see "Improved Particle Swarm Optimization Algorithm Based on
+            # Last-Eliminated Principle and Enhanced Information Sharing" -> 2.2 IEPSO -> equations (2) and (3)
+            def update_velocity():
+                self.__velocity = self.w * self.__velocity \
+                                  + self.c1 * self.r1 * (self._personal_best_position - self._position) \
+                                  + self.c2 * self.r2 * (global_best_position - self._position) \
+                                  + self.c3 * self.r3 * (global_best_position - self._personal_best_position)
 
         update_velocity()
         # Updating the particle's _position.
@@ -42,4 +52,3 @@ class Particle:
 
     def __get_fitness_at_current_position(self):
         return Particle.fitness_function(self._position)
-
