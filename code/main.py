@@ -1,7 +1,7 @@
-from classes.classicPSOswarm import ClassicSwarm
-from classes.clanPSOswarm import ClanSwarm
-from classes.particle import Particle
-from numpy import cos,pi, e, sqrt, inf, array as vector
+from classes.PSOs.classicPSOswarm import ClassicSwarm
+from classes.PSOs.clanPSOswarm import ClanSwarm
+from classes.PSOs.particle import Particle
+from numpy import cos,pi, e, sqrt, inf, array as vector, seterr
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 
@@ -46,6 +46,7 @@ def styblinski_tang_function(x: list):
 
 
 def main():
+    # seterr(all='raise')
     domain_dimensions = 10
 
     fig, axis = plt.subplots()
@@ -79,13 +80,13 @@ def main():
     print("Classic Particle Swarm Optimization: Rastrigin Function")
     print("-------------------------------------------------------")
     rastrigin_classic_divergences = []
-    for i in range(30):  # Thirty (30) repetitions are considered enough for analysis/observations.
+    for i in range(1):  # Thirty (30) repetitions are considered enough for analysis/observations.
         rastrigin_classic_swarm = ClassicSwarm(rastrigin_function, rastrigin_function_search_domain, w=w_max, swarm_size=60)
         iteration = 0  # Counter used for changing inertia constants.
         loop_stop_condition_value = inf
         while not(loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
             # Linear decrease of (velocity) inertia weight.
-            Particle.w = w_max - ((w_max - w_min)/repetitions) * iteration
+            rastrigin_classic_swarm.w = w_max - ((w_max - w_min)/repetitions) * iteration
             rastrigin_classic_swarm.update_swarm()
             loop_stop_condition_value = rastrigin_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
             iteration += 1
@@ -102,13 +103,14 @@ def main():
     print("Clan Particle Swarm Optimization: Rastrigin Function")
     print("----------------------------------------------------")
     rastrigin_clan_divergences = []
-    for i in range(30):  # Thirty (30) repetitions are considered enough for analysis/observations.
+    for i in range(1):  # Thirty (30) repetitions are considered enough for analysis/observations.
         rastrigin_clan_swarm = ClanSwarm(rastrigin_function, rastrigin_function_search_domain, w=w_max, swarm_size=15, number_of_clans=4)
         iteration = 0  # Counter used for changing inertia constants.
         loop_stop_condition_value = inf
         while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
             # Linear decrease of (velocity) inertia weight.
-            Particle.w = w_max - ((w_max - w_min) / repetitions) * iteration
+            for clan in rastrigin_clan_swarm.clans:
+                clan.w = w_max - ((w_max - w_min) / repetitions) * iteration
             rastrigin_clan_swarm.update_swarm()
             loop_stop_condition_value = rastrigin_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
             iteration += 1
@@ -141,7 +143,7 @@ def main():
     loop_stop_condition_value = inf
     iteration = 0  # Counter used for changing inertia constants.
     while not(loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
-        Particle.w = w_max - ((w_max - w_min) / repetitions) * iteration
+        ackley_classic_swarm.w = w_max - ((w_max - w_min) / repetitions) * iteration
         ackley_classic_swarm.update_swarm()
         loop_stop_condition_value = ackley_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
         iteration += 1
@@ -159,7 +161,8 @@ def main():
     loop_stop_condition_value = inf
     iteration = 0  # Counter used for changing inertia constants.
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
-        Particle.w = w_max - ((w_max - w_min) / repetitions) * iteration
+        for clan in ackley_clan_swarm.clans:
+            ackley_clan_swarm.w = w_max - ((w_max - w_min) / repetitions) * iteration
         ackley_clan_swarm.update_swarm()
         loop_stop_condition_value = ackley_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
         iteration += 1
@@ -182,7 +185,7 @@ def main():
     loop_stop_condition_value = inf
     iteration = 0  # Counter used for changing inertia constants.
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
-        Particle.w = w_max - ((w_max - w_min) / repetitions) * iteration
+        sphere_classic_swarm.w = w_max - ((w_max - w_min) / repetitions) * iteration
         sphere_classic_swarm.update_swarm()
         sphere_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
         iteration += 1
@@ -200,7 +203,8 @@ def main():
     loop_stop_condition_value = inf
     iteration = 0  # Counter used for changing inertia constants.
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
-        Particle.w = w_max - ((w_max - w_min) / repetitions) * iteration
+        for clan in sphere_clan_swarm.clans:
+            clan.w = w_max - ((w_max - w_min) / repetitions) * iteration
         sphere_clan_swarm.update_swarm()
         sphere_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
         iteration += 1
@@ -223,7 +227,7 @@ def main():
     loop_stop_condition_value = inf
     iteration = 0  # Counter used for changing inertia constants.
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
-        Particle.w = w_max - ((w_max - w_min) / repetitions) * iteration
+        rosenbrock_classic_swarm.w = w_max - ((w_max - w_min) / repetitions) * iteration
         rosenbrock_classic_swarm.update_swarm()
         rosenbrock_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
         iteration += 1
@@ -241,7 +245,8 @@ def main():
     loop_stop_condition_value = inf
     iteration = 0  # Counter used for changing inertia constants.
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
-        Particle.w = w_max - ((w_max - w_min) / repetitions) * iteration
+        for clan in rosenbrock_clan_swarm.clans:
+            clan.w = w_max - ((w_max - w_min) / repetitions) * iteration
         rosenbrock_clan_swarm.update_swarm()
         rosenbrock_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
         iteration += 1

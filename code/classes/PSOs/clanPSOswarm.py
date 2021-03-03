@@ -1,4 +1,4 @@
-from .classicPSOswarm import ClassicSwarm
+from classes.PSOs.classicPSOswarm import ClassicSwarm
 from numpy import array_equal
 
 
@@ -24,7 +24,7 @@ class ClanSwarm:
             return leaders
 
         def update_clan_leaders(leaders: list):
-            clan_leaders_swarm = ClassicSwarm(leaders, convex_boundaries=[], w=-1)
+            clan_leaders_swarm = ClassicSwarm(leaders, convex_boundaries=[], w=1)  # TODO Find a way to adjust inertia weight w.
             clan_leaders_swarm.update_swarm()
 
         # Execute particle movement as per the classic PSO
@@ -50,4 +50,3 @@ class ClanSwarm:
                                        for clan in self.clans)
 
 
-        
