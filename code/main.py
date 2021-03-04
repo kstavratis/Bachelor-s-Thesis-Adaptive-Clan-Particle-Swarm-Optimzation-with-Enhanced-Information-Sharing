@@ -162,7 +162,7 @@ def main():
     iteration = 0  # Counter used for changing inertia constants.
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
         for clan in ackley_clan_swarm.clans:
-            ackley_clan_swarm.w = w_max - ((w_max - w_min) / repetitions) * iteration
+            clan.w = w_max - ((w_max - w_min) / repetitions) * iteration
         ackley_clan_swarm.update_swarm()
         loop_stop_condition_value = ackley_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
         iteration += 1
@@ -187,7 +187,7 @@ def main():
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
         sphere_classic_swarm.w = w_max - ((w_max - w_min) / repetitions) * iteration
         sphere_classic_swarm.update_swarm()
-        sphere_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
+        loop_stop_condition_value = sphere_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
         iteration += 1
     print("Sphere function optimizing point x = " + str(sphere_classic_swarm.global_best_position))
     print("Sphere function value = " + str(sphere_function(sphere_classic_swarm.global_best_position)))
@@ -206,7 +206,7 @@ def main():
         for clan in sphere_clan_swarm.clans:
             clan.w = w_max - ((w_max - w_min) / repetitions) * iteration
         sphere_clan_swarm.update_swarm()
-        sphere_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
+        loop_stop_condition_value = sphere_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
         iteration += 1
     print("Sphere function optimizing point x = " + str(sphere_clan_swarm.find_population_global_best_position()))
     print("Sphere function value = " + str(sphere_function(sphere_clan_swarm.find_population_global_best_position())))
@@ -229,7 +229,7 @@ def main():
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < repetitions:
         rosenbrock_classic_swarm.w = w_max - ((w_max - w_min) / repetitions) * iteration
         rosenbrock_classic_swarm.update_swarm()
-        rosenbrock_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
+        loop_stop_condition_value = rosenbrock_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
         iteration += 1
     print("Rosenbrock function optimizing point x = " + str(rosenbrock_classic_swarm.global_best_position))
     print("Rosenbrock function value at x = " + str(rosenbrock_function(rosenbrock_classic_swarm.global_best_position)))
@@ -248,7 +248,7 @@ def main():
         for clan in rosenbrock_clan_swarm.clans:
             clan.w = w_max - ((w_max - w_min) / repetitions) * iteration
         rosenbrock_clan_swarm.update_swarm()
-        rosenbrock_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
+        loop_stop_condition_value = rosenbrock_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
         iteration += 1
     print("Rosenbrock function optimizing point x = " + str(rosenbrock_clan_swarm.find_population_global_best_position()))
     print("Rosenbrock function value at x = " + str(rosenbrock_function(rosenbrock_clan_swarm.find_population_global_best_position())))

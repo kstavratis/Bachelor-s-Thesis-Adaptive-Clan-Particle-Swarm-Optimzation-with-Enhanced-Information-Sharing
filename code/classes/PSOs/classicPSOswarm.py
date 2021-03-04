@@ -7,26 +7,21 @@ from types import FunctionType
 
 
 class ClassicSwarm:
-
     def __init__(self, swarm_or_fitness_function, convex_boundaries: list, w: float,
                  c1: float = 2, c2: float = 2, c3: float = None,
                  swarm_size: int = 50):
         if isinstance(swarm_or_fitness_function, FunctionType):
             self.swarm = [Particle(swarm_or_fitness_function, convex_boundaries) for i in range(swarm_size)]
-            # self.__fitness_function = swarm_or_fitness_function
         if isinstance(swarm_or_fitness_function, list):
             self.swarm = swarm_or_fitness_function
 
         # Initializing the fitness_function's global best _position particle with the optimal value on spawn.
+        self.__fitness_function = swarm_or_fitness_function
         self.global_best_position = self._find_global_best_position()
-        # Storing the velocity inertia w and the learning rates c1 and c2. All three are shared among all particles.
-        # Existence of constant "c3" indicates that enhanced information sharing is enabled.
-        # It has the value "None" otherwise.
+        # Storing the velocity inertia w and the learning rates c1, c2 & c3.
+        # All three are shared among all particles of the swarm.
+        # Existence of constant c3 indicates that enhanced information sharing is enabled.
         self.w, self.c1, self.c2, self.c3 = w, c1, c2, c3
-
-        # if isinstance(swarm_or_fitness_function, list):
-        #     self.swarm = swarm_or_fitness_function
-        #     self.global_best_position = self._find_global_best_position()
 
     def __find_particle_with_best_personal_best(self):
         """
@@ -50,6 +45,7 @@ class ClassicSwarm:
         :return:
         """
         return self.__find_particle_with_best_personal_best()._personal_best_position
+
 
     def update_swarm(self):
         r1, r2, r3 = r1_r2_r3_generator(), r1_r2_r3_generator(), None
