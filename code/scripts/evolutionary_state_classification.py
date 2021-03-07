@@ -60,7 +60,11 @@ def classify_evolutionary_state(evolutionary_factor: float):
         EvolutionaryStates.JUMP_OUT: jumping_out_membership_function
     }
 
+
+    # Initialization of array
     f = [-inf for i in range(len(EvolutionaryStates))]
+
+    # Calculate membership function values.
     f[EvolutionaryStates.EXPLORATION.value] = \
         membership_function_dict[EvolutionaryStates.EXPLORATION](evolutionary_factor)
 
@@ -72,5 +76,6 @@ def classify_evolutionary_state(evolutionary_factor: float):
 
     f[EvolutionaryStates.JUMP_OUT.value] = \
         membership_function_dict[EvolutionaryStates.JUMP_OUT](evolutionary_factor)
+
 
     return EvolutionaryStates(f.index(max(f)))  # singleton defuzzification classification technique

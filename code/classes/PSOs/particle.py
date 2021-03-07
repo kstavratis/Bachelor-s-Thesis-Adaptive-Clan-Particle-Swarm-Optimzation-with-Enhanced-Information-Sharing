@@ -1,5 +1,5 @@
 from random import random as r1_r2_generator
-from random import uniform as particle_position_and_velocity_initializer
+from random import uniform
 from numpy import array as vector
 
 
@@ -9,7 +9,7 @@ class Particle:
 
     def __init__(self, fitness_function, convex_boundaries: list):
         # Randomly spawning the particle according to the problem's convex boundaries.
-        self._position: vector = vector([particle_position_and_velocity_initializer(
+        self._position: vector = vector([uniform(
             convex_boundaries[vector_space_dimension][0], convex_boundaries[vector_space_dimension][1])
             for vector_space_dimension in range(len(convex_boundaries))])
         # The particle's first personal best _position is the _position where it is spawned.

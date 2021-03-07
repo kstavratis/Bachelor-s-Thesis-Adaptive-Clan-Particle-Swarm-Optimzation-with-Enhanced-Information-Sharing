@@ -3,12 +3,18 @@ from numpy import array_equal
 
 
 class ClanSwarm:
-    def __init__(self, fitness_function, convex_boundaries: list, w: float,
+    def __init__(self, fitness_function, convex_boundaries: list, maximum_iterations, w: float,
+                 adaptive: bool = False,
                  c1: float = 2, c2: float = 2, c3: float = None,
                  swarm_size: int = 15, number_of_clans: int = 4):
-        self.clans = [ClassicSwarm(fitness_function, convex_boundaries, w, c1, c2, c3, swarm_size)
+        self.clans = [ClassicSwarm(fitness_function, convex_boundaries, adaptive=adaptive,
+                                   maximum_iterations=maximum_iterations,
+                                   w=w,
+                                   c1=c1, c2=c2, c3=c3, swarm_size=swarm_size)
                       for i in range(number_of_clans)]
         self.__fitness_function = fitness_function
+
+        self.__max_iterations = maximum_iterations
 
     def update_swarm(self):
         def find_clan_leaders():
@@ -24,7 +30,8 @@ class ClanSwarm:
             return leaders
 
         def update_clan_leaders(leaders: list):
-            clan_leaders_swarm = ClassicSwarm(leaders, convex_boundaries=[], w=1)  # TODO Find a way to adjust inertia weight w.
+            clan_leaders_swarm = ClassicSwarm(
+                leaders, convex_boundaries=[],maximum_iterations=self.__max_iterations, w=1)  # TODO Find a way to adjust inertia weight w.
             clan_leaders_swarm.update_swarm()
 
         # Execute particle movement as per the classic PSO
@@ -48,5 +55,6 @@ class ClanSwarm:
         return 1/len(self.clans) *\
                sum(clan.calculate_swarm_distance_from_swarm_centroid()
                                        for clan in self.clans)
+
 
 
