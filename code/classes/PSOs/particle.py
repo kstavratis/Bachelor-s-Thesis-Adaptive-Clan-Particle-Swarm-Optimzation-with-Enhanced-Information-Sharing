@@ -57,3 +57,16 @@ class Particle:
 
     def __get_fitness_at_current_position(self):
         return Particle.fitness_function(self._position)
+
+    def _limit_velocity(self, velocity_boundaries: list):
+        # In case of false user input, (upper boundary has been given first and lower boundary second).
+        # the boundaries are swapped, in order to proceed to the next part of code correctly.
+        if velocity_boundaries[0] > velocity_boundaries[1]:
+            velocity_boundaries[0], velocity_boundaries[1] = velocity_boundaries[1], velocity_boundaries[0]
+
+        for i in range(len(self.__velocity)):
+            if self.__velocity[i] < velocity_boundaries[0]:
+                self.__velocity[i] = velocity_boundaries[0]
+            if self.__velocity[i] > velocity_boundaries[1]:
+                self.__velocity[i] = velocity_boundaries[1]
+

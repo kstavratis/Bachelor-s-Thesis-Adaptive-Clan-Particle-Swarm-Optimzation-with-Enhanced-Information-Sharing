@@ -1,31 +1,35 @@
 from numpy.ma import sqrt
 from random import random as r1_r2_r3_generator, uniform, randrange, gauss
-from numpy import mean, e
+from numpy import mean, e, inf
 from numpy.linalg import norm
 from types import FunctionType
 from enum import Enum
+from typing import List
+# from typing import Final
 
 from classes.PSOs.particle import Particle
 from classes.evolutionary_states import EvolutionaryStates
-from scripts.evolutionary_state_classification import classify_evolutionary_state
+from scripts.evolutionary_state_classification_singleton_method import classify_evolutionary_state
 
 w_min, w_max = 0.4, 0.9
 c_min, c_max = 1.5, 2.5
+c3_start, c3_end = 2, 0
 
-
-
+# PARTICLE_SIMILARITY_LIMIT : Final = 10**(-9)
+PARTICLE_SIMILARITY_LIMIT = 10 ** (-20)
 
 class ClassicSwarm:
     def __init__(self, swarm_or_fitness_function, convex_boundaries: list, maximum_iterations: int,
                  w: float,
                  adaptive: bool = False,
                  c1: float = 2, c2: float = 2, c3: float = None,
-                 swarm_size: int = 50):
+                 swarm_size: int = 50,
+                 lep_boundaries: List[List[float]] = None):
         if isinstance(swarm_or_fitness_function, FunctionType):
             self.swarm = [Particle(swarm_or_fitness_function, convex_boundaries) for i in range(swarm_size)]
         if isinstance(swarm_or_fitness_function, list):
             self.swarm = swarm_or_fitness_function
-        if adaptive:
+        if adaptive or lep_boundaries is not None:
             # The convex boundaries need to be stored in order to apply
             # the learning strategy (using eliticism)
             # For details, see -> "Adaptive Clan Particle Swarm Optimization" ->
@@ -42,6 +46,7 @@ class ClassicSwarm:
 
         self.__adaptive = adaptive
         self.__max_iterations, self.__current_iteration = maximum_iterations, 0
+        self.__last_elimination_principle_boundaries = lep_boundaries
 
     def __find_particle_with_best_personal_best(self) -> Particle:
         """
@@ -70,6 +75,35 @@ class ClassicSwarm:
     def update_swarm(self):
         self.__update_parameters()
 
+        def replace_particles_out_of_position_boundaries():
+            for particle in self.swarm:
+                for axis in particle._position:
+                    if not (self.__last_elimination_principle_boundaries[0][0] <
+                            axis < self.__last_elimination_principle_boundaries[0][1]):
+                        # Remove this particle, which has exceeded the allowed boundaries.
+                        self.swarm.remove(particle)
+                        # Replace the deleted particle with a new one.
+                        self.swarm.append(Particle(self.__fitness_function, self.__convex_boundaries))
+                        break
+
+
+        def limit_particle_velocity():
+            for particle in self.swarm:
+                particle._limit_velocity(self.__last_elimination_principle_boundaries[1])
+
+        def replace_similar_particles():
+            for particle in self.swarm:
+                for other_particle in self.swarm:
+                    if other_particle != particle:  # Obviously the distance/similarity between a particle and itself is 0.
+                        similarity = norm(particle._position - other_particle._position)
+                        if similarity < PARTICLE_SIMILARITY_LIMIT:
+                            # Delete this particle, since it is (very) similar to a different particle.
+                            self.swarm.remove(particle)
+                            # Replace the deleted particle with a new one.
+                            self.swarm.append(Particle(self.__fitness_function, self.__convex_boundaries))
+                            break
+
+
         r1, r2, r3 = r1_r2_r3_generator(), r1_r2_r3_generator(), None
         if self.c3 is not None: r3 = r1_r2_r3_generator()
         for particle in self.swarm:
@@ -78,6 +112,14 @@ class ClassicSwarm:
                                       self.c1, r1,
                                       self.c2, r2,
                                       self.c3, r3)
+
+        # This is executed only when the Last-Elimination Principle is enabled.
+        if self.__last_elimination_principle_boundaries is not None:
+            replace_particles_out_of_position_boundaries()
+            limit_particle_velocity()
+            replace_similar_particles()
+
+        # Calculating the new best position of the swarm.
         self.global_best_position = self._find_global_best_position()
 
         self.__current_iteration += 1
@@ -89,6 +131,10 @@ class ClassicSwarm:
             self.__adapt_inertia_factor()
         else:  # Follow classic PSO learning strategy: decrease inertia weight linearly.
             self.w = w_max - ((w_max - w_min) / self.__max_iterations) * self.__current_iteration
+
+        # Global optimization capability is strong when c_3 is linearly decreasing.
+        if self.c3 is not None:
+            self.c3 = c3_start - (c3_start - c3_end) / self.__max_iterations * self.__current_iteration
 
     def calculate_swarm_distance_from_swarm_centroid(self):
         swarm_positions = [self.swarm[i]._position for i in range(len(self.swarm))]
@@ -122,7 +168,7 @@ class ClassicSwarm:
 
         def evaluate_evolutionary_factor(d: list):
             best_particle_of_the_swarm = self.__find_particle_with_best_personal_best()
-            d_g = 1 / (len(self.swarm) - 1) *\
+            d_g = 1 / (len(self.swarm) - 1) * \
                   sum(norm(best_particle_of_the_swarm._position - particle._position)
                       for particle in self.swarm)
             d_min, d_max = min(d), max(d)
@@ -159,26 +205,30 @@ class ClassicSwarm:
         else:
             raise ValueError  # The evolutionary state can only be in one of the four states above.
 
-
         if c1_strategy == CoefficientOperations.INCREASE:
-            self.c1 += acceleration_rate
+            if self.c1 + acceleration_rate <= c_max:
+                self.c1 += acceleration_rate
         elif c1_strategy == CoefficientOperations.INCREASE_SLIGHTLY:
-            self.c1 += 0.5 * acceleration_rate
+            if self.c1 + 0.5 * acceleration_rate <= c_max:
+                self.c1 += 0.5 * acceleration_rate
         elif c1_strategy == CoefficientOperations.DECREASE:
-            self.c1 -= acceleration_rate
+            if self.c1 - acceleration_rate >= c_min:
+                self.c1 -= acceleration_rate
 
         if c2_strategy == CoefficientOperations.INCREASE:
-            self.c2 += acceleration_rate
+            if self.c2 + acceleration_rate <= c_max:
+                self.c2 += acceleration_rate
         elif c2_strategy == CoefficientOperations.INCREASE_SLIGHTLY:
-            self.c2 += 0.5 * acceleration_rate
+            if self.c2 + 0.5 * acceleration_rate <= c_max:
+                self.c2 += 0.5 * acceleration_rate
         elif c2_strategy == CoefficientOperations.DECREASE:
-            self.c2 -= acceleration_rate
+            if self.c2 - acceleration_rate >= c_min:
+                self.c2 -= acceleration_rate
         elif c2_strategy == CoefficientOperations.DECREASE_SLIGHTLY:
-            self.c2 -= 0.5 * acceleration_rate
-
+            if self.c2 - 0.5 * acceleration_rate >= c_min:
+                self.c2 -= 0.5 * acceleration_rate
 
         print("Evolutionary state = " + str(evolutionary_state))
-
 
         # In order to avoid an explosion state, it is necessary to bound the sum c1+c2.
         # As the minimum and the maximum value for c1 and c2 are c_min = 1.5 and c_max = 2.5,

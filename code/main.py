@@ -83,7 +83,7 @@ def main():
     rastrigin_classic_divergences = []
     for i in range(1):  # Thirty (30) repetitions are considered enough for analysis/observations.
         rastrigin_classic_swarm = ClassicSwarm(rastrigin_function, rastrigin_function_search_domain, maximum_iterations,
-                                               w=w_max, swarm_size=60, adaptive=False)
+                                               w=w_max, swarm_size=60, adaptive=True, lep_boundaries=[[-5.12, 5.12],[-40, 40]])
         iteration = 0  # Counter used for changing inertia constants.
         loop_stop_condition_value = inf
         while not(loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:

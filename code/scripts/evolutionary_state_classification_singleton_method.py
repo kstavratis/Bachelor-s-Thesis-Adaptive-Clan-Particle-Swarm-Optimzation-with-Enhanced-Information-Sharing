@@ -8,6 +8,22 @@ The singleton defuzzification classification technique is used to determine the 
 """
 
 
+#  Confusion\ Current State   S1 S2 S3 S4
+# ----------------------------------------
+#         S1-S2|             |S1 S2 S2 S1
+#         S1-S4|             |S1 S4 S4 S4
+#         S2-S3|             |S2 S2 S3 S2
+# Defining transition matrix as a tuple, so as to make it unchangeable.
+transition_matrix = (
+    (EvolutionaryStates.EXPLORATION, EvolutionaryStates.EXPLOITATION, EvolutionaryStates.EXPLOITATION, EvolutionaryStates.EXPLORATION),
+    (EvolutionaryStates.EXPLORATION, EvolutionaryStates.JUMP_OUT, EvolutionaryStates.JUMP_OUT, EvolutionaryStates.JUMP_OUT),
+    (EvolutionaryStates.EXPLOITATION, EvolutionaryStates.EXPLOITATION, EvolutionaryStates.CONVERGENCE, EvolutionaryStates.EXPLOITATION)
+)
+
+current_state = EvolutionaryStates.EXPLORATION
+
+
+
 def classify_evolutionary_state(evolutionary_factor: float):
     def exploration_membership_function(f: float):
         if 0 <= f <= 0.4 or 0.8 < f <= 1.0:
@@ -64,18 +80,46 @@ def classify_evolutionary_state(evolutionary_factor: float):
     # Initialization of array
     f = [-inf for i in range(len(EvolutionaryStates))]
 
+    greater_than_zero_membership_values = 0
+
+
     # Calculate membership function values.
     f[EvolutionaryStates.EXPLORATION.value] = \
         membership_function_dict[EvolutionaryStates.EXPLORATION](evolutionary_factor)
+    if f[EvolutionaryStates.EXPLORATION.value] > 0:
+        greater_than_zero_membership_values += 1
 
     f[EvolutionaryStates.EXPLOITATION.value] = \
         membership_function_dict[EvolutionaryStates.EXPLOITATION](evolutionary_factor)
+    if f[EvolutionaryStates.EXPLOITATION.value] > 0:
+        greater_than_zero_membership_values += 1
 
     f[EvolutionaryStates.CONVERGENCE.value] = \
         membership_function_dict[EvolutionaryStates.CONVERGENCE](evolutionary_factor)
+    if f[EvolutionaryStates.CONVERGENCE.value] > 0:
+        greater_than_zero_membership_values += 1
 
     f[EvolutionaryStates.JUMP_OUT.value] = \
         membership_function_dict[EvolutionaryStates.JUMP_OUT](evolutionary_factor)
+    if f[EvolutionaryStates.JUMP_OUT.value] > 0:
+        greater_than_zero_membership_values += 1
 
 
-    return EvolutionaryStates(f.index(max(f)))  # singleton defuzzification classification technique
+    global current_state
+
+    if greater_than_zero_membership_values <= 0:
+        raise ValueError  # f_evol must be classified to at least one evolutionary state.
+    elif greater_than_zero_membership_values == 1:
+        next_evolutionary_state = EvolutionaryStates(f.index(max(f)))
+        current_state = next_evolutionary_state
+        return next_evolutionary_state  # singleton defuzzification classification technique
+    else:
+        if f[EvolutionaryStates.EXPLORATION.value] > 0 and f[EvolutionaryStates.EXPLOITATION.value] > 0:
+            current_state = transition_matrix[0][current_state.value]
+            return current_state
+        elif f[EvolutionaryStates.EXPLORATION.value] > 0 and f[EvolutionaryStates.JUMP_OUT.value] > 0:
+            current_state = transition_matrix[1][current_state.value]
+            return current_state
+        elif f[EvolutionaryStates.EXPLOITATION.value] > 0 and f[EvolutionaryStates.CONVERGENCE.value] > 0:
+            current_state = transition_matrix[2][current_state.value]
+            return current_state
