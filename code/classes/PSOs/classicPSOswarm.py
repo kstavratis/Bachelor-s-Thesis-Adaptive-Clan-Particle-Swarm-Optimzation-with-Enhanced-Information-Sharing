@@ -19,11 +19,13 @@ c3_start, c3_end = 2, 0
 PARTICLE_SIMILARITY_LIMIT = 10 ** (-20)
 
 class ClassicSwarm:
-    def __init__(self, swarm_or_fitness_function, convex_boundaries: list, maximum_iterations: int,
-                 w: float,
+    def __init__(self, swarm_or_fitness_function, convex_boundaries: list,
+                 maximum_iterations: int,
+                 # w: float,
                  adaptive: bool = False,
                  c1: float = 2, c2: float = 2, c3: float = None,
                  swarm_size: int = 50,
+                 current_iteration: int = 0,
                  lep_boundaries: List[List[float]] = None):
         if isinstance(swarm_or_fitness_function, FunctionType):
             self.swarm = [Particle(swarm_or_fitness_function, convex_boundaries) for i in range(swarm_size)]
@@ -38,14 +40,16 @@ class ClassicSwarm:
 
         # Initializing the fitness_function's global best _position particle with the optimal value on spawn.
         self.__fitness_function = swarm_or_fitness_function
-        self.global_best_position = self._find_global_best_position()
+        self.global_best_position = self._find_global_best_position()  # Could become a dynamically-added field.
         # Storing the velocity inertia w and the learning rates c1, c2 & c3.
         # All three are shared among all particles of the swarm.
         # Existence of constant c3 indicates that enhanced information sharing is enabled.
-        self.w, self.c1, self.c2, self.c3 = w, c1, c2, c3
+        self.c1, self.c2, self.c3 = c1, c2, c3
+        # Note that in all PSO variations used, inertia weight "w" is calculated dynamically
+        # in the "update_parameters" function.
 
         self.__adaptive = adaptive
-        self.__max_iterations, self.__current_iteration = maximum_iterations, 0
+        self.__max_iterations, self.current_iteration = maximum_iterations, current_iteration
         self.__last_elimination_principle_boundaries = lep_boundaries
 
     def __find_particle_with_best_personal_best(self) -> Particle:
@@ -122,19 +126,22 @@ class ClassicSwarm:
         # Calculating the new best position of the swarm.
         self.global_best_position = self._find_global_best_position()
 
-        self.__current_iteration += 1
+        self.current_iteration += 1
 
     def __update_parameters(self):
         if self.__adaptive:
-            self.__determine_accelaration_coefficients()
-            self.__apply_eliticism_learning_strategy()
-            self.__adapt_inertia_factor()
+            f_evol = self.__estimate_evolutionary_state()
+            evolutionary_state = classify_evolutionary_state(f_evol)
+
+            self.__determine_accelaration_coefficients(evolutionary_state)
+            self.__apply_eliticism_learning_strategy(evolutionary_state)
+            self.__adapt_inertia_factor(f_evol)
         else:  # Follow classic PSO learning strategy: decrease inertia weight linearly.
-            self.w = w_max - ((w_max - w_min) / self.__max_iterations) * self.__current_iteration
+            self.w = w_max - ((w_max - w_min) / self.__max_iterations) * self.current_iteration
 
         # Global optimization capability is strong when c_3 is linearly decreasing.
         if self.c3 is not None:
-            self.c3 = c3_start - (c3_start - c3_end) / self.__max_iterations * self.__current_iteration
+            self.c3 = c3_start - (c3_start - c3_end) / self.__max_iterations * self.current_iteration
 
     def calculate_swarm_distance_from_swarm_centroid(self):
         swarm_positions = [self.swarm[i]._position for i in range(len(self.swarm))]
@@ -166,7 +173,7 @@ class ClassicSwarm:
                 )
             return d
 
-        def evaluate_evolutionary_factor(d: list):
+        def evaluate_evolutionary_factor(d: list) -> float:
             best_particle_of_the_swarm = self.__find_particle_with_best_personal_best()
             d_g = 1 / (len(self.swarm) - 1) * \
                   sum(norm(best_particle_of_the_swarm._position - particle._position)
@@ -178,7 +185,7 @@ class ClassicSwarm:
 
         return evaluate_evolutionary_factor(evaluate_average_between_each_particle_to_all_others())
 
-    def __determine_accelaration_coefficients(self):
+    def __determine_accelaration_coefficients(self, evolutionary_state: EvolutionaryStates):
 
         class CoefficientOperations(Enum):
             INCREASE = 0,
@@ -188,8 +195,6 @@ class ClassicSwarm:
 
         acceleration_rate = uniform(0.05, 0.10)
         c1_strategy, c2_strategy = "", ""
-        f_evol = self.__estimate_evolutionary_state()
-        evolutionary_state = classify_evolutionary_state(f_evol)
         if evolutionary_state == EvolutionaryStates.EXPLORATION:
             c1_strategy = CoefficientOperations.INCREASE
             c2_strategy = CoefficientOperations.DECREASE
@@ -239,22 +244,21 @@ class ClassicSwarm:
             self.c1 = c1_old / (c1_old + c2_old) * (c_min + c_max)
             self.c2 = c2_old / (c1_old + c2_old) * (c_min + c_max)
 
-    def __apply_eliticism_learning_strategy(self):
+    def __apply_eliticism_learning_strategy(self, evolutionary_state: EvolutionaryStates):
         # This strategy aims at maintaining the diversity during the search,
         # by causing a escape state of the best particle when it gets trapped in a local minimum.
         # That is why this strategy is executed only in case of convergence.
-        if self.__estimate_evolutionary_state() == EvolutionaryStates.CONVERGENCE:
+        if evolutionary_state == EvolutionaryStates.CONVERGENCE:
             search_space_dimention = randrange(len(self.__convex_boundaries))
             mu = mean(self.__convex_boundaries[search_space_dimention])
             # "Adaptive Particle Swarm Optimization, Zhi et al." -> "IV. APSO" -> "C. ELS" ->
             # "Empirical study shows that σ_max = 1.0 and σ_min = 0.1
             # result in good performance on most of the test functions"
-            sigma = 1 - (1 - 0.1) / self.__max_iterations * self.__current_iteration
+            sigma = 1 - (1 - 0.1) / self.__max_iterations * self.current_iteration
             elitist_learning_rate = gauss(mu, sigma)
 
             self.__find_particle_with_best_personal_best()._position[search_space_dimention] += \
                 elitist_learning_rate
 
-    def __adapt_inertia_factor(self):
-        f_evol = self.__estimate_evolutionary_state()
+    def __adapt_inertia_factor(self, f_evol: float):
         self.w = 1 / (1 + 1.5 * e ** (-2.6 * f_evol))  # ∈[0.4, 0.9]  ∀f_evol ∈[0,1]

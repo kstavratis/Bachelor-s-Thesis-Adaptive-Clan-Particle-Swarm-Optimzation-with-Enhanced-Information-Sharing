@@ -3,14 +3,13 @@ from numpy import array_equal
 
 
 class ClanSwarm:
-    def __init__(self, fitness_function, convex_boundaries: list, maximum_iterations, w: float,
-                 adaptive: bool = False,
+    def __init__(self, fitness_function, convex_boundaries: list, maximum_iterations, adaptive: bool = False,
                  c1: float = 2, c2: float = 2, c3: float = None,
-                 swarm_size: int = 15, number_of_clans: int = 4):
+                 swarm_size: int = 15, number_of_clans: int = 4, current_iteration: int = 0):
         self.clans = [ClassicSwarm(fitness_function, convex_boundaries, adaptive=adaptive,
                                    maximum_iterations=maximum_iterations,
-                                   w=w,
-                                   c1=c1, c2=c2, c3=c3, swarm_size=swarm_size)
+                                   # w=w,
+                                   c1=c1, c2=c2, c3=c3, swarm_size=swarm_size, current_iteration=current_iteration)
                       for i in range(number_of_clans)]
         self.__fitness_function = fitness_function
 
@@ -27,11 +26,14 @@ class ClanSwarm:
                     # ~Adaptive Clan Particle Optimization II: CLAN PARTICLE SWARM OPTIMIZATION 2nd paragraph.
                     if array_equal(swarm.global_best_position, particle._personal_best_position):
                         leaders.append(particle)
+                        break
             return leaders
 
         def update_clan_leaders(leaders: list):
             clan_leaders_swarm = ClassicSwarm(
-                leaders, convex_boundaries=[],maximum_iterations=self.__max_iterations, w=1)  # TODO Find a way to adjust inertia weight w.
+                leaders, convex_boundaries=[],maximum_iterations=self.__max_iterations,
+                current_iteration=self.clans[0].current_iteration)
+            # Note: all clans have the same value in their "current_iteration" variable.
             clan_leaders_swarm.update_swarm()
 
         # Execute particle movement as per the classic PSO

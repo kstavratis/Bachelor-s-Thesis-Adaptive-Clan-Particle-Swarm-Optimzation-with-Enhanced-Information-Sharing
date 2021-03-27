@@ -76,14 +76,14 @@ def main():
 
 
     maximum_iterations = 5000
-    loop_stop_condition_limit = 5 * 10**(-7)
+    loop_stop_condition_limit = 5 * 10**(-20)
 
     print("Classic Particle Swarm Optimization: Rastrigin Function")
     print("-------------------------------------------------------")
     rastrigin_classic_divergences = []
     for i in range(1):  # Thirty (30) repetitions are considered enough for analysis/observations.
         rastrigin_classic_swarm = ClassicSwarm(rastrigin_function, rastrigin_function_search_domain, maximum_iterations,
-                                               w=w_max, swarm_size=60, adaptive=True, lep_boundaries=[[-5.12, 5.12],[-40, 40]])
+                                               swarm_size=60, adaptive=True, lep_boundaries=[[-5.12, 5.12],[-40, 40]])
         iteration = 0  # Counter used for changing inertia constants.
         loop_stop_condition_value = inf
         while not(loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
@@ -106,7 +106,7 @@ def main():
     rastrigin_clan_divergences = []
     for i in range(1):  # Thirty (30) repetitions are considered enough for analysis/observations.
         rastrigin_clan_swarm = ClanSwarm(rastrigin_function, rastrigin_function_search_domain, maximum_iterations,
-                                         w=w_max, swarm_size=15, number_of_clans=4)
+                                         swarm_size=15, number_of_clans=4)
         iteration = 0  # Counter used for changing inertia constants.
         loop_stop_condition_value = inf
         while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
@@ -138,8 +138,7 @@ def main():
 
     print("Classic Particle Swarm Optimization: Ackley Function")
     print("----------------------------------------------------")
-    ackley_classic_swarm = ClassicSwarm(ackley_function, ackley_function_search_domain, maximum_iterations,
-                                        w=w_max)
+    ackley_classic_swarm = ClassicSwarm(ackley_function, ackley_function_search_domain, maximum_iterations)
     loop_stop_condition_value = inf
     iteration = 0  # Counter used for changing inertia constants.
     while not(loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
@@ -156,8 +155,7 @@ def main():
 
     print("Clan Particle Swarm Optimization: Ackley Function")
     print("-------------------------------------------------")
-    ackley_clan_swarm = ClanSwarm(ackley_function, ackley_function_search_domain, maximum_iterations,
-                                  w=w_max, swarm_size=50)
+    ackley_clan_swarm = ClanSwarm(ackley_function, ackley_function_search_domain, maximum_iterations, swarm_size=50)
     loop_stop_condition_value = inf
     iteration = 0  # Counter used for changing inertia constants.
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
@@ -179,8 +177,7 @@ def main():
 
     print("Classic Particle Swarm Optimization: Sphere Function")
     print("----------------------------------------------------")
-    sphere_classic_swarm = ClassicSwarm(sphere_function, sphere_function_search_domain, maximum_iterations,
-                                        w=w_max, adaptive=False)
+    sphere_classic_swarm = ClassicSwarm(sphere_function, sphere_function_search_domain, maximum_iterations, adaptive=False)
     loop_stop_condition_value = inf
     iteration = 0  # Counter used for changing inertia constants.
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
@@ -197,8 +194,8 @@ def main():
 
     print("Clan Particle Swarm Optimization: Sphere Function")
     print("----------------------------------------------------")
-    sphere_clan_swarm = ClanSwarm(sphere_function, sphere_function_search_domain, maximum_iterations,
-                                  w=w_max)
+    sphere_clan_swarm = ClanSwarm(sphere_function, sphere_function_search_domain, maximum_iterations)
+                                  # w=w_max)
     loop_stop_condition_value = inf
     iteration = 0  # Counter used for changing inertia constants.
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
@@ -220,8 +217,8 @@ def main():
 
     print("Classic Particle Swarm Optimization: Rosenbrock Function")
     print("--------------------------------------------------------")
-    rosenbrock_classic_swarm = ClassicSwarm(rosenbrock_function, rosenbrock_function_search_domain, maximum_iterations,
-                                            w=w_max)
+    rosenbrock_classic_swarm = ClassicSwarm(rosenbrock_function, rosenbrock_function_search_domain, maximum_iterations)
+                                            # w=w_max)
     loop_stop_condition_value = inf
     iteration = 0  # Counter used for changing inertia constants.
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
@@ -238,8 +235,8 @@ def main():
 
     print("Clan Particle Swarm Optimization: Rosenbrock Function")
     print("--------------------------------------------------------")
-    rosenbrock_clan_swarm = ClanSwarm(rosenbrock_function, rosenbrock_function_search_domain, maximum_iterations,
-                                      w=w_max)
+    rosenbrock_clan_swarm = ClanSwarm(rosenbrock_function, rosenbrock_function_search_domain, maximum_iterations)
+                                      # w=w_max)
     loop_stop_condition_value = inf
     iteration = 0  # Counter used for changing inertia constants.
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
