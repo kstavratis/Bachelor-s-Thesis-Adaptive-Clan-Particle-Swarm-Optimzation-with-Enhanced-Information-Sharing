@@ -1,6 +1,6 @@
 from numpy.ma import sqrt
 from random import random as r1_r2_r3_generator, uniform, randrange, gauss
-from numpy import mean, e, inf
+from numpy import mean, std, e, inf
 from numpy.linalg import norm
 from types import FunctionType
 from enum import Enum
@@ -9,6 +9,7 @@ from typing import List
 
 from classes.PSOs.particle import Particle
 from classes.evolutionary_states import EvolutionaryStates
+from classes.wall_types import WallTypes
 from scripts.evolutionary_state_classification_singleton_method import classify_evolutionary_state
 
 w_min, w_max = 0.4, 0.9
@@ -26,17 +27,19 @@ class ClassicSwarm:
                  c1: float = 2, c2: float = 2, c3: float = None,
                  swarm_size: int = 50,
                  current_iteration: int = 0,
-                 lep_boundaries: List[List[float]] = None):
+                 search_and_velocity_boundaries: List[List[float]] = None, wt: WallTypes = WallTypes.NONE):
         if isinstance(swarm_or_fitness_function, FunctionType):
             self.swarm = [Particle(swarm_or_fitness_function, convex_boundaries) for i in range(swarm_size)]
         if isinstance(swarm_or_fitness_function, list):
             self.swarm = swarm_or_fitness_function
-        if adaptive or lep_boundaries is not None:
+        if adaptive or search_and_velocity_boundaries is not None:
             # The convex boundaries need to be stored in order to apply
             # the learning strategy (using eliticism)
             # For details, see -> "Adaptive Clan Particle Swarm Optimization" ->
             # -> "III. ADAPTIVE PARTICLE SWARM OPTIMIZATION" -> "D. Learning Strategy using Elitism"
             self.__convex_boundaries = convex_boundaries
+        if search_and_velocity_boundaries is not None:
+            self.__wall_type = wt
 
         # Initializing the fitness_function's global best _position particle with the optimal value on spawn.
         self.__fitness_function = swarm_or_fitness_function
@@ -50,7 +53,11 @@ class ClassicSwarm:
 
         self.__adaptive = adaptive
         self.__max_iterations, self.current_iteration = maximum_iterations, current_iteration
-        self.__last_elimination_principle_boundaries = lep_boundaries
+        self.__domain_and_velocity_boundaries = search_and_velocity_boundaries
+        # Note: It is good practice to have the speed limits be a multiple of the domain limits.
+        # In the article "Adaptive Particle Swarm Optimization", Zhan et al. (https://ieeexplore.ieee.org/document/4812104)
+        # used a Vmax of 20% the domain limits in each dimension.
+        # Adaptive Particle Swarm Optimization -> II. PSO AND ITS DEVELOPMENTS -> A. PSO Framework
 
     def __find_particle_with_best_personal_best(self) -> Particle:
         """
@@ -77,51 +84,127 @@ class ClassicSwarm:
         return self.__find_particle_with_best_personal_best()._personal_best_position
 
     def update_swarm(self):
-        self.__update_parameters()
 
-        def replace_particles_out_of_position_boundaries():
-            for particle in self.swarm:
-                for axis in particle._position:
-                    if not (self.__last_elimination_principle_boundaries[0][0] <
-                            axis < self.__last_elimination_principle_boundaries[0][1]):
-                        # Remove this particle, which has exceeded the allowed boundaries.
-                        self.swarm.remove(particle)
-                        # Replace the deleted particle with a new one.
-                        self.swarm.append(Particle(self.__fitness_function, self.__convex_boundaries))
-                        break
+        def wall_enforcement():
+
+            def replace():
+                for particle in self.swarm:
+                    for axis in particle._position:
+                        if not (self.__domain_and_velocity_boundaries[0][0] <
+                                axis < self.__domain_and_velocity_boundaries[0][1]):
+                            # Remove this particle, which has exceeded the allowed boundaries.
+                            self.swarm.remove(particle)
+                            # Replace the deleted particle with a new one.
+                            self.swarm.append(Particle(self.__fitness_function, self.__convex_boundaries))
+                            break
+
+            def absorb():
+                for particle in self.swarm:
+                    for axis in range(len(particle._position)):  # == len(particle.__velocity)
+                        if not (self.__domain_and_velocity_boundaries[0][0] <
+                                axis < self.__domain_and_velocity_boundaries[0][1]):
+                            particle._zero_velocity(axis)
+
+            def reflect():
+                for particle in self.swarm:
+                    for axis in range(len(particle._position)):  # == len(particle.__velocity)
+                        if not (self.__domain_and_velocity_boundaries[0][0] <
+                                axis < self.__domain_and_velocity_boundaries[0][1]):
+                            particle._reflect_velocity(axis)
+
+            # TODO develop invisible wall (don't calculate fitness value of particles outside the allowed domain).
+            def ignore():
+                return
+
+            if self.__wall_type == WallTypes.NONE:
+                return
+            elif self.__wall_type == WallTypes.ELIMINATING:
+                replace()
+            elif self.__wall_type == WallTypes.ABSORBING:
+                absorb()
+            elif self.__wall_type == WallTypes.REFLECTING:
+                reflect()
+            elif self.__wall_type == WallTypes.INVISIBLE:
+                ignore()
+            else:
+                raise ValueError  # Undefined wall type has been given.
+
+
 
 
         def limit_particle_velocity():
             for particle in self.swarm:
-                particle._limit_velocity(self.__last_elimination_principle_boundaries[1])
+                particle._limit_velocity(self.__domain_and_velocity_boundaries[1])
 
-        def replace_similar_particles():
+        def replace_similar_particles(gamma: float = 0.01):
+            """
+            Algorithm
+            ---------
+            Step 1: Calculate average distances between each particle to all others.
+            Step 2: Calculate mean (μ) and standard deviation (σ) of Step 1.
+            Step 3: Remove all particles in between [ μ - γ σ, μ + γ σ ], γ > 0  (68-95-99.7 rule) and replace them with new ones.
+            :param gamma: constant determining the range from the mean μ mentioned in Step 2.
+            """
+
+            # # Step 1
+            # average_distances = []
+            # for particle_i in range(len(self.swarm)):
+            #     average_distance_of_particle_i = sum(norm(self.swarm[particle_i]._position - particle_j._position)
+            #                                          for particle_j in self.swarm) / len(self.swarm)
+            #     average_distances.append(average_distance_of_particle_i)
+            #
+            # # Step 2
+            # mu, sigma = mean(average_distances), std(average_distances)
+            #
+            # # Step 3
+            # for particle_index in range(len(self.swarm)):
+            #     if mu - gamma * sigma < average_distances[particle_index] < mu + gamma * sigma:
+            #         print("Deleting particle at position " + str(particle_index))
+            #         del self.swarm[particle_index]
+            #         print("Inserting new particle at position " + str(particle_index))
+            #         self.swarm.insert(particle_index, Particle(self.__fitness_function, self.__convex_boundaries))
+
             for particle in self.swarm:
                 for other_particle in self.swarm:
                     if other_particle != particle:  # Obviously the distance/similarity between a particle and itself is 0.
                         similarity = norm(particle._position - other_particle._position)
                         if similarity < PARTICLE_SIMILARITY_LIMIT:
                             # Delete this particle, since it is (very) similar to a different particle.
+                            print("Removing particle")
                             self.swarm.remove(particle)
                             # Replace the deleted particle with a new one.
+                            print("Replacing particle")
                             self.swarm.append(Particle(self.__fitness_function, self.__convex_boundaries))
                             break
 
 
-        r1, r2, r3 = r1_r2_r3_generator(), r1_r2_r3_generator(), None
-        if self.c3 is not None: r3 = r1_r2_r3_generator()
+        self.__update_parameters()
+
+        # TODO different random per dimension
+        # This code does not satisfy the above "2doo". This creates a different random number for each particle,
+        # not for each dimenstion. Keeping it in case that I would like to integrate both techniques
+        # (different random for each particle with if each of its dimensions having different random numbers).
+        random_multipliers = tuple(([r1_r2_r3_generator(), r1_r2_r3_generator(), None]
+                              for i in range(len(self.swarm))))
+        # r1, r2, r3 = r1_r2_r3_generator(), r1_r2_r3_generator(), None
+        if self.c3 is not None:
+            for triad in random_multipliers:
+                triad[2] = r1_r2_r3_generator()
+
+        random_multipliers_index = 0
         for particle in self.swarm:
             particle._update_position(self.global_best_position,
                                       self.w,
-                                      self.c1, r1,
-                                      self.c2, r2,
-                                      self.c3, r3)
+                                      self.c1, random_multipliers[random_multipliers_index][0],
+                                      self.c2, random_multipliers[random_multipliers_index][1],
+                                      self.c3, random_multipliers[random_multipliers_index][2])
+            random_multipliers_index += 1
 
         # This is executed only when the Last-Elimination Principle is enabled.
-        if self.__last_elimination_principle_boundaries is not None:
-            replace_particles_out_of_position_boundaries()
+        if self.__domain_and_velocity_boundaries is not None:
+            wall_enforcement()
             limit_particle_velocity()
-            replace_similar_particles()
+            # replace_similar_particles()
 
         # Calculating the new best position of the swarm.
         self.global_best_position = self._find_global_best_position()
@@ -232,8 +315,6 @@ class ClassicSwarm:
         elif c2_strategy == CoefficientOperations.DECREASE_SLIGHTLY:
             if self.c2 - 0.5 * acceleration_rate >= c_min:
                 self.c2 -= 0.5 * acceleration_rate
-
-        print("Evolutionary state = " + str(evolutionary_state))
 
         # In order to avoid an explosion state, it is necessary to bound the sum c1+c2.
         # As the minimum and the maximum value for c1 and c2 are c_min = 1.5 and c_max = 2.5,

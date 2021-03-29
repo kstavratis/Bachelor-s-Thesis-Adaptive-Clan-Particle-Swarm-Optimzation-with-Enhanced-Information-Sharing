@@ -70,3 +70,9 @@ class Particle:
             if self.__velocity[i] > velocity_boundaries[1]:
                 self.__velocity[i] = velocity_boundaries[1]
 
+    def _zero_velocity(self, axis_index: int):
+        self.__velocity[axis_index] = 0
+
+    def _reflect_velocity(self, axis_index: int):
+        self.__velocity[axis_index] *= -1
+

@@ -11,13 +11,13 @@ The singleton defuzzification classification technique is used to determine the 
 #  Confusion\ Current State   S1 S2 S3 S4
 # ----------------------------------------
 #         S1-S2|             |S1 S2 S2 S1
-#         S1-S4|             |S1 S4 S4 S4
-#         S2-S3|             |S2 S2 S3 S2
+#         S1-S4|             |S1 S1 S4 S4
+#         S2-S3|             |S2 S2 S3 S3
 # Defining transition matrix as a tuple, so as to make it unchangeable.
 transition_matrix = (
     (EvolutionaryStates.EXPLORATION, EvolutionaryStates.EXPLOITATION, EvolutionaryStates.EXPLOITATION, EvolutionaryStates.EXPLORATION),
-    (EvolutionaryStates.EXPLORATION, EvolutionaryStates.JUMP_OUT, EvolutionaryStates.JUMP_OUT, EvolutionaryStates.JUMP_OUT),
-    (EvolutionaryStates.EXPLOITATION, EvolutionaryStates.EXPLOITATION, EvolutionaryStates.CONVERGENCE, EvolutionaryStates.EXPLOITATION)
+    (EvolutionaryStates.EXPLORATION, EvolutionaryStates.EXPLORATION, EvolutionaryStates.JUMP_OUT, EvolutionaryStates.JUMP_OUT),
+    (EvolutionaryStates.EXPLOITATION, EvolutionaryStates.EXPLOITATION, EvolutionaryStates.CONVERGENCE, EvolutionaryStates.CONVERGENCE)
 )
 
 current_state = EvolutionaryStates.EXPLORATION

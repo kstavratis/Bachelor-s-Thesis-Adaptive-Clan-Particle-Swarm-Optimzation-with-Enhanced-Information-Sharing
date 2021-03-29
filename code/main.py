@@ -1,6 +1,6 @@
 from classes.PSOs.classicPSOswarm import ClassicSwarm
 from classes.PSOs.clanPSOswarm import ClanSwarm
-from classes.PSOs.particle import Particle
+from classes.wall_types import WallTypes
 from numpy import cos,pi, e, sqrt, inf, array as vector, seterr
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
@@ -83,7 +83,9 @@ def main():
     rastrigin_classic_divergences = []
     for i in range(1):  # Thirty (30) repetitions are considered enough for analysis/observations.
         rastrigin_classic_swarm = ClassicSwarm(rastrigin_function, rastrigin_function_search_domain, maximum_iterations,
-                                               swarm_size=60, adaptive=True, lep_boundaries=[[-5.12, 5.12],[-40, 40]])
+                                               swarm_size=60, adaptive=True,
+                                               search_and_velocity_boundaries=[[-5.12, 5.12], [-20 / 100 * 5.12, 20 / 100 * 5.12]],
+                                               wt=WallTypes.ABSORBING)
         iteration = 0  # Counter used for changing inertia constants.
         loop_stop_condition_value = inf
         while not(loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
@@ -95,6 +97,7 @@ def main():
 
     print("Rastrigin function optimizing point x = " + str(rastrigin_classic_swarm.global_best_position))
     print("Rastrigin value = " + str(rastrigin_function(rastrigin_classic_swarm.global_best_position)))
+    print("Distance from target = " + str(norm(rastrigin_classic_swarm.global_best_position - rastigin_function_goal_point)))
     print("iterations = " + str(iteration))
     print("Stop condition value = " + str(loop_stop_condition_value))
     print("----------------------------------------------------")
@@ -117,6 +120,7 @@ def main():
 
     print("Rastrigin function optimizing point x = " + str(rastrigin_clan_swarm.find_population_global_best_position()))
     print("Rastrigin value = " + str(rastrigin_function(rastrigin_clan_swarm.find_population_global_best_position())))
+    print("Distance from target = " + str(norm(rastrigin_clan_swarm.find_population_global_best_position() - rastigin_function_goal_point)))
     print("iterations = " + str(iteration))
     print("Stop condition value = " + str(loop_stop_condition_value))
     print("----------------------------------------------------")
@@ -147,6 +151,7 @@ def main():
         iteration += 1
     print("Ackley function optimizing point x = " + str(ackley_classic_swarm.global_best_position))
     print("Ackley value = " + str(ackley_function((ackley_classic_swarm.global_best_position))))
+    print("Distance from target = " + str(norm(ackley_classic_swarm.global_best_position - ackley_function_goal_point)))
     print("iterations = " + str(iteration))
     print("Stop condition value = " + str(loop_stop_condition_value))
     print("----------------------------------------------------")
@@ -164,6 +169,7 @@ def main():
         iteration += 1
     print("Ackley function optimizing point x = " + str(ackley_clan_swarm.find_population_global_best_position()))
     print("Ackley value = " + str(ackley_function((ackley_clan_swarm.find_population_global_best_position()))))
+    print("Distance from target = " + str(norm(ackley_clan_swarm.find_population_global_best_position() - ackley_function_goal_point)))
     print("iterations = " + str(iteration))
     print("Stop condition value = " + str(loop_stop_condition_value))
     print("--------------------------------------------------")
@@ -186,6 +192,7 @@ def main():
         iteration += 1
     print("Sphere function optimizing point x = " + str(sphere_classic_swarm.global_best_position))
     print("Sphere function value = " + str(sphere_function(sphere_classic_swarm.global_best_position)))
+    print("Distance from target = " + str(norm(sphere_classic_swarm.global_best_position - sphere_function_goal_point)))
     print("iterations = " + str(iteration))
     print("Stop condition value = " + str(loop_stop_condition_value))
     print("-------------------------------------------------")
@@ -204,6 +211,7 @@ def main():
         iteration += 1
     print("Sphere function optimizing point x = " + str(sphere_clan_swarm.find_population_global_best_position()))
     print("Sphere function value = " + str(sphere_function(sphere_clan_swarm.find_population_global_best_position())))
+    print("Distance from target = " + str(norm(sphere_clan_swarm.find_population_global_best_position() - sphere_function_goal_point)))
     print("iterations = " + str(iteration))
     print("Stop condition value = " + str(loop_stop_condition_value))
     print("-------------------------------------------------")
@@ -227,6 +235,7 @@ def main():
         iteration += 1
     print("Rosenbrock function optimizing point x = " + str(rosenbrock_classic_swarm.global_best_position))
     print("Rosenbrock function value at x = " + str(rosenbrock_function(rosenbrock_classic_swarm.global_best_position)))
+    print("Distance from target = " + str(norm(rosenbrock_classic_swarm.global_best_position - rosenbrock_function_goal_point)))
     print("iterations = " + str(iteration))
     print("Stop condition value = " + str(loop_stop_condition_value))
     print("-----------------------------------------------------")
@@ -245,6 +254,7 @@ def main():
         iteration += 1
     print("Rosenbrock function optimizing point x = " + str(rosenbrock_clan_swarm.find_population_global_best_position()))
     print("Rosenbrock function value at x = " + str(rosenbrock_function(rosenbrock_clan_swarm.find_population_global_best_position())))
+    print("Distance from target = " + str(norm(rosenbrock_clan_swarm.find_population_global_best_position() - rosenbrock_function_goal_point)))
     print("iterations = " + str(iteration))
     print("Stop condition value = " + str(loop_stop_condition_value))
     print("-----------------------------------------------------")
