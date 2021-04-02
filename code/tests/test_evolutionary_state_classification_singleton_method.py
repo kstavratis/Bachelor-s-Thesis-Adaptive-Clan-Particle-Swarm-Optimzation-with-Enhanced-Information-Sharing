@@ -1,6 +1,6 @@
 import unittest
 import scripts.evolutionary_state_classification_singleton_method as clasfation
-from classes.evolutionary_states import EvolutionaryStates
+from classes.enums.evolutionary_states import EvolutionaryStates
 
 
 class TestEvolutionaryStateClassificationBoundaries(unittest.TestCase):

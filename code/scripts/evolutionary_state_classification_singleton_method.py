@@ -1,6 +1,6 @@
 from numpy import inf
 
-from classes.evolutionary_states import EvolutionaryStates
+from classes.enums.evolutionary_states import EvolutionaryStates
 
 """
 For details see "Adaptive Particle Swarm Optimization (Zhan et al.)" -> III ESE for PSO -> B. ESE -> Step 3
@@ -35,7 +35,7 @@ def classify_evolutionary_state(evolutionary_factor: float):
         elif 0.7 < f <= 0.8:
             return -10 * f + 8
         else:
-            raise ValueError  # The evolutionary factor is bounded in the values [0,1].
+            raise ValueError("The evolutionary factor is bounded in the values [0,1].")
 
     def exploitation_membership_function(f: float):
         if 0 <= f <= 0.2 or 0.6 < f <= 1:
@@ -47,7 +47,7 @@ def classify_evolutionary_state(evolutionary_factor: float):
         elif 0.4 < f <= 0.6:
             return -5 * f + 3
         else:
-            raise ValueError  # The evolutionary factor is bounded in the values [0,1].
+            raise ValueError("The evolutionary factor is bounded in the values [0,1].")
 
     def convergence_membership_function(f: float):
         if 0 <= f <= 0.1:
@@ -57,7 +57,7 @@ def classify_evolutionary_state(evolutionary_factor: float):
         elif 0.3 < f <= 1:
             return 0
         else:
-            raise ValueError  # The evolutionary factor is bounded in the values [0,1].
+            raise ValueError("The evolutionary factor is bounded in the values [0,1].")
 
     def jumping_out_membership_function(f: float):
         if 0 <= f <= 0.7:
@@ -67,7 +67,7 @@ def classify_evolutionary_state(evolutionary_factor: float):
         elif 0.9 < f <= 1:
             return 1
         else:
-            raise ValueError  # The evolutionary factor is bounded in the values [0,1].
+            raise ValueError("The evolutionary factor is bounded in the values [0,1].")
 
     membership_function_dict = {
         EvolutionaryStates.EXPLORATION: exploration_membership_function,
@@ -108,7 +108,7 @@ def classify_evolutionary_state(evolutionary_factor: float):
     global current_state
 
     if greater_than_zero_membership_values <= 0:
-        raise ValueError  # f_evol must be classified to at least one evolutionary state.
+        raise ValueError("# f_evol must be classified to at least one evolutionary state.")
     elif greater_than_zero_membership_values == 1:
         next_evolutionary_state = EvolutionaryStates(f.index(max(f)))
         current_state = next_evolutionary_state

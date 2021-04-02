@@ -1,19 +1,36 @@
 from classes.PSOs.classicPSOswarm import ClassicSwarm
+from classes.enums.wall_types import WallTypes
+from classes.enums.enhanced_information_sharing.global_local_coefficient_types import GlobalLocalCoefficientTypes
+from classes.enums.enhanced_information_sharing.control_factor_types import ControlFactorTypes
 from numpy import array_equal
+from typing import List, Tuple
+
 
 
 class ClanSwarm:
-    def __init__(self, fitness_function, convex_boundaries: list, maximum_iterations, adaptive: bool = False,
-                 c1: float = 2, c2: float = 2, c3: float = None,
-                 swarm_size: int = 15, number_of_clans: int = 4, current_iteration: int = 0):
-        self.clans = [ClassicSwarm(fitness_function, convex_boundaries, adaptive=adaptive,
+    def __init__(self, fitness_function, convex_boundaries: list,
+                 maximum_iterations,
+                 adaptive: bool = False,
+                 c1: float = 2, c2: float = 2,
+                 eis: Tuple[Tuple[GlobalLocalCoefficientTypes, float or None], Tuple[ControlFactorTypes, float or None]] =
+                 ((GlobalLocalCoefficientTypes.NONE, None), (ControlFactorTypes.NONE, None)),
+                 swarm_size: int = 15, number_of_clans: int = 4,
+                 current_iteration: int = 0,
+                 search_and_velocity_boundaries: List[List[float]] = None, wt: WallTypes = WallTypes.NONE):
+
+        self.clans = [ClassicSwarm(fitness_function, convex_boundaries, adaptivePSO=adaptive,
                                    maximum_iterations=maximum_iterations,
                                    # w=w,
-                                   c1=c1, c2=c2, c3=c3, swarm_size=swarm_size, current_iteration=current_iteration)
+                                   c1=c1, c2=c2,
+                                   eis=eis,
+                                   swarm_size=swarm_size, current_iteration=current_iteration,
+                                   search_and_velocity_boundaries=search_and_velocity_boundaries, wt=wt)
                       for i in range(number_of_clans)]
         self.__fitness_function = fitness_function
 
+
         self.__max_iterations = maximum_iterations
+        self.__search_and_velocity_boundaries, self.__wall_type = search_and_velocity_boundaries, wt
 
     def update_swarm(self):
         def find_clan_leaders():
@@ -31,9 +48,13 @@ class ClanSwarm:
 
         def update_clan_leaders(leaders: list):
             clan_leaders_swarm = ClassicSwarm(
-                leaders, convex_boundaries=[],maximum_iterations=self.__max_iterations,
-                current_iteration=self.clans[0].current_iteration)
-            # Note: all clans have the same value in their "current_iteration" variable.
+                leaders, convex_boundaries=[], maximum_iterations=self.__max_iterations,
+                current_iteration=self.clans[0].current_iteration,  # Note: all clans have the same value in their "current_iteration" variable.
+                eis=((self.clans[0]._global_local_coefficient_method, self.clans[0].c3),
+                     (self.clans[0]._control_factor_method, self.clans[0].c3_k)),
+                search_and_velocity_boundaries=self.__search_and_velocity_boundaries, wt=self.__wall_type
+            )
+
             clan_leaders_swarm.update_swarm()
 
         # Execute particle movement as per the classic PSO

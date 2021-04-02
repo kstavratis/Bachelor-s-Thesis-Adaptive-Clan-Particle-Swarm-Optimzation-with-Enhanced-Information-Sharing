@@ -1,10 +1,11 @@
-from classes.PSOs.classicPSOswarm import ClassicSwarm
 from classes.PSOs.clanPSOswarm import ClanSwarm
-from classes.wall_types import WallTypes
-from numpy import cos,pi, e, sqrt, inf, array as vector, seterr
+from classes.enums.enhanced_information_sharing.global_local_coefficient_types import GlobalLocalCoefficientTypes
+from classes.enums.enhanced_information_sharing.control_factor_types import ControlFactorTypes
+from numpy import cos, pi, sqrt, mean, std, median, e, inf, array as vector, seterr
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
-
+import pandas
+from time import process_time
 
 
 # Theorem: min g(x) = -max (-g(x))
@@ -16,7 +17,6 @@ import matplotlib.pyplot as plt
 def rastrigin_function(x: list):
     A = 10
     return 1/(A * len(x) + sum(x[i]**2 - A * cos(2*pi*x[i]) for i in range(len(x))))
-
 
 # Ackley function's domain is x[i] ∈ [-5, 5] for all i and its minimum is at f(0,...0) = 0.
 def ackley_function(x: list, a: float = 20, b: float = 0.2, c: float = 2*pi):
@@ -47,17 +47,15 @@ def styblinski_tang_function(x: list):
 
 
 def main():
-    # seterr(all='raise')
+    seterr(all='raise')
     domain_dimensions = 10
-
-    fig, axis = plt.subplots()
 
 
     rastrigin_function_search_domain = [[-5.12, 5.12] for i in range(domain_dimensions)]
     ackley_function_search_domain = [[-32.768, 32.768] for i in range(domain_dimensions)]
     ackley_function_search_domain = [[-5, 5] for i in range(domain_dimensions)]
     # sphere_function_search_domain = [[-inf, inf] for i in range(domain_dimensions)]
-    sphere_function_search_domain = [[-10**2, 10**2] for i in range(domain_dimensions)]
+    sphere_function_search_domain = [[-10**3, 10**3] for i in range(domain_dimensions)]
     # The domain of Rosenbrock's function is x[i] ∈ [-∞, ∞] for all i
     # rosenbrock_function_search_domain = [[-inf, inf] for i in range(domain_dimensions)]
     rosenbrock_function_search_domain = [[-10**2, 10**2] for i in range(domain_dimensions)]
@@ -69,210 +67,542 @@ def main():
     sphere_function_goal_point = vector([0 for i in range(domain_dimensions)])
     rosenbrock_function_goal_point = vector([1 for i in range(domain_dimensions)])
 
+
+    fig, axis = plt.subplots()
+
     # To achieve a balance between global and local exploration to speed up convergence to the true optimum,
     # an inertia weight whose value decreases linearly with the iteration number has been used.
     # The values of w_min = 0.4 and w_max = 0.9 are widely used.
     w_min, w_max = 0.4, 0.9
 
-
+    clans = 5
+    particles_per_clan = 8
+    simple_pso_particles = clans * particles_per_clan
     maximum_iterations = 5000
     loop_stop_condition_limit = 5 * 10**(-20)
 
-    print("Classic Particle Swarm Optimization: Rastrigin Function")
-    print("-------------------------------------------------------")
-    rastrigin_classic_divergences = []
-    for i in range(1):  # Thirty (30) repetitions are considered enough for analysis/observations.
-        rastrigin_classic_swarm = ClassicSwarm(rastrigin_function, rastrigin_function_search_domain, maximum_iterations,
-                                               swarm_size=60, adaptive=True,
-                                               search_and_velocity_boundaries=[[-5.12, 5.12], [-20 / 100 * 5.12, 20 / 100 * 5.12]],
-                                               wt=WallTypes.ABSORBING)
-        iteration = 0  # Counter used for changing inertia constants.
+
+    # axis.set_ylabel("Distance from target")
+    # axis.plot(rastrigin_classic_divergences, marker=".", label="Classic PSO")
+    # axis.plot(rastrigin_clan_divergences, marker=".", label="Clan PSO")
+    # # axis.plot(rastrigin_classic_iterations,rastrigin_classic_errors, label="Classic PSO")
+    # # axis.plot(rastrigin_clan_iterations, rastrigin_clan_errors, label="Clan PSO")
+    # axis.legend()
+    # plt.show()
+
+
+    experiments = 500
+
+    print("Rastrigin Function")
+    print("------------------")
+
+
+    rastrigin_adaptive_clan_precisions = []
+    rastrigin_adaptive_clan_cpu_average_iteration_times = []
+    rastrigin_adaptive_clan_experiment_cpu_times = []
+    rastrigin_adaptive_clan_iterations = []
+
+    for experiment in range(experiments):
+        print("Simple Adaptive Clan PSO: experiment #" + str(experiment + 1))
+        loop_times = []
+
+        experiment_start = process_time()
+
+        rastrigin_adaptive_clan_swarm = ClanSwarm(fitness_function=rastrigin_function,
+                                                  convex_boundaries=rastrigin_function_search_domain,
+                                                  number_of_clans=clans,
+                                                  swarm_size=particles_per_clan,
+                                                  maximum_iterations=maximum_iterations,
+                                                  adaptive=True,
+                                                  search_and_velocity_boundaries=[[-5.12, 5.12], [-20 / 100 * 5.12, 20 / 100 * 5.12]],
+                                                  )
+        iteration = 0
         loop_stop_condition_value = inf
+
         while not(loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
-            rastrigin_classic_swarm.update_swarm()
-            loop_stop_condition_value = rastrigin_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
+            loop_start = process_time()
+
+            try:
+                rastrigin_adaptive_clan_swarm.update_swarm()
+            except FloatingPointError:
+                iteration += 1
+                loop_end = process_time()
+                loop_times.append(loop_end - loop_start)
+                break
+
+            loop_stop_condition_value = rastrigin_adaptive_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
             iteration += 1
-            # print(iteration)
-        rastrigin_classic_divergences.append(norm(rastrigin_classic_swarm.global_best_position - rastigin_function_goal_point))
 
-    print("Rastrigin function optimizing point x = " + str(rastrigin_classic_swarm.global_best_position))
-    print("Rastrigin value = " + str(rastrigin_function(rastrigin_classic_swarm.global_best_position)))
-    print("Distance from target = " + str(norm(rastrigin_classic_swarm.global_best_position - rastigin_function_goal_point)))
-    print("iterations = " + str(iteration))
-    print("Stop condition value = " + str(loop_stop_condition_value))
-    print("----------------------------------------------------")
+            loop_end = process_time()
+            loop_times.append(loop_end - loop_start)
 
-    [print() for i in range(2)]
+        experiment_end = process_time()
+        rastrigin_adaptive_clan_cpu_average_iteration_times.append(mean(loop_times))
+        rastrigin_adaptive_clan_experiment_cpu_times.append(experiment_end - experiment_start)
+        rastrigin_adaptive_clan_precisions.append(norm(
+            rastrigin_adaptive_clan_swarm.find_population_global_best_position()
+            - rastigin_function_goal_point
+        ))
+        rastrigin_adaptive_clan_iterations.append(iteration)
 
-    print("Clan Particle Swarm Optimization: Rastrigin Function")
-    print("----------------------------------------------------")
-    rastrigin_clan_divergences = []
-    for i in range(1):  # Thirty (30) repetitions are considered enough for analysis/observations.
-        rastrigin_clan_swarm = ClanSwarm(rastrigin_function, rastrigin_function_search_domain, maximum_iterations,
-                                         swarm_size=15, number_of_clans=4)
-        iteration = 0  # Counter used for changing inertia constants.
+    rastrigin_adaptive_clan_mean_precision = mean(rastrigin_adaptive_clan_precisions)
+    rastrigin_adaptive_clan_precision_std = std(rastrigin_adaptive_clan_precisions)
+    rastrigin_adaptive_clan_precision_median = median(rastrigin_adaptive_clan_precisions)
+    rastrigin_adaptive_clan_precision_best = min(rastrigin_adaptive_clan_precisions)
+    rastrigin_adaptive_clan_average_iteration_cpu_time = mean(rastrigin_adaptive_clan_cpu_average_iteration_times)
+    rastrigin_adaptive_clan_mean_experiment_cpu_time = mean(rastrigin_adaptive_clan_experiment_cpu_times)
+    rastrigin_adaptive_clan_mean_iterations = mean(rastrigin_adaptive_clan_iterations)
+
+
+
+
+    [print() for i in range(3)]
+
+
+
+
+    rastrigin_eis_k0point2_adaptive_clan_precisions = []
+    rastrigin_eis_k0point2_adaptive_clan_cpu_average_iteration_times = []
+    rastrigin_eis_k0point2_adaptive_clan_experiment_cpu_times = []
+    rastrigin_eis_k0point2_adaptive_clan_iterations = []
+
+    for experiment in range(experiments):
+        print("Adaptive EIS Clan PSO (k=0.2): experiment #" + str(experiment + 1))
+
+        loop_times = []
+
+        experiment_start = process_time()
+
+        rastrigin_eis_adaptive_clan_swarm = ClanSwarm(fitness_function=rastrigin_function,
+                                                      convex_boundaries=rastrigin_function_search_domain,
+                                                      number_of_clans=clans,
+                                                      swarm_size=particles_per_clan,
+                                                      maximum_iterations=maximum_iterations,
+                                                      adaptive=True,
+                                                      search_and_velocity_boundaries=[[-5.12, 5.12], [-20 / 100 * 5.12,
+                                                                                                      20 / 100 * 5.12]],
+                                                      eis=((GlobalLocalCoefficientTypes.ADAPTIVE, 0.2), (ControlFactorTypes.CONSTANT, 0.2))
+                                                      )
+        iteration = 0
         loop_stop_condition_value = inf
-        while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
-            rastrigin_clan_swarm.update_swarm()
-            loop_stop_condition_value = rastrigin_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
+
+        while not(loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
+            loop_start = process_time()
+
+            try:
+                rastrigin_eis_adaptive_clan_swarm.update_swarm()
+            except FloatingPointError:
+                iteration += 1
+                loop_end = process_time()
+                loop_times.append(loop_end - loop_start)
+                break
+
+            loop_stop_condition_value = rastrigin_eis_adaptive_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
             iteration += 1
-        rastrigin_clan_divergences.append(norm(rastrigin_clan_swarm.find_population_global_best_position() - rastigin_function_goal_point))
 
-    print("Rastrigin function optimizing point x = " + str(rastrigin_clan_swarm.find_population_global_best_position()))
-    print("Rastrigin value = " + str(rastrigin_function(rastrigin_clan_swarm.find_population_global_best_position())))
-    print("Distance from target = " + str(norm(rastrigin_clan_swarm.find_population_global_best_position() - rastigin_function_goal_point)))
-    print("iterations = " + str(iteration))
-    print("Stop condition value = " + str(loop_stop_condition_value))
-    print("----------------------------------------------------")
+            loop_end = process_time()
+            loop_times.append(loop_end - loop_start)
+
+        experiment_end = process_time()
+        rastrigin_eis_k0point2_adaptive_clan_cpu_average_iteration_times.append(mean(loop_times))
+        rastrigin_eis_k0point2_adaptive_clan_experiment_cpu_times.append(experiment_end - experiment_start)
+        rastrigin_eis_k0point2_adaptive_clan_precisions.append(norm(
+            rastrigin_eis_adaptive_clan_swarm.find_population_global_best_position()
+            - rastigin_function_goal_point
+        ))
+        rastrigin_eis_k0point2_adaptive_clan_iterations.append(iteration)
+
+    rastrigin_eis_k0point2_adaptive_clan_mean_precision = mean(rastrigin_eis_k0point2_adaptive_clan_precisions)
+    rastrigin_eis_k0point2_adaptive_clan_precision_std = std(rastrigin_eis_k0point2_adaptive_clan_precisions)
+    rastrigin_eis_k0point2_adaptive_clan_precision_median = median(rastrigin_eis_k0point2_adaptive_clan_precisions)
+    rastrigin_eis_k0point2_adaptive_clan_precision_best = min(rastrigin_eis_k0point2_adaptive_clan_precisions)
+    rastrigin_eis_k0point2_adaptive_clan_average_iteration_cpu_time = mean(rastrigin_eis_k0point2_adaptive_clan_cpu_average_iteration_times)
+    rastrigin_eis_k0point2_adaptive_clan_mean_experiment_cpu_time = mean(rastrigin_eis_k0point2_adaptive_clan_experiment_cpu_times)
+    rastrigin_eis_k0point2_adaptive_clan_mean_iterations = mean(rastrigin_eis_k0point2_adaptive_clan_iterations)
 
 
-    axis.set_ylabel("Distance from target")
-    axis.plot(rastrigin_classic_divergences, marker=".", label="Classic PSO")
-    axis.plot(rastrigin_clan_divergences, marker=".", label="Clan PSO")
-    # axis.plot(rastrigin_classic_iterations,rastrigin_classic_errors, label="Classic PSO")
-    # axis.plot(rastrigin_clan_iterations, rastrigin_clan_errors, label="Clan PSO")
-    axis.legend()
-    plt.show()
+    # [print() for i in range(2)]
+    #
+    #
+    # rastrigin_eis_k2_adaptive_clan_precisions = []
+    # rastrigin_eis_k2_adaptive_clan_cpu_average_iteration_times = []
+    # rastrigin_eis_k2_adaptive_clan_experiment_cpu_times = []
+    # rastrigin_eis_k2_adaptive_clan_iterations = []
+    #
+    # for experiment in range(experiments):
+    #     print("EIS Adaptive Clan PSO (k=-2): experiment #" + str(experiment + 1))
+    #
+    #     loop_times = []
+    #
+    #     experiment_start = process_time()
+    #
+    #     rastrigin_eis_adaptive_clan_swarm = ClanSwarm(fitness_function=rastrigin_function,
+    #                                                   convex_boundaries=rastrigin_function_search_domain,
+    #                                                   number_of_clans=clans,
+    #                                                   swarm_size=particles_per_clan,
+    #                                                   maximum_iterations=maximum_iterations,
+    #                                                   adaptivePSO=True,
+    #                                                   search_and_velocity_boundaries=[[-5.12, 5.12], [-20 / 100 * 5.12,
+    #                                                                                                   20 / 100 * 5.12]],
+    #                                                   c3=2.0, c3_k=-2)
+    #     iteration = 0
+    #     loop_stop_condition_value = inf
+    #
+    #     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
+    #         loop_start = process_time()
+    #
+    #         try:
+    #             rastrigin_eis_adaptive_clan_swarm.update_swarm()
+    #         except FloatingPointError:
+    #             iteration += 1
+    #             loop_end = process_time()
+    #             loop_times.append(loop_end - loop_start)
+    #             break
+    #
+    #         loop_stop_condition_value = rastrigin_eis_adaptive_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
+    #         iteration += 1
+    #
+    #         loop_end = process_time()
+    #         loop_times.append(loop_end - loop_start)
+    #
+    #     experiment_end = process_time()
+    #     rastrigin_eis_k2_adaptive_clan_cpu_average_iteration_times.append(mean(loop_times))
+    #     rastrigin_eis_k2_adaptive_clan_experiment_cpu_times.append(experiment_end - experiment_start)
+    #     rastrigin_eis_k2_adaptive_clan_precisions.append(norm(
+    #         rastrigin_eis_adaptive_clan_swarm.find_population_global_best_position()
+    #         - rastigin_function_goal_point
+    #     ))
+    #     rastrigin_eis_k2_adaptive_clan_iterations.append(iteration)
+    #
+    # rastrigin_eis_k2_adaptive_clan_mean_precision = mean(rastrigin_eis_k2_adaptive_clan_precisions)
+    # rastrigin_eis_k2_adaptive_clan_precision_std = std(rastrigin_eis_k2_adaptive_clan_precisions)
+    # rastrigin_eis_k2_adaptive_clan_precision_median = median(rastrigin_eis_k2_adaptive_clan_precisions)
+    # rastrigin_eis_k2_adaptive_clan_precision_best = min(rastrigin_eis_k2_adaptive_clan_precisions)
+    # rastrigin_eis_k2_adaptive_clan_average_iteration_cpu_time = mean(
+    #     rastrigin_eis_k2_adaptive_clan_cpu_average_iteration_times)
+    # rastrigin_eis_k2_adaptive_clan_mean_experiment_cpu_time = mean(
+    #     rastrigin_eis_k2_adaptive_clan_experiment_cpu_times)
+    # rastrigin_eis_k2_adaptive_clan_mean_iterations = mean(rastrigin_eis_k2_adaptive_clan_iterations)
+
+    rastrigin_collected_data = {
+        "Simple AClanPSO": pandas.Series([rastrigin_adaptive_clan_mean_precision,
+                                          rastrigin_adaptive_clan_precision_std,
+                                          rastrigin_adaptive_clan_precision_median,
+                                          rastrigin_adaptive_clan_precision_best,
+                                          rastrigin_adaptive_clan_mean_experiment_cpu_time,
+                                          rastrigin_adaptive_clan_average_iteration_cpu_time,
+                                          experiments,
+                                          rastrigin_adaptive_clan_mean_iterations,
+                                          maximum_iterations],
+                                         index=["Precision mean",
+                                                "Precision std",
+                                                "Precision median",
+                                                "Best precision",
+                                                "Mean experiment CPU time",
+                                                "Mean iteration CPU time",
+                                                "Experiments",
+                                                "Mean iterations per experiment",
+                                                "Maximum iterations"]),
+
+        "Adaptive EISClanPSO (k=0.2)": pandas.Series([rastrigin_eis_k0point2_adaptive_clan_mean_precision,
+                                                      rastrigin_eis_k0point2_adaptive_clan_precision_std,
+                                                      rastrigin_eis_k0point2_adaptive_clan_precision_median,
+                                                      rastrigin_eis_k0point2_adaptive_clan_precision_best,
+                                                      rastrigin_eis_k0point2_adaptive_clan_mean_experiment_cpu_time,
+                                                      rastrigin_eis_k0point2_adaptive_clan_average_iteration_cpu_time,
+                                                      experiments,
+                                                      rastrigin_eis_k0point2_adaptive_clan_mean_iterations,
+                                                      maximum_iterations],
+                                                     index=["Precision mean",
+                                                            "Precision std",
+                                                            "Precision median",
+                                                            "Best precision",
+                                                            "Mean experiment CPU time",
+                                                            "Mean iteration CPU time",
+                                                            "Experiments",
+                                                            "Mean iterations per experiment",
+                                                            "Maximum iterations per experiment"]) # ,
+
+        # "EIS AClanPSO (k=-2)": pandas.Series([rastrigin_eis_k2_adaptive_clan_mean_precision,
+        #                                        rastrigin_eis_k2_adaptive_clan_precision_std,
+        #                                        rastrigin_eis_k2_adaptive_clan_precision_median,
+        #                                        rastrigin_eis_k2_adaptive_clan_precision_best,
+        #                                        rastrigin_eis_k2_adaptive_clan_mean_experiment_cpu_time,
+        #                                        rastrigin_eis_k2_adaptive_clan_average_iteration_cpu_time,
+        #                                        rastrigin_eis_k2_adaptive_clan_mean_iterations],
+        #                                       index=["Precision mean",
+        #                                              "Precision std",
+        #                                              "Precision median",
+        #                                              "Best precision",
+        #                                              "Mean experiment CPU time",
+        #                                              "Mean iteration CPU time",
+        #                                              "Mean iterations per experiment"]),
+
+
+    }
+
+    [print() for i in range(3)]
+    print("Creating file for Rastrigin test function comparison...")
+    pandas.DataFrame(rastrigin_collected_data).to_csv(r'rastrigin function.csv')
+    print("File for Rastrigin test function created!")
+
+
+
+
 
     [print() for i in range(6)]
 
 
+    print("Sphere Function")
+    print("---------------")
+
+    sphere_adaptive_clan_precisions = []
+    sphere_adaptive_clan_cpu_average_iteration_times = []
+    sphere_adaptive_clan_experiment_cpu_times = []
+    sphere_adaptive_clan_iterations = []
+
+    for experiment in range(experiments):
+        print("Simple Adaptive Clan PSO: experiment #" + str(experiment + 1))
+        loop_times = []
+
+        experiment_start = process_time()
+
+        sphere_adaptive_clan_swarm = ClanSwarm(fitness_function=sphere_function,
+                                                  convex_boundaries=sphere_function_search_domain,
+                                                  maximum_iterations=maximum_iterations,
+                                                  adaptive=True,
+                                                  # search_and_velocity_boundaries=[[-5.12, 5.12],
+                                                  #                                 [-20 / 100 * 5.12, 20 / 100 * 5.12]],
+                                                  eis=((GlobalLocalCoefficientTypes.NONE, None),(ControlFactorTypes.NONE, None))
+                                               )
+        iteration = 0
+        loop_stop_condition_value = inf
+
+        while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
+            loop_start = process_time()
+
+            try:
+                sphere_adaptive_clan_swarm.update_swarm()
+            except FloatingPointError:
+                iteration += 1
+                loop_end = process_time()
+                loop_times.append(loop_end - loop_start)
+                break
+
+            loop_stop_condition_value = sphere_adaptive_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
+            iteration += 1
+
+            loop_end = process_time()
+            loop_times.append(loop_end - loop_start)
+
+        experiment_end = process_time()
+        sphere_adaptive_clan_cpu_average_iteration_times.append(mean(loop_times))
+        sphere_adaptive_clan_experiment_cpu_times.append(experiment_end - experiment_start)
+        sphere_adaptive_clan_precisions.append(norm(
+            sphere_adaptive_clan_swarm.find_population_global_best_position()
+            - sphere_function_goal_point
+        ))
+        sphere_adaptive_clan_iterations.append(iteration)
+
+    sphere_adaptive_clan_mean_precision = mean(sphere_adaptive_clan_precisions)
+    sphere_adaptive_clan_precision_std = std(sphere_adaptive_clan_precisions)
+    sphere_adaptive_clan_precision_median = median(sphere_adaptive_clan_precisions)
+    sphere_adaptive_clan_precision_best = min(sphere_adaptive_clan_precisions)
+    sphere_adaptive_clan_average_iteration_cpu_time = mean(sphere_adaptive_clan_cpu_average_iteration_times)
+    sphere_adaptive_clan_mean_experiment_cpu_time = mean(sphere_adaptive_clan_experiment_cpu_times)
+    sphere_adaptive_clan_mean_iterations = mean(sphere_adaptive_clan_iterations)
 
 
 
-    print("Classic Particle Swarm Optimization: Ackley Function")
-    print("----------------------------------------------------")
-    ackley_classic_swarm = ClassicSwarm(ackley_function, ackley_function_search_domain, maximum_iterations)
-    loop_stop_condition_value = inf
-    iteration = 0  # Counter used for changing inertia constants.
-    while not(loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
-        ackley_classic_swarm.update_swarm()
-        loop_stop_condition_value = ackley_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
-        iteration += 1
-    print("Ackley function optimizing point x = " + str(ackley_classic_swarm.global_best_position))
-    print("Ackley value = " + str(ackley_function((ackley_classic_swarm.global_best_position))))
-    print("Distance from target = " + str(norm(ackley_classic_swarm.global_best_position - ackley_function_goal_point)))
-    print("iterations = " + str(iteration))
-    print("Stop condition value = " + str(loop_stop_condition_value))
-    print("----------------------------------------------------")
 
     [print() for i in range(2)]
 
-    print("Clan Particle Swarm Optimization: Ackley Function")
-    print("-------------------------------------------------")
-    ackley_clan_swarm = ClanSwarm(ackley_function, ackley_function_search_domain, maximum_iterations, swarm_size=50)
-    loop_stop_condition_value = inf
-    iteration = 0  # Counter used for changing inertia constants.
-    while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
-        ackley_clan_swarm.update_swarm()
-        loop_stop_condition_value = ackley_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
-        iteration += 1
-    print("Ackley function optimizing point x = " + str(ackley_clan_swarm.find_population_global_best_position()))
-    print("Ackley value = " + str(ackley_function((ackley_clan_swarm.find_population_global_best_position()))))
-    print("Distance from target = " + str(norm(ackley_clan_swarm.find_population_global_best_position() - ackley_function_goal_point)))
-    print("iterations = " + str(iteration))
-    print("Stop condition value = " + str(loop_stop_condition_value))
-    print("--------------------------------------------------")
 
 
 
-    [print() for i in range(6)]
+    sphere_eis_k0point2_adaptive_clan_precisions = []
+    sphere_eis_k0point2_adaptive_clan_cpu_average_iteration_times = []
+    sphere_eis_k0point2_adaptive_clan_experiment_cpu_times = []
+    sphere_eis_k0point2_adaptive_clan_iterations = []
+
+    for experiment in range(experiments):
+        print("Adaptive EIS Clan PSO (k=0.2): experiment #" + str(experiment + 1))
+
+        loop_times = []
+
+        experiment_start = process_time()
+
+        sphere_eis_adaptive_clan_swarm = ClanSwarm(fitness_function=rastrigin_function,
+                                                   convex_boundaries=rastrigin_function_search_domain,
+                                                   number_of_clans=clans,
+                                                   swarm_size=particles_per_clan,
+                                                   maximum_iterations=maximum_iterations,
+                                                   adaptive=True,
+                                                   # search_and_velocity_boundaries=[[-5.12, 5.12], [-20 / 100 * 5.12,
+                                                   #                                                 20 / 100 * 5.12]],
+                                                   eis=((GlobalLocalCoefficientTypes.ADAPTIVE, 0.2),(GlobalLocalCoefficientTypes.CONSTANT, 0.2))
+                                                   )
+        iteration = 0
+        loop_stop_condition_value = inf
+
+        while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
+            loop_start = process_time()
+
+            try:
+                sphere_eis_adaptive_clan_swarm.update_swarm()
+            except FloatingPointError:
+                iteration += 1
+                loop_end = process_time()
+                loop_times.append(loop_end - loop_start)
+                break
+
+            loop_stop_condition_value = sphere_eis_adaptive_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
+            iteration += 1
+
+            loop_end = process_time()
+            loop_times.append(loop_end - loop_start)
+
+        experiment_end = process_time()
+        sphere_eis_k0point2_adaptive_clan_cpu_average_iteration_times.append(mean(loop_times))
+        sphere_eis_k0point2_adaptive_clan_experiment_cpu_times.append(experiment_end - experiment_start)
+        sphere_eis_k0point2_adaptive_clan_precisions.append(norm(
+            sphere_eis_adaptive_clan_swarm.find_population_global_best_position()
+            - sphere_function_goal_point
+        ))
+        sphere_eis_k0point2_adaptive_clan_iterations.append(iteration)
+
+    sphere_eis_k0point2_adaptive_clan_mean_precision = mean(sphere_eis_k0point2_adaptive_clan_precisions)
+    sphere_eis_k0point2_adaptive_clan_precision_std = std(sphere_eis_k0point2_adaptive_clan_precisions)
+    sphere_eis_k0point2_adaptive_clan_precision_median = median(sphere_eis_k0point2_adaptive_clan_precisions)
+    sphere_eis_k0point2_adaptive_clan_precision_best = min(sphere_eis_k0point2_adaptive_clan_precisions)
+    sphere_eis_k0point2_adaptive_clan_average_iteration_cpu_time = mean(
+        sphere_eis_k0point2_adaptive_clan_cpu_average_iteration_times)
+    sphere_eis_k0point2_adaptive_clan_mean_experiment_cpu_time = mean(sphere_eis_k0point2_adaptive_clan_experiment_cpu_times)
+    sphere_eis_k0point2_adaptive_clan_mean_iterations = mean(sphere_eis_k0point2_adaptive_clan_iterations)
 
 
+    # [print() for i in range(2)]
+    #
+    #
+    # sphere_eis_k1_adaptive_clan_precisions = []
+    # sphere_eis_k1_adaptive_clan_cpu_average_iteration_times = []
+    # sphere_eis_k1_adaptive_clan_experiment_cpu_times = []
+    # sphere_eis_k1_adaptive_clan_iterations = []
+    #
+    # for experiment in range(experiments):
+    #     print("EIS Adaptive Clan PSO (k=-1): experiment #" + str(experiment + 1))
+    #
+    #     loop_times = []
+    #
+    #     experiment_start = process_time()
+    #
+    #     sphere_eis_adaptive_clan_swarm = ClanSwarm(fitness_function=rastrigin_function,
+    #                                                convex_boundaries=rastrigin_function_search_domain,
+    #                                                number_of_clans=clans,
+    #                                                swarm_size=particles_per_clan,
+    #                                                maximum_iterations=maximum_iterations,
+    #                                                adaptivePSO=True,
+    #                                                # search_and_velocity_boundaries=[[-5.12, 5.12], [-20 / 100 * 5.12,
+    #                                                #                                                 20 / 100 * 5.12]],
+    #                                                c3=2.0, c3_k=-1)
+    #     iteration = 0
+    #     loop_stop_condition_value = inf
+    #
+    #     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
+    #         loop_start = process_time()
+    #
+    #         try:
+    #             sphere_eis_adaptive_clan_swarm.update_swarm()
+    #         except FloatingPointError:
+    #             iteration += 1
+    #             loop_end = process_time()
+    #             loop_times.append(loop_end - loop_start)
+    #             break
+    #
+    #         loop_stop_condition_value = sphere_eis_adaptive_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
+    #         iteration += 1
+    #
+    #         loop_end = process_time()
+    #         loop_times.append(loop_end - loop_start)
+    #
+    #     experiment_end = process_time()
+    #     sphere_eis_k1_adaptive_clan_cpu_average_iteration_times.append(mean(loop_times))
+    #     sphere_eis_k1_adaptive_clan_experiment_cpu_times.append(experiment_end - experiment_start)
+    #     sphere_eis_k1_adaptive_clan_precisions.append(norm(
+    #         sphere_eis_adaptive_clan_swarm.find_population_global_best_position()
+    #         - sphere_function_goal_point
+    #     ))
+    #     sphere_eis_k1_adaptive_clan_iterations.append(iteration)
+    #
+    # sphere_eis_k1_adaptive_clan_mean_precision = mean(sphere_eis_k1_adaptive_clan_precisions)
+    # sphere_eis_k1_adaptive_clan_precision_std = std(sphere_eis_k1_adaptive_clan_precisions)
+    # sphere_eis_k1_adaptive_clan_precision_median = median(sphere_eis_k1_adaptive_clan_precisions)
+    # sphere_eis_k1_adaptive_clan_precision_best = min(sphere_eis_k1_adaptive_clan_precisions)
+    # sphere_eis_k1_adaptive_clan_average_iteration_cpu_time = mean(
+    #     sphere_eis_k1_adaptive_clan_cpu_average_iteration_times)
+    # sphere_eis_k1_adaptive_clan_mean_experiment_cpu_time = mean(
+    #     sphere_eis_k1_adaptive_clan_experiment_cpu_times)
+    # sphere_eis_k1_adaptive_clan_mean_iterations = mean(sphere_eis_k1_adaptive_clan_iterations)
 
+    sphere_collected_data = {
+        "Simple AClanPSO": pandas.Series([sphere_adaptive_clan_mean_precision,
+                                          sphere_adaptive_clan_precision_std,
+                                          sphere_adaptive_clan_precision_median,
+                                          sphere_adaptive_clan_precision_best,
+                                          sphere_adaptive_clan_mean_experiment_cpu_time,
+                                          sphere_adaptive_clan_average_iteration_cpu_time,
+                                          experiments,
+                                          sphere_adaptive_clan_mean_iterations,
+                                          maximum_iterations],
+                                         index=["Precision mean",
+                                                "Precision std",
+                                                "Precision median",
+                                                "Best precision",
+                                                "Mean experiment CPU time",
+                                                "Mean iteration CPU time",
+                                                "Experiments",
+                                                "Mean iterations per experiment",
+                                                "Maximum iterations per experiment"]),
 
-    print("Classic Particle Swarm Optimization: Sphere Function")
-    print("----------------------------------------------------")
-    sphere_classic_swarm = ClassicSwarm(sphere_function, sphere_function_search_domain, maximum_iterations, adaptive=False)
-    loop_stop_condition_value = inf
-    iteration = 0  # Counter used for changing inertia constants.
-    while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
-        sphere_classic_swarm.update_swarm()
-        loop_stop_condition_value = sphere_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
-        iteration += 1
-    print("Sphere function optimizing point x = " + str(sphere_classic_swarm.global_best_position))
-    print("Sphere function value = " + str(sphere_function(sphere_classic_swarm.global_best_position)))
-    print("Distance from target = " + str(norm(sphere_classic_swarm.global_best_position - sphere_function_goal_point)))
-    print("iterations = " + str(iteration))
-    print("Stop condition value = " + str(loop_stop_condition_value))
-    print("-------------------------------------------------")
+        "Adaptive EISClanPSO (k=0.2)": pandas.Series([sphere_eis_k0point2_adaptive_clan_mean_precision,
+                                       sphere_eis_k0point2_adaptive_clan_precision_std,
+                                       sphere_eis_k0point2_adaptive_clan_precision_median,
+                                       sphere_eis_k0point2_adaptive_clan_precision_best,
+                                       sphere_eis_k0point2_adaptive_clan_mean_experiment_cpu_time,
+                                       sphere_eis_k0point2_adaptive_clan_average_iteration_cpu_time,
+                                                      experiments,
+                                       sphere_eis_k0point2_adaptive_clan_mean_iterations,
+                                                      maximum_iterations],
+                                      index=["Precision mean",
+                                             "Precision std",
+                                             "Precision median",
+                                             "Best precision",
+                                             "Mean experiment CPU time",
+                                             "Mean iteration CPU time",
+                                             "Experiments",
+                                             "Mean iterations per experiment",
+                                             "Maximum iterations per experiment"])#,
 
-    [print() for i in range(2)]
+        # "EIS AClanPSO (k=-1)": pandas.Series([sphere_eis_k1_adaptive_clan_mean_precision,
+        #                                      sphere_eis_k1_adaptive_clan_precision_std,
+        #                                      sphere_eis_k1_adaptive_clan_precision_median,
+        #                                      sphere_eis_k1_adaptive_clan_precision_best,
+        #                                      sphere_eis_k1_adaptive_clan_mean_experiment_cpu_time,
+        #                                      sphere_eis_k1_adaptive_clan_average_iteration_cpu_time,
+        #                                      sphere_eis_k1_adaptive_clan_mean_iterations],
+        #                                     index=["Precision mean",
+        #                                            "Precision std",
+        #                                            "Precision median",
+        #                                            "Best precision",
+        #                                            "Mean experiment CPU time",
+        #                                            "Mean iteration CPU time",
+        #                                            "Mean iterations per experiment"])
+    }
 
-    print("Clan Particle Swarm Optimization: Sphere Function")
-    print("----------------------------------------------------")
-    sphere_clan_swarm = ClanSwarm(sphere_function, sphere_function_search_domain, maximum_iterations)
-                                  # w=w_max)
-    loop_stop_condition_value = inf
-    iteration = 0  # Counter used for changing inertia constants.
-    while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
-        sphere_clan_swarm.update_swarm()
-        loop_stop_condition_value = sphere_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
-        iteration += 1
-    print("Sphere function optimizing point x = " + str(sphere_clan_swarm.find_population_global_best_position()))
-    print("Sphere function value = " + str(sphere_function(sphere_clan_swarm.find_population_global_best_position())))
-    print("Distance from target = " + str(norm(sphere_clan_swarm.find_population_global_best_position() - sphere_function_goal_point)))
-    print("iterations = " + str(iteration))
-    print("Stop condition value = " + str(loop_stop_condition_value))
-    print("-------------------------------------------------")
-
-
-
-    [print() for i in range(6)]
-
-
-
-
-    print("Classic Particle Swarm Optimization: Rosenbrock Function")
-    print("--------------------------------------------------------")
-    rosenbrock_classic_swarm = ClassicSwarm(rosenbrock_function, rosenbrock_function_search_domain, maximum_iterations)
-                                            # w=w_max)
-    loop_stop_condition_value = inf
-    iteration = 0  # Counter used for changing inertia constants.
-    while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
-        rosenbrock_classic_swarm.update_swarm()
-        loop_stop_condition_value = rosenbrock_classic_swarm.calculate_swarm_distance_from_swarm_centroid()
-        iteration += 1
-    print("Rosenbrock function optimizing point x = " + str(rosenbrock_classic_swarm.global_best_position))
-    print("Rosenbrock function value at x = " + str(rosenbrock_function(rosenbrock_classic_swarm.global_best_position)))
-    print("Distance from target = " + str(norm(rosenbrock_classic_swarm.global_best_position - rosenbrock_function_goal_point)))
-    print("iterations = " + str(iteration))
-    print("Stop condition value = " + str(loop_stop_condition_value))
-    print("-----------------------------------------------------")
-
-    [print() for i in range(2)]
-
-    print("Clan Particle Swarm Optimization: Rosenbrock Function")
-    print("--------------------------------------------------------")
-    rosenbrock_clan_swarm = ClanSwarm(rosenbrock_function, rosenbrock_function_search_domain, maximum_iterations)
-                                      # w=w_max)
-    loop_stop_condition_value = inf
-    iteration = 0  # Counter used for changing inertia constants.
-    while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
-        rosenbrock_clan_swarm.update_swarm()
-        loop_stop_condition_value = rosenbrock_clan_swarm.calculate_swarm_distance_from_swarm_centroid()
-        iteration += 1
-    print("Rosenbrock function optimizing point x = " + str(rosenbrock_clan_swarm.find_population_global_best_position()))
-    print("Rosenbrock function value at x = " + str(rosenbrock_function(rosenbrock_clan_swarm.find_population_global_best_position())))
-    print("Distance from target = " + str(norm(rosenbrock_clan_swarm.find_population_global_best_position() - rosenbrock_function_goal_point)))
-    print("iterations = " + str(iteration))
-    print("Stop condition value = " + str(loop_stop_condition_value))
-    print("-----------------------------------------------------")
-
-
-
-
-    # styblinski_tang_swarm = ClassicSwarm(styblinski_tang_function, styblinski_tang_function_search_domain, w=w_max)
-    # loop_stop_condition_value = inf
-    # iteration = 0  # Counter used for changing inertia constants.
-    # while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
-    #     Particle.w = w_max - ((w_max - w_min) / maximum_iterations) * iteration
-    #     rosenbrock_swarm.update_swarm()
-    #     rosenbrock_swarm.calculate_swarm_distance_from_swarm_centroid()
-    #     iteration += 1
-    # print("Rosenbrock function optimizing point x = " + str(rosenbrock_swarm.fitness_function[0].global_best_position))
-    # print("iterations = " + str(iteration))
-    # print("Stop condition value = " + str(loop_stop_condition_value))
+    [print() for i in range(3)]
+    print("Creating file for Sphere test function comparison...")
+    pandas.DataFrame(sphere_collected_data).to_csv(r'sphere function.csv')
+    print("File for Sphere test function created!")
 
 
 if __name__ == "__main__":
