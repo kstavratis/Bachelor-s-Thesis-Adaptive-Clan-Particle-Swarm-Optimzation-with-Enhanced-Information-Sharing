@@ -1,6 +1,6 @@
 from random import random as r1_r2_generator
 from random import uniform
-from numpy import array as vector
+from numpy import array as vector, zeros
 
 
 class Particle:
@@ -21,9 +21,8 @@ class Particle:
         #  2) At which speeds is it a good idea to start the algorithm? With small initial speeds, the particles
         #  will have a larger velocity, tending at the global optimum
         # self.__velocity: vector = vector([particle_position_and_velocity_initializer(0, 1)
-        #                                  for vector_space_dimension in range(len(convex_boundaries))])
-        self.__velocity: vector = vector(
-            [0 for vector_space_dimension in range(len(convex_boundaries))])  # Initialize the particles as being still.
+        #                                  for vector_space_dimension in range(len(spawn_boundaries))])
+        self.__velocity: vector = zeros(len(convex_boundaries))  # Initialize the particles as being still.
 
         Particle.fitness_function = fitness_function
 

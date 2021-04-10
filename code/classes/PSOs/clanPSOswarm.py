@@ -8,17 +8,17 @@ from typing import List, Tuple
 
 
 class ClanSwarm:
-    def __init__(self, fitness_function, convex_boundaries: list,
+    def __init__(self, fitness_function, spawn_boundaries: list,
                  maximum_iterations,
-                 adaptive: bool = False,
+                 swarm_size: int = 15, number_of_clans: int = 4,
                  c1: float = 2, c2: float = 2,
+                 adaptivePSO: bool = False,
                  eis: Tuple[Tuple[GlobalLocalCoefficientTypes, float or None], Tuple[ControlFactorTypes, float or None]] =
                  ((GlobalLocalCoefficientTypes.NONE, None), (ControlFactorTypes.NONE, None)),
-                 swarm_size: int = 15, number_of_clans: int = 4,
                  current_iteration: int = 0,
                  search_and_velocity_boundaries: List[List[float]] = None, wt: WallTypes = WallTypes.NONE):
 
-        self.clans = [ClassicSwarm(fitness_function, convex_boundaries, adaptivePSO=adaptive,
+        self.clans = [ClassicSwarm(fitness_function, spawn_boundaries, adaptivePSO=adaptivePSO,
                                    maximum_iterations=maximum_iterations,
                                    # w=w,
                                    c1=c1, c2=c2,
@@ -48,7 +48,7 @@ class ClanSwarm:
 
         def update_clan_leaders(leaders: list):
             clan_leaders_swarm = ClassicSwarm(
-                leaders, convex_boundaries=[], maximum_iterations=self.__max_iterations,
+                leaders, spawn_boundaries=[], maximum_iterations=self.__max_iterations,
                 current_iteration=self.clans[0].current_iteration,  # Note: all clans have the same value in their "current_iteration" variable.
                 eis=((self.clans[0]._global_local_coefficient_method, self.clans[0].c3),
                      (self.clans[0]._control_factor_method, self.clans[0].c3_k)),

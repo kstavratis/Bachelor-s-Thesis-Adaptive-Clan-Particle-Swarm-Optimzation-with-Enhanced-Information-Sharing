@@ -4,8 +4,7 @@ from numpy import mean, e
 from numpy.linalg import norm
 from types import FunctionType
 from enum import Enum
-from typing import List, Tuple
-# from typing import Final
+from typing import List, Tuple#, Final
 
 from classes.PSOs.particle import Particle
 from classes.enums.evolutionary_states import EvolutionaryStates
@@ -23,19 +22,19 @@ PARTICLE_SIMILARITY_LIMIT = 10 ** (-20)
 
 
 class ClassicSwarm:
-    def __init__(self, swarm_or_fitness_function, convex_boundaries: list,
+    def __init__(self, swarm_or_fitness_function, spawn_boundaries: list,
                  maximum_iterations: int,
                  # w: float,
-                 adaptivePSO: bool = False,
+                 swarm_size: int = 50,
                  c1: float = 2, c2: float = 2,
+                 adaptivePSO: bool = False,
                  eis: Tuple[
                      Tuple[GlobalLocalCoefficientTypes, float or None], Tuple[ControlFactorTypes, float or None]] =
                  ((GlobalLocalCoefficientTypes.NONE, None), (ControlFactorTypes.NONE, None)),
-                 swarm_size: int = 50,
                  current_iteration: int = 0,
                  search_and_velocity_boundaries: List[List[float]] = None, wt: WallTypes = WallTypes.NONE):
         if isinstance(swarm_or_fitness_function, FunctionType):
-            self.swarm = [Particle(swarm_or_fitness_function, convex_boundaries) for i in range(swarm_size)]
+            self.swarm = [Particle(swarm_or_fitness_function, spawn_boundaries) for i in range(swarm_size)]
         if isinstance(swarm_or_fitness_function, list):
             self.swarm = swarm_or_fitness_function
         if adaptivePSO or search_and_velocity_boundaries is not None:
@@ -43,7 +42,7 @@ class ClassicSwarm:
             # the learning strategy (using eliticism)
             # For details, see -> "Adaptive Clan Particle Swarm Optimization" ->
             # -> "III. ADAPTIVE PARTICLE SWARM OPTIMIZATION" -> "D. Learning Strategy using Elitism"
-            self.__convex_boundaries = convex_boundaries
+            self.__convex_boundaries = spawn_boundaries
         if search_and_velocity_boundaries is not None:
             self.__wall_type = wt
 
@@ -59,31 +58,42 @@ class ClassicSwarm:
 
         self._control_factor_method = control_factor_method
         self._global_local_coefficient_method = global_locaL_coefficient_method
+
+        # c3 is not a number <=> c3_k is not a number
         if self._global_local_coefficient_method == GlobalLocalCoefficientTypes.NONE:
             self.c3, self.c3_k = None, None
+
 
         elif self._global_local_coefficient_method == GlobalLocalCoefficientTypes.CONSTANT:
             if isinstance(c3, float):
                 self.c3 = c3
             else:
-                raise ValueError("Global-local coefficient c3 that was given is not a number.")
-            self.c3_k = None
+                raise ValueError("Global-local coefficient c3 that was given is not a real number.")
 
         elif self._global_local_coefficient_method == GlobalLocalCoefficientTypes.LINEAR:
-            if c3_k is not None:
-                self.c3, self.c3_k, self.__c3_k_start = c3, c3_k, c3_k  # Note that in reality, c3 is calculated dynamically at each iteration.
-            else:
-                ValueError("A value has not been assigned to the control factor c3_k.")
+            self.c3 = c3  # Note that in reality, c3 is calculated dynamically at each iteration.
 
         elif self._global_local_coefficient_method == GlobalLocalCoefficientTypes.ADAPTIVE:
             if isinstance(c3, float):
                 self.c3 = c3
             else:
-                raise ValueError("Global-local coefficient c3 that was given is not a number.")
-            self.c3_k = None
+                raise ValueError("Global-local coefficient c3 that was given is not a real number.")
+            self.c3_k = None  # c3 is dependent on c3_k only in the case of a linear c3.
 
         else:
             ValueError("A not defined Enhanced Information Sharing (EIS) methodology has been given.")
+
+        # c3 is a number <=> c3_k is a number
+        if self._global_local_coefficient_method == GlobalLocalCoefficientTypes.CONSTANT or \
+                self._global_local_coefficient_method == GlobalLocalCoefficientTypes.LINEAR or \
+                self._global_local_coefficient_method == GlobalLocalCoefficientTypes.ADAPTIVE:
+            if isinstance(c3_k, float):
+                self.c3_k = c3_k
+            else:
+                raise ValueError("The value assigned to the control factor c3_k is not a floating-point number.")
+
+        if self._control_factor_method == ControlFactorTypes.LINEAR:
+            self.__c3_k_start = c3_k
 
         # Note that in all PSO variations used, inertia weight "w" is calculated dynamically
         # in the "update_parameters" function.
@@ -220,7 +230,7 @@ class ClassicSwarm:
         random_multipliers = tuple(([r1_r2_r3_generator(), r1_r2_r3_generator(), None]
                                     for i in range(len(self.swarm))))
         # r1, r2, r3 = r1_r2_r3_generator(), r1_r2_r3_generator(), None
-        if self.c3 is not None:
+        if isinstance(self.c3, float):
             for triad in random_multipliers:
                 triad[2] = r1_r2_r3_generator()
 
@@ -257,7 +267,6 @@ class ClassicSwarm:
             else:  # Follow classic PSO learning strategy: decrease inertia weight linearly.
                 self.w = w_max - ((w_max - w_min) / self.__max_iterations) * self.current_iteration
 
-
         def update_global_local():
 
             def update_global_local_coefficient():
@@ -267,10 +276,10 @@ class ClassicSwarm:
                     pass
                 # Global optimization capability is strong when c_3 is linearly decreasing (c3_k > 0) according to the article.
                 elif self._global_local_coefficient_method == GlobalLocalCoefficientTypes.LINEAR:
-                    self.c3 = self.c3_k * (c3_start - (c3_start - c3_end) / self.__max_iterations * self.current_iteration)
+                    self.c3 = self.c3_k * (
+                                c3_start - (c3_start - c3_end) / self.__max_iterations * self.current_iteration)
                 elif self._global_local_coefficient_method == GlobalLocalCoefficientTypes.ADAPTIVE:
                     pass  # It is handled in the "determine_accelaration_coefficients" function called above (see "if self adaptivePSO").
-
 
             def update_global_local_control_factor():
                 if self._control_factor_method == ControlFactorTypes.NONE or \
@@ -279,10 +288,11 @@ class ClassicSwarm:
 
                 # Changing global-local coefficient control factor k.
                 elif self._control_factor_method == ControlFactorTypes.LINEAR:
-                    self.c3_k = self.__c3_k_start - (self.__c3_k_start - 0) / self.__max_iterations * self.current_iteration
+                    self.c3_k = self.__c3_k_start - (
+                                self.__c3_k_start - 0) / self.__max_iterations * self.current_iteration
 
                 elif self._control_factor_method == ControlFactorTypes.ADAPTIVE:
-                    pass  # TODO: implement an adaptive control factor
+                    pass  # handled in "__determince accelaration coefficients" function.
 
             update_global_local_coefficient()
             update_global_local_control_factor()
@@ -311,8 +321,23 @@ class ClassicSwarm:
         :return: "f_evol": float ∈[0,1]
         """
 
+
+
         def evaluate_average_between_each_particle_to_all_others():
             d = []
+
+            # # Multi-threaded version
+            # processes = []
+            # for particle in self.swarm:
+            #     p = Process(target=self.__calculate_average_distance_of_particle_from_all_others, args=(d,particle))
+            #     p.start()
+            #     processes.append(p)
+            #
+            # for process in processes:
+            #     process.join()
+
+
+            # Single-threaded version.
             for particle1 in self.swarm:
                 # "Adaptive Clan Particle Swarm Optimization" -> equation (3)
                 d.append(
@@ -350,6 +375,13 @@ class ClassicSwarm:
             return (d_g - d_min) / (d_max - d_min)
 
         return evaluate_evolutionary_factor(evaluate_average_between_each_particle_to_all_others())
+
+    # # Needed for multi-threaded calculation of average distances d_i.
+    # def __calculate_average_distance_of_particle_from_all_others(self, d: list, particle: Particle):
+    #     d.append(
+    #         1 / (len(self.swarm) - 1) * sum(norm(particle._position - other_particle._position)
+    #                                         for other_particle in self.swarm)
+    #     )
 
     def __determine_accelaration_coefficients(self, evolutionary_state: EvolutionaryStates):
 
@@ -408,7 +440,6 @@ class ClassicSwarm:
             self.c1 = c1_old / (c1_old + c2_old) * (c_min + c_max)
             self.c2 = c2_old / (c1_old + c2_old) * (c_min + c_max)
 
-
         if self._global_local_coefficient_method == GlobalLocalCoefficientTypes.ADAPTIVE:
             # When local exploration is encouraged, the coefficient contributes a vector starting
             # from the swarm's global best pointing towards the particle's local best.
@@ -420,6 +451,20 @@ class ClassicSwarm:
             elif evolutionary_state == EvolutionaryStates.CONVERGENCE or \
                     evolutionary_state == EvolutionaryStates.JUMP_OUT:
                 self.c3 = abs(self.c3)
+
+        if self._control_factor_method == ControlFactorTypes.ADAPTIVE:
+            # When local exploration is encouraged, the coefficient contributes a vector starting
+            # from the swarm's global best pointing towards the particle's local best.
+            if evolutionary_state == EvolutionaryStates.EXPLORATION or \
+                    evolutionary_state == EvolutionaryStates.EXPLOITATION:
+                self.c3_k = -(abs(self.c3_k))
+            # When global exploration is encouraged, the coefficient contributes a vector starting
+            # from the particle's best pointing towards the swarm's global best.
+            elif evolutionary_state == EvolutionaryStates.CONVERGENCE or \
+                    evolutionary_state == EvolutionaryStates.JUMP_OUT:
+                self.c3_k = abs(self.c3_k)
+
+
 
     def __apply_eliticism_learning_strategy(self, evolutionary_state: EvolutionaryStates):
         # This strategy aims at maintaining the diversity during the search,
