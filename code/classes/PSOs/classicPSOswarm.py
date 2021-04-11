@@ -1,3 +1,8 @@
+"""
+Copyright (C) 2021  Konstantinos Stavratis
+For the full notice of the program, see "main.py"
+"""
+
 from numpy.ma import sqrt
 from random import random as r1_r2_r3_generator, uniform, randrange, gauss
 from numpy import mean, e

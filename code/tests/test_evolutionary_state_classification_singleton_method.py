@@ -1,3 +1,8 @@
+"""
+Copyright (C) 2021  Konstantinos Stavratis
+For the full notice of the program, see "main.py"
+"""
+
 import unittest
 import scripts.evolutionary_state_classification_singleton_method as clasfation
 from classes.enums.evolutionary_states import EvolutionaryStates

@@ -1,3 +1,9 @@
+"""
+Copyright (C) 2021  Konstantinos Stavratis
+For the full notice of the program, see "main.py"
+"""
+
+
 from classes.PSOs.classicPSOswarm import ClassicSwarm
 from classes.enums.wall_types import WallTypes
 from classes.enums.enhanced_information_sharing.global_local_coefficient_types import GlobalLocalCoefficientTypes

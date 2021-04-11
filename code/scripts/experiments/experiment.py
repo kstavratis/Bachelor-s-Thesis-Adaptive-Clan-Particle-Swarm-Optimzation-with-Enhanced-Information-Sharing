@@ -1,3 +1,8 @@
+"""
+Copyright (C) 2021  Konstantinos Stavratis
+For the full notice of the program, see "main.py"
+"""
+
 import os
 from time import process_time
 from typing import Any, List, Tuple
@@ -16,7 +21,7 @@ loop_stop_condition_limit = 5 * 10 ** (-15)
 def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
                objective_function_goal_point: array,
                maximum_iterations: int,
-               swarm_size: int = 40, isClan: bool = False, clan_size: int = 4, c1: float = 2.0, c2: float = 2.0,
+               swarm_size: int = 40, isClan: bool = False, number_of_clans: int = 4, c1: float = 2.0, c2: float = 2.0,
                adaptivePSO: bool = False,
                eis: Tuple[Tuple[GlobalLocalCoefficientTypes, float or None], Tuple[ControlFactorTypes, float or None]] =
                ((GlobalLocalCoefficientTypes.NONE, None), (ControlFactorTypes.NONE, None)),
@@ -27,7 +32,7 @@ def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
     :param maximum_iterations:
     :param swarm_size:
     :param isClan:
-    :param clan_size:
+    :param number_of_clans:
     :param c1:
     :param c2:
     :param adaptivePSO:
@@ -49,7 +54,7 @@ def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
 
     if isClan:
         experiment_swarm = ClanSwarm(fitness_function=objective_function, spawn_boundaries=spawn_boundaries,
-                                     swarm_size=swarm_size // clan_size, number_of_clans=clan_size,
+                                     swarm_size=swarm_size // number_of_clans, number_of_clans=number_of_clans,
                                      maximum_iterations=maximum_iterations,
                                      c1=c1, c2=c2,
                                      adaptivePSO=adaptivePSO, eis=eis, current_iteration=0,

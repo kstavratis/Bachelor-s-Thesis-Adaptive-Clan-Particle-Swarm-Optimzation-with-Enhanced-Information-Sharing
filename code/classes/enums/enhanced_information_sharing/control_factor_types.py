@@ -1,3 +1,8 @@
+"""
+Copyright (C) 2021  Konstantinos Stavratis
+For the full notice of the program, see "main.py"
+"""
+
 from enum import Enum
 
 

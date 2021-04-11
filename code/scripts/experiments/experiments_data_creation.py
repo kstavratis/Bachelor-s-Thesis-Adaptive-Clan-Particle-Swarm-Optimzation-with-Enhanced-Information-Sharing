@@ -1,20 +1,24 @@
-import scripts.experiments.experiment
-import scripts.benchmark_functions as bench_f
+"""
+Copyright (C) 2021  Konstantinos Stavratis
+For the full notice of the program, see "main.py"
+"""
 
 from typing import Any, List, Tuple
-from numpy import array, mean
+from numpy import array, mean, std, median
 from concurrent.futures.process import ProcessPoolExecutor
 
 from classes.enums.enhanced_information_sharing.control_factor_types import ControlFactorTypes
 from classes.enums.enhanced_information_sharing.global_local_coefficient_types import GlobalLocalCoefficientTypes
 from classes.enums.wall_types import WallTypes
 
+import scripts.experiments.experiment
+
 
 def run(num_of_experiments: int,
         objective_function_pointer: Any, spawn_boundaries: List[List[float]],
         objective_function_goal_point: array,
         maximum_iterations: int,
-        swarm_size: int = 40, isClan: bool = False, clan_size: int = 4, c1: float = 2.0, c2: float = 2.0,
+        swarm_size: int = 40, isClan: bool = False, number_of_clans: int = 4, c1: float = 2.0, c2: float = 2.0,
         adaptivePSO: bool = False,
         eis: Tuple[Tuple[GlobalLocalCoefficientTypes, float or None], Tuple[ControlFactorTypes, float or None]] =
         ((GlobalLocalCoefficientTypes.NONE, None), (ControlFactorTypes.NONE, None)),
@@ -36,7 +40,7 @@ def run(num_of_experiments: int,
                                                spawn_boundaries=spawn_boundaries,
                                                objective_function_goal_point=objective_function_goal_point,
                                                maximum_iterations=maximum_iterations,
-                                               swarm_size=swarm_size, isClan=isClan, clan_size=clan_size,
+                                               swarm_size=swarm_size, isClan=isClan, number_of_clans=number_of_clans,
                                                c1=c1, c2=c2,
                                                adaptivePSO=adaptivePSO,
                                                eis=eis,
@@ -55,10 +59,18 @@ def run(num_of_experiments: int,
 
 
     mean_experiement_precision = mean(experiments_precisions_per_experiment)
+    std_experiment_precision = std(experiments_precisions_per_experiment)
+    median_experiment_precision = median(experiments_precisions_per_experiment)
+    best_experiment_precision = min(experiments_precisions_per_experiment)
     mean_experiment_iterations = mean(experiments_iterations_per_experiment)
     mean_experiments_average_iteration_cpu_times = mean(experiments_average_iteration_cpu_times_per_experiment)
     mean_experiment_cpu_time = mean(experiments_cpu_times_per_experiment)
 
-    return mean_experiement_precision, mean_experiment_iterations, mean_experiments_average_iteration_cpu_times, \
-           mean_experiment_cpu_time
+    return {"Precision mean" : mean_experiement_precision,
+            "Precision std": std_experiment_precision,
+            "Precision median": median_experiment_precision,
+            "Best precision": best_experiment_precision,
+            "Mean iterations per experiment": mean_experiment_iterations,
+            "Mean iteration CPU time": mean_experiments_average_iteration_cpu_times,
+            "Mean experiment CPU time": mean_experiment_cpu_time}
 

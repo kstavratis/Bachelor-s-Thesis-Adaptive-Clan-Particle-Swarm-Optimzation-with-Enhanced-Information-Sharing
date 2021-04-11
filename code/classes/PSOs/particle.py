@@ -1,3 +1,8 @@
+"""
+Copyright (C) 2021  Konstantinos Stavratis
+For the full notice of the program, see "main.py"
+"""
+
 from random import random as r1_r2_generator
 from random import uniform
 from numpy import array as vector, zeros
