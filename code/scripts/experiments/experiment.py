@@ -63,7 +63,6 @@ def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
     loop_times = []
 
     # START EXPERIMENT
-    print("Starting experiment in process {}".format(os.getpid()))
     experiment_start = process_time()
 
     iteration = 0
@@ -85,10 +84,8 @@ def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
 
         loop_end = process_time()
         loop_times.append(loop_end - loop_start)
-        # print(iteration)
 
     experiment_end = process_time()
-    print("Ending experiment in process {}".format(os.getpid()))
     # END EXPERIMENT
 
     precision = None

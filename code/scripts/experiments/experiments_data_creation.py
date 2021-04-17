@@ -14,7 +14,8 @@ from classes.enums.wall_types import WallTypes
 import scripts.experiments.experiment
 
 
-def run(num_of_experiments: int,
+def run(executor: ProcessPoolExecutor,
+        num_of_experiments: int,
         objective_function_pointer: Any, spawn_boundaries: List[List[float]],
         objective_function_goal_point: array,
         maximum_iterations: int,
@@ -30,7 +31,6 @@ def run(num_of_experiments: int,
     experiments_average_iteration_cpu_times_per_experiment = []
     experiments_cpu_times_per_experiment = []
 
-    executor = ProcessPoolExecutor()
 
     experiments_array = []
 

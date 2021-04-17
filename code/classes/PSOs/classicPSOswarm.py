@@ -18,6 +18,10 @@ from classes.enums.enhanced_information_sharing.global_local_coefficient_types i
 from classes.enums.enhanced_information_sharing.control_factor_types import ControlFactorTypes
 from scripts.evolutionary_state_classification_singleton_method import classify_evolutionary_state
 
+
+# To achieve a balance between global and local exploration to speed up convergence to the true optimum,
+# an inertia weight whose value decreases linearly with the iteration number has been used.
+# The values of w_min = 0.4 and w_max = 0.9 are widely used.
 w_min, w_max = 0.4, 0.9
 c_min, c_max = 1.5, 2.5
 c3_start, c3_end = 2, 0
