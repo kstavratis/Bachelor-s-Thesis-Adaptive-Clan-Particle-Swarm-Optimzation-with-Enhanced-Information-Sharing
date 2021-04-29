@@ -51,7 +51,7 @@ class ClassicSwarm:
             # the learning strategy (using eliticism)
             # For details, see -> "Adaptive Clan Particle Swarm Optimization" ->
             # -> "III. ADAPTIVE PARTICLE SWARM OPTIMIZATION" -> "D. Learning Strategy using Elitism"
-            self.__convex_boundaries = spawn_boundaries
+            self.__spawn_boundaries = spawn_boundaries
         if search_and_velocity_boundaries is not None:
             self.__wall_type = wt
 
@@ -104,6 +104,7 @@ class ClassicSwarm:
         if self._control_factor_method == ControlFactorTypes.LINEAR:
             self.__c3_k_start = c3_k
 
+
         # Note that in all PSO variations used, inertia weight "w" is calculated dynamically
         # in the "update_parameters" function.
 
@@ -151,14 +152,14 @@ class ClassicSwarm:
                             # Remove this particle, which has exceeded the allowed boundaries.
                             self.swarm.remove(particle)
                             # Replace the deleted particle with a new one.
-                            self.swarm.append(Particle(self.__fitness_function, self.__convex_boundaries))
+                            self.swarm.append(Particle(Particle.fitness_function, self.__spawn_boundaries))
                             break
 
             def absorb():
                 for particle in self.swarm:
                     for axis in range(len(particle._position)):  # == len(particle.__velocity)
                         if not (self.__domain_and_velocity_boundaries[0][0] <
-                                axis < self.__domain_and_velocity_boundaries[0][1]):
+                                particle._position[axis] < self.__domain_and_velocity_boundaries[0][1]):
                             particle._zero_velocity(axis)
 
             def reflect():
@@ -215,7 +216,7 @@ class ClassicSwarm:
             #         print("Deleting particle at position " + str(particle_index))
             #         del self.swarm[particle_index]
             #         print("Inserting new particle at position " + str(particle_index))
-            #         self.swarm.insert(particle_index, Particle(self.__fitness_function, self.__convex_boundaries))
+            #         self.swarm.insert(particle_index, Particle(self.__fitness_function, self.__spawn_boundaries))
 
             for particle in self.swarm:
                 for other_particle in self.swarm:
@@ -223,11 +224,9 @@ class ClassicSwarm:
                         similarity = norm(particle._position - other_particle._position)
                         if similarity < PARTICLE_SIMILARITY_LIMIT:
                             # Delete this particle, since it is (very) similar to a different particle.
-                            print("Removing particle")
                             self.swarm.remove(particle)
                             # Replace the deleted particle with a new one.
-                            print("Replacing particle")
-                            self.swarm.append(Particle(self.__fitness_function, self.__convex_boundaries))
+                            self.swarm.append(Particle(self.__fitness_function, self.__spawn_boundaries))
                             break
 
         self.__update_parameters()
@@ -249,7 +248,7 @@ class ClassicSwarm:
                                       self.w,
                                       self.c1, random_multipliers[random_multipliers_index][0],
                                       self.c2, random_multipliers[random_multipliers_index][1],
-                                      self.c3, random_multipliers[random_multipliers_index][2])
+                                      self.c3, random_multipliers[random_multipliers_index][2], self._control_factor_method)
             random_multipliers_index += 1
 
         # This is executed only when the Last-Elimination Principle is enabled.
@@ -480,8 +479,8 @@ class ClassicSwarm:
         # by causing a escape state of the best particle when it gets trapped in a local minimum.
         # That is why this strategy is executed only in case of convergence.
         if evolutionary_state == EvolutionaryStates.CONVERGENCE:
-            search_space_dimention = randrange(len(self.__convex_boundaries))
-            mu = mean(self.__convex_boundaries[search_space_dimention])
+            search_space_dimention = randrange(len(self.__spawn_boundaries))
+            mu = mean(self.__spawn_boundaries[search_space_dimention])
             # "Adaptive Particle Swarm Optimization, Zhi et al." -> "IV. APSO" -> "C. ELS" ->
             # "Empirical study shows that σ_max = 1.0 and σ_min = 0.1
             # result in good performance on most of the test functions"

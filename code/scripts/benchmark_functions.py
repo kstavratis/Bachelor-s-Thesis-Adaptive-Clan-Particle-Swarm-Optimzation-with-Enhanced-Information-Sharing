@@ -3,7 +3,8 @@ Copyright (C) 2021  Konstantinos Stavratis
 For the full notice of the program, see "main.py"
 """
 
-from numpy import absolute, sum, sqrt, square, cos, prod, pi, e, array
+from numpy import absolute, sum, sqrt, square, sin, cos, prod, pi, e, array
+from scipy.linalg import norm
 
 
 # Theorem: min g(x) = -max (-g(x)).
@@ -61,6 +62,14 @@ def ackley_function(x: array, a: float = 20, b: float = 0.2, c: float = 2*pi) ->
              - e ** (1 / len(x) * sum(cos(c * x)))
              + a + e)
 
+
+def salomon_function(x: array) -> float:
+    norm_of_x = norm(x)
+    return -(1 - cos(2*pi*norm_of_x) + 0.1*norm_of_x)
+
+
+def alpinen1_function(x: array) -> float:
+    return -sum(absolute(x * sin(x) + 0.1 * x))
 
 def styblinski_tang_function(x: list) -> float:
     return -(sum(x[i]**4 -16*x[i]**2 + 5*x[i] for i in range(len(x)))/2)
