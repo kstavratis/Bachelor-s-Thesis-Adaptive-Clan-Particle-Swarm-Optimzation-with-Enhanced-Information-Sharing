@@ -5,7 +5,7 @@ For the full notice of the program, see "main.py"
 
 from random import random as r1_r2_generator
 from random import uniform
-from numpy import array as vector, zeros, absolute
+from numpy import array as vector, zeros, absolute, ndarray
 
 from classes.enums.enhanced_information_sharing.control_factor_types import ControlFactorTypes
 
@@ -14,11 +14,14 @@ class Particle:
     # w, c1, c2, c3, r1, r2, r3 = None, None, None, None, None, None, None
     fitness_function = None
 
-    def __init__(self, fitness_function, convex_boundaries: list):
+    def __init__(self, fitness_function, convex_boundaries: list, spawn_position: vector = None):
         # Randomly spawning the particle according to the problem's convex boundaries.
-        self._position: vector = vector([uniform(
-            convex_boundaries[vector_space_dimension][0], convex_boundaries[vector_space_dimension][1])
-            for vector_space_dimension in range(len(convex_boundaries))])
+        if spawn_position is None:
+            self._position: vector = vector([uniform(
+                convex_boundaries[vector_space_dimension][0], convex_boundaries[vector_space_dimension][1])
+                for vector_space_dimension in range(len(convex_boundaries))])
+        if isinstance(spawn_position, ndarray):
+            self._position: vector = spawn_position
         # The particle's first personal best _position is the _position where it is spawned.
         self._personal_best_position: vector = self._position
 

@@ -116,20 +116,29 @@ class ClassicSwarm:
         # used a Vmax of 20% the domain limits in each dimension.
         # Adaptive Particle Swarm Optimization -> II. PSO AND ITS DEVELOPMENTS -> A. PSO Framework
 
-    def __find_particle_with_best_personal_best(self) -> Particle:
+    def __find_particle_with_best_personal_best(self, greater_than: bool = True) -> Particle:
         """
         Particle that at some point had the best-known position (global max).
         Take into account the possibility that no particle is on that position when this function is called.
         This can happen when the particle which found this position moved to a worse position.
+
+        :param greater_than: Returns particle with greatest (best) position if True (default). Returns particle with lowest (worst) position if False.
+
         :return:
         """
         # Initializing it into the 1st particle for comparison.
         particle_with_best_personal_best = self.swarm[0]
         for particle in self.swarm:
-            if Particle.fitness_function(particle._personal_best_position) \
-                    > \
-                    Particle.fitness_function(particle_with_best_personal_best._personal_best_position):
-                particle_with_best_personal_best = particle
+            if greater_than:
+                if Particle.fitness_function(particle._personal_best_position) \
+                        > \
+                        Particle.fitness_function(particle_with_best_personal_best._personal_best_position):
+                    particle_with_best_personal_best = particle
+            else:
+                if Particle.fitness_function(particle._personal_best_position) \
+                        < \
+                        Particle.fitness_function(particle_with_best_personal_best._personal_best_position):
+                    particle_with_best_personal_best = particle
 
         return particle_with_best_personal_best
 
@@ -479,16 +488,46 @@ class ClassicSwarm:
         # by causing a escape state of the best particle when it gets trapped in a local minimum.
         # That is why this strategy is executed only in case of convergence.
         if evolutionary_state == EvolutionaryStates.CONVERGENCE:
-            search_space_dimention = randrange(len(self.__spawn_boundaries))
-            mu = mean(self.__spawn_boundaries[search_space_dimention])
+            # Picking a dimension at random for the mutation to take place.
+            search_space_dimension = randrange(len(self.__spawn_boundaries))
+
+            current_best_particle = self.__find_particle_with_best_personal_best()
+
+            search_space_range = \
+                self.__spawn_boundaries[search_space_dimension][1] - self.__spawn_boundaries[search_space_dimension][0]
             # "Adaptive Particle Swarm Optimization, Zhi et al." -> "IV. APSO" -> "C. ELS" ->
             # "Empirical study shows that σ_max = 1.0 and σ_min = 0.1
             # result in good performance on most of the test functions"
-            sigma = 1 - (1 - 0.1) / self.__max_iterations * self.current_iteration
-            elitist_learning_rate = gauss(mu, sigma)
+            sigma = (1 - (1 - 0.1) / self.__max_iterations * self.current_iteration)
+            elitist_learning_rate = gauss(0, sigma)
 
-            self.__find_particle_with_best_personal_best()._position[search_space_dimention] += \
-                elitist_learning_rate
+            mutated_position = current_best_particle._position
+
+            # Making sure that the particle will still be inside the search space after the mutation.
+            # First two conditions (if and elif) enforce that the particle remains inside the search boundaries where they to be exceeded.
+            # Last one (else) applies the calculated transposition as is.
+            # TODO Create a better strategy for ensuring that the particle remains in search boundaries.
+            #  Attempt to generate a new random number (always following the same distribution) until a valid one
+            #  (one that keeps the particle inside the search space) is generated was made, but experimentally,
+            #  it showed that this can slow down the PSO significantly, because of its random nature, especially in the
+            #  early stages of the algorithm. Cutting down mutation step range to "search_space_range/2" attempt was made
+            #  but it did not lead to a satisfying speed-up.
+            if current_best_particle._position[search_space_dimension] + search_space_range * elitist_learning_rate < \
+                    self.__spawn_boundaries[search_space_dimension][0]:
+                mutated_position[search_space_dimension] = self.__spawn_boundaries[search_space_dimension][0]
+            elif current_best_particle._position[search_space_dimension] + search_space_range * elitist_learning_rate > \
+                self.__spawn_boundaries[search_space_dimension][1]:
+                mutated_position[search_space_dimension] = self.__spawn_boundaries[search_space_dimension][1]
+            else:
+                mutated_position[search_space_dimension] += search_space_range * elitist_learning_rate
+
+            # If the mutated position achieves a better fitness function, then have the best particle move there.
+            if Particle.fitness_function(mutated_position) > Particle.fitness_function(current_best_particle._position):
+                current_best_particle._position = mutated_position
+            else:  # Replacing particle with worst position with particle with mutated best position.
+                current_worst_particle = self.__find_particle_with_best_personal_best(greater_than=False)
+                self.swarm.remove(current_worst_particle)
+                self.swarm.append(Particle(Particle.fitness_function, self.__spawn_boundaries, spawn_position=mutated_position))
 
     def __adapt_inertia_factor(self, f_evol: float):
         self.w = 1 / (1 + 1.5 * e ** (-2.6 * f_evol))  # ∈[0.4, 0.9]  ∀f_evol ∈[0,1]
