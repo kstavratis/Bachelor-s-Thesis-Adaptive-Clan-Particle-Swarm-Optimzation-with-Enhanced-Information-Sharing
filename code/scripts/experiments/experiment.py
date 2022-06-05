@@ -48,12 +48,14 @@ def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
     if not isClan:
         experiment_swarm = ClassicSwarm(swarm_or_fitness_function=objective_function,
                                         spawn_boundaries=spawn_boundaries,
-                                        swarm_size=swarm_size, maximum_iterations=maximum_iterations,
+                                        swarm_size=swarm_size,
+                                        maximum_iterations=maximum_iterations,
                                         adaptivePSO=adaptivePSO, eis=eis, current_iteration=0,
                                         search_and_velocity_boundaries=search_and_velocity_boundaries, wt=wt)
 
     if isClan:
-        experiment_swarm = ClanSwarm(fitness_function=objective_function, spawn_boundaries=spawn_boundaries,
+        experiment_swarm = ClanSwarm(fitness_function=objective_function,
+                                     spawn_boundaries=spawn_boundaries,
                                      swarm_size=swarm_size // number_of_clans, number_of_clans=number_of_clans,
                                      maximum_iterations=maximum_iterations,
                                      c1=c1, c2=c2,

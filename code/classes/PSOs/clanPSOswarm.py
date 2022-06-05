@@ -1,5 +1,5 @@
 """
-Copyright (C) 2021  Konstantinos Stavratis
+Copyright (C) 2022  Konstantinos Stavratis
 For the full notice of the program, see "main.py"
 """
 
@@ -36,6 +36,7 @@ class ClanSwarm:
 
 
         self.__max_iterations = maximum_iterations
+        self.__spawn_boundaries = spawn_boundaries
         self.__search_and_velocity_boundaries, self.__wall_type = search_and_velocity_boundaries, wt
 
     def update_swarm(self):
@@ -54,7 +55,9 @@ class ClanSwarm:
 
         def update_clan_leaders(leaders: list):
             clan_leaders_swarm = ClassicSwarm(
-                leaders, spawn_boundaries=[], maximum_iterations=self.__max_iterations,
+                leaders,
+                spawn_boundaries=self.__spawn_boundaries,
+                maximum_iterations=self.__max_iterations,
                 current_iteration=self.clans[0].current_iteration,  # Note: all clans have the same value in their "current_iteration" variable.
                 eis=((self.clans[0]._global_local_coefficient_method, self.clans[0].c3),
                      (self.clans[0]._control_factor_method, self.clans[0].c3_k)),
@@ -69,12 +72,23 @@ class ClanSwarm:
         # Execute Clan PSO movement operation.
         update_clan_leaders(find_clan_leaders())
 
+    # TODO
+    #   While the implementation below is computationally correct, it has one main weakness:
+    #   it recalculates the fitness value for each point, which may be computationally expensive,
+    #   such as in the case of the Quadric function, where the cost of computing a value is O(n^2).
+    #   This principle may be generalized into other computationally expensive problems (fitness function values),
+    #   such as calculating the error of a neural network training cycle.
+    #   POSSIBLE SOLUTION: Store the best particle population at runtime, using either a pointer to the
+    #   particle object or an index to its position in the array/list.
     def find_population_global_best_position(self):
         best_position = self.clans[0].global_best_position
         best_value = self.__fitness_function(self.clans[0].global_best_position)
         for swarm in self.clans:
             swarm_best_value = self.__fitness_function(swarm.global_best_position)
-            if swarm_best_value > best_value:
+            # Following the standard implementation, where PSO is tasked to solve a minimization problem.
+            # Therefore a "better" solution is defined as a solution (phenotype) which has a lower
+            # fitness value.
+            if swarm_best_value < best_value:
                 best_position = swarm.global_best_position
                 best_value = swarm_best_value
 

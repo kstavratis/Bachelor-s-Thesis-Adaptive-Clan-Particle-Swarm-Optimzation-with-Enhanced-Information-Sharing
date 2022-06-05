@@ -1,9 +1,8 @@
 """
 Code to conduct experiments with the Particle Swarm Optimization (PSO) and some of its variations (including ClanPSO and Adaptive PSO)
 Code for my Bachelor's Thesis in the Informatics department of the Aristotle University of Thessaloniki (https://www.csd.auth.gr/en/)
-    Copyright (C) 2021  Konstantinos Stavratis
-    academic e-mail: kstavrat@csd.auth.gr
-    alternative e-mail: kostauratis@gmail.com
+    Copyright (C) 2022  Konstantinos Stavratis
+    e-mail: kostauratis@gmail.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -78,7 +77,7 @@ def main():
     particles_per_clan = 10
     simple_pso_particles = number_of_clans * particles_per_clan
     maximum_iterations = 5000
-    experiments = 4
+    experiments = 64
     executor = ProcessPoolExecutor()
 
 
@@ -373,7 +372,7 @@ def main():
         )
     }
 
-    pandas.DataFrame(sphere_collected_data).to_csv("test sphere 3x10.csv")
+    pandas.DataFrame(sphere_collected_data).to_csv("test sphere 3x10 with ELS.csv")
     print("File for Sphere test function with 3 clans of 10 particles was created!")
 
 

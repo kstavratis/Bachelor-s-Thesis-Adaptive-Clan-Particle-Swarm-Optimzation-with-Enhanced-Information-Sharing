@@ -1,11 +1,11 @@
 """
-Copyright (C) 2021  Konstantinos Stavratis
+Copyright (C) 2022  Konstantinos Stavratis
 For the full notice of the program, see "main.py"
 """
 
 from numpy.ma import sqrt
 from random import random as r1_r2_r3_generator, uniform, randrange, gauss
-from numpy import mean, e
+from numpy import mean, e, diag
 from numpy.linalg import norm
 from types import FunctionType
 from enum import Enum
@@ -28,6 +28,13 @@ c3_start, c3_end = 2, 0
 
 # PARTICLE_SIMILARITY_LIMIT : Final = 10**(-9)
 PARTICLE_SIMILARITY_LIMIT = 10 ** (-20)
+
+
+# TODO: Python code optimization comment.
+#   Admittedly, this file is following a policy which encumbers Python for the sake of code readability.
+#   In the functions below, a lot of nested functions are defined, which makes Python create function objects
+#   at each iteration of the algorithm. These could be rewritten with one global definition as private functions.
+#   Currently, readability is considered to be a major benefit for following said policy.
 
 
 class ClassicSwarm:
@@ -116,24 +123,39 @@ class ClassicSwarm:
         # used a Vmax of 20% the domain limits in each dimension.
         # Adaptive Particle Swarm Optimization -> II. PSO AND ITS DEVELOPMENTS -> A. PSO Framework
 
-    def __find_particle_with_best_personal_best(self, greater_than: bool = True) -> Particle:
+    def __find_particle_with_best_personal_best(self, greater_than: bool = False) -> Particle:
         """
-        Particle that at some point had the best-known position (global max).
+        Particle that at some point had the best-known position (global min).
         Take into account the possibility that no particle is on that position when this function is called.
         This can happen when the particle which found this position moved to a worse position.
 
-        :param greater_than: Returns particle with greatest (best) position if True (default). Returns particle with lowest (worst) position if False.
+        :param greater_than: Returns particle with greatest position if True . Returns particle with lowest position if False (Default).
 
         :return:
         """
+
+        # TODO: While the implementation below is computationally correct, it has one main weakness:
+        #   it recalculates the fitness value for each point, which may be computationally expensive,
+        #   such as in the case of the Quadric function, where the cost of computing a value is O(n^2).
+        #   This principle may be generalized into other computationally expensive problems (fitness function values),
+        #   such as calculating the error of a neural network training cycle.
+        #   POSSIBLE SOLUTION: Store the best particle population at runtime, using either a pointer to the
+        #   particle object or an index to its position in the array/list.
+
+
         # Initializing it into the 1st particle for comparison.
         particle_with_best_personal_best = self.swarm[0]
         for particle in self.swarm:
+            # This implementation follows the standard convention that PSO is tasked to solve a minimization problem.
+            # Therefore, the default (if not only) behaviour is to consider the lower fitness value as the better solution.
+
+            # Maximization problem.
             if greater_than:
                 if Particle.fitness_function(particle._personal_best_position) \
                         > \
                         Particle.fitness_function(particle_with_best_personal_best._personal_best_position):
                     particle_with_best_personal_best = particle
+            # Minimization problem (Default).
             else:
                 if Particle.fitness_function(particle._personal_best_position) \
                         < \
@@ -241,15 +263,22 @@ class ClassicSwarm:
         self.__update_parameters()
 
         # TODO different random per dimension
-        # This code does not satisfy the above "2doo". This creates a different random number for each particle,
-        # not for each dimenstion. Keeping it in case that I would like to integrate both techniques
-        # (different random for each particle with if each of its dimensions having different random numbers).
-        random_multipliers = tuple(([r1_r2_r3_generator(), r1_r2_r3_generator(), None]
-                                    for i in range(len(self.swarm))))
-        # r1, r2, r3 = r1_r2_r3_generator(), r1_r2_r3_generator(), None
+        #   This code does not satisfy the above "2doo". This creates a different random number for each particle,
+        #   ΝΟΤ for each dimension. Keeping it in case that I would like to integrate both techniques
+        #   (different random for each particle with if each of its dimensions having different random numbers).
+        #   POSSIBLE IMPLEMENTATION: Create diagonal random (following the U[0,1] distribution) matrices
+        #   and applying them to the direction vectors.
+        random_multipliers = tuple(
+            [
+                diag([r1_r2_r3_generator() for _ in range(len(self.__spawn_boundaries))]),
+                diag([r1_r2_r3_generator() for _ in range(len(self.__spawn_boundaries))]),
+                None
+            ]
+            for _ in range(len(self.swarm)))
+
         if isinstance(self.c3, float):
             for triad in random_multipliers:
-                triad[2] = r1_r2_r3_generator()
+                triad[2] = diag([r1_r2_r3_generator() for _ in range(len(self.__spawn_boundaries))])
 
         random_multipliers_index = 0
         for particle in self.swarm:
@@ -321,8 +350,9 @@ class ClassicSwarm:
     def calculate_swarm_distance_from_swarm_centroid(self):
         swarm_positions = [self.swarm[i]._position for i in range(len(self.swarm))]
         swarm_centroid = mean(swarm_positions, axis=0)
+        # SD = √(1/N * Σ(||x_avg - x_i||^2))
         swarm_standard_deviation = sqrt(sum(norm(
-            swarm_centroid - self.swarm[i]._position) ** 2 for i in range(len(self.swarm)))) / len(self.swarm)
+            swarm_centroid - self.swarm[i]._position) ** 2 for i in range(len(self.swarm))) / len(self.swarm))
         return swarm_standard_deviation
 
     def __estimate_evolutionary_state(self):
@@ -521,11 +551,11 @@ class ClassicSwarm:
             else:
                 mutated_position[search_space_dimension] += search_space_range * elitist_learning_rate
 
-            # If the mutated position achieves a better fitness function, then have the best particle move there.
-            if Particle.fitness_function(mutated_position) > Particle.fitness_function(current_best_particle._position):
+            # If the mutated position achieves a better (lower) fitness value, then have the best particle move there.
+            if Particle.fitness_function(mutated_position) < Particle.fitness_function(current_best_particle._position):
                 current_best_particle._position = mutated_position
             else:  # Replacing particle with worst position with particle with mutated best position.
-                current_worst_particle = self.__find_particle_with_best_personal_best(greater_than=False)
+                current_worst_particle = self.__find_particle_with_best_personal_best(greater_than=True)
                 self.swarm.remove(current_worst_particle)
                 self.swarm.append(Particle(Particle.fitness_function, self.__spawn_boundaries, spawn_position=mutated_position))
 

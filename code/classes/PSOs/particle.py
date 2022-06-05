@@ -5,6 +5,8 @@ For the full notice of the program, see "main.py"
 
 from random import random as r1_r2_generator
 from random import uniform
+
+import numpy
 from numpy import array as vector, zeros, absolute, ndarray
 
 from classes.enums.enhanced_information_sharing.control_factor_types import ControlFactorTypes
@@ -38,15 +40,15 @@ class Particle:
 
     def _update_position(self, global_best_position: vector,
                          w: float,
-                         c1: float, r1: float,
-                         c2: float, r2: float,
-                         c3: float, r3: float, c3_k_control_factor_mode: ControlFactorTypes):
+                         c1: float, r1: float or numpy.array,
+                         c2: float, r2: float or numpy.array,
+                         c3: float, r3: float or numpy.array, c3_k_control_factor_mode: ControlFactorTypes):
         if c3 is None and r3 is None:
             # Classic velocity adjustment ensues a.k.a. Enhanced Information Sharing is disabled.
             def update_velocity():
                 self.__velocity = w * self.__velocity \
-                                  + c1 * r1 * (self._personal_best_position - self._position) \
-                                  + c2 * r2 * (global_best_position - self._position)
+                                  + c1 * r1.dot((self._personal_best_position - self._position)) \
+                                  + c2 * r2.dot((global_best_position - self._position))
         else:
             # Enhanced information sharing is enabled.
             # For details see "Improved Particle Swarm Optimization Algorithm Based on
@@ -55,25 +57,25 @@ class Particle:
 
                 if c3_k_control_factor_mode != ControlFactorTypes.ADAPTIVE:
                     # Follow article's approach.
-                    phi3 = c3 * r3 * absolute(global_best_position - self._personal_best_position)
+                    phi3 = c3 * r3.dot(absolute(global_best_position - self._personal_best_position))
                 else:
                     # If an adaptive strategy is used, show bias towards:
                     # - global, if state = {CONVERGENCE, JUMP-OUT}
                     # - local, if state = {EXPLORATION. EXPLOITATION}
-                    phi3 = c3 * r3 * (global_best_position - self._personal_best_position)
+                    phi3 = c3 * r3.dot((global_best_position - self._personal_best_position))
 
 
                 self.__velocity = w * self.__velocity \
-                                  + c1 * r1 * (self._personal_best_position - self._position) \
-                                  + c2 * r2 * (global_best_position - self._position) \
+                                  + c1 * r1.dot((self._personal_best_position - self._position)) \
+                                  + c2 * r2.dot((global_best_position - self._position)) \
                                   + phi3
 
 
         update_velocity()
         # Updating the particle's _position.
         self._position = self._position + self.__velocity
-        # Checking whether the new _position is a new personal best (maximum).
-        if self.__get_fitness_at_current_position() > Particle.fitness_function(self._personal_best_position):
+        # Checking whether the new _position is a new personal best (minimum).
+        if self.__get_fitness_at_current_position() < Particle.fitness_function(self._personal_best_position):
             self._personal_best_position = self._position
 
     def __get_fitness_at_current_position(self):
