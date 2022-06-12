@@ -43,18 +43,18 @@ def main():
 
     # Unimodal Functions search domain
     # sphere_function_search_domain = [[-inf, inf] for i in range(domain_dimensions)]
-    sphere_function_search_domain = [[-10 ** 2, 10 ** 2] for i in range(domain_dimensions)]
-    quadric_function_search_domain = [[-10 ** 2, 10 ** 2] for i in range(domain_dimensions)]
-    schwefel222_function_search_domain = [[-10, 10] for i in range(domain_dimensions)]
-    # rosenbrock_function_search_domain = [[-inf, inf] for i in range(domain_dimensions)]
-    rosenbrock_function_search_domain = [[-10, 10] for i in range(domain_dimensions)]
+    sphere_function_search_domain = [[-10 ** 2, 10 ** 2] for _ in range(domain_dimensions)]
+    quadric_function_search_domain = [[-10 ** 2, 10 ** 2] for _ in range(domain_dimensions)]
+    schwefel222_function_search_domain = [[-10, 10] for _ in range(domain_dimensions)]
+    # rosenbrock_function_search_domain = [[-inf, inf] for _ in range(domain_dimensions)]
+    rosenbrock_function_search_domain = [[-10, 10] for _ in range(domain_dimensions)]
 
     # Multimodal Functions search domain
-    rastrigin_function_search_domain = [[-5.12, 5.12] for i in range(domain_dimensions)]
-    ackley_function_search_domain = [[-32, 32] for i in range(domain_dimensions)]
-    salomon_function_search_domain = [[-10**2, 10**2] for i in range(domain_dimensions)]
-    alpinen1_function_search_domain = [[0, 10] for i in range(domain_dimensions)]
-    styblinski_tang_function_search_domain = [[-5, 5] for i in range(domain_dimensions)]
+    rastrigin_function_search_domain = [[-5.12, 5.12] for _ in range(domain_dimensions)]
+    ackley_function_search_domain = [[-32, 32] for _ in range(domain_dimensions)]
+    salomon_function_search_domain = [[-10**2, 10**2] for _ in range(domain_dimensions)]
+    alpinen1_function_search_domain = [[0, 10] for _ in range(domain_dimensions)]
+    styblinski_tang_function_search_domain = [[-5, 5] for _ in range(domain_dimensions)]
 
 
 
@@ -73,8 +73,8 @@ def main():
 
 
 
-    number_of_clans = 3
-    particles_per_clan = 10
+    number_of_clans = 6
+    particles_per_clan = 5
     simple_pso_particles = number_of_clans * particles_per_clan
     maximum_iterations = 5000
     experiments = 64
@@ -82,133 +82,133 @@ def main():
 
 
 
-    print("Sphere function: 3 clans of 10 particles each")
+    print(f'rastrigin function: {number_of_clans} clans of {particles_per_clan} particles each')
     print("---------------")
 
     simple_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.sphere_function,
-        spawn_boundaries=sphere_function_search_domain,
-        objective_function_goal_point=sphere_function_goal_point,
+        objective_function_pointer=bench_f.rastrigin_function,
+        spawn_boundaries=rastrigin_function_search_domain,
+        objective_function_goal_point=rastrigin_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
-        search_and_velocity_boundaries=[[-100, 100], [-0.2 * 100, 0.2 * 100]],
+        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k0p2c_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.sphere_function,
-        spawn_boundaries=sphere_function_search_domain,
-        objective_function_goal_point=sphere_function_goal_point,
+        objective_function_pointer=bench_f.rastrigin_function,
+        spawn_boundaries=rastrigin_function_search_domain,
+        objective_function_goal_point=rastrigin_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans*particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.CONSTANT, 0.2)),
-        search_and_velocity_boundaries=[[-100, 100], [-0.2 * 100, 0.2 * 100]],
+        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k1c_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.sphere_function,
-        spawn_boundaries=sphere_function_search_domain,
-        objective_function_goal_point=sphere_function_goal_point,
+        objective_function_pointer=bench_f.rastrigin_function,
+        spawn_boundaries=rastrigin_function_search_domain,
+        objective_function_goal_point=rastrigin_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.CONSTANT, 1.0)),
-        search_and_velocity_boundaries=[[-100, 100], [-0.2 * 100, 0.2 * 100]],
+        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k2c_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.sphere_function,
-        spawn_boundaries=sphere_function_search_domain,
-        objective_function_goal_point=sphere_function_goal_point,
+        objective_function_pointer=bench_f.rastrigin_function,
+        spawn_boundaries=rastrigin_function_search_domain,
+        objective_function_goal_point=rastrigin_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.CONSTANT, 2.0)),
-        search_and_velocity_boundaries=[[-100, 100], [-0.2 * 100, 0.2 * 100]],
+        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k0p2l_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.sphere_function,
-        spawn_boundaries=sphere_function_search_domain,
-        objective_function_goal_point=sphere_function_goal_point,
+        objective_function_pointer=bench_f.rastrigin_function,
+        spawn_boundaries=rastrigin_function_search_domain,
+        objective_function_goal_point=rastrigin_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.LINEAR, 0.2)),
-        search_and_velocity_boundaries=[[-100, 100], [-0.2 * 100, 0.2 * 100]],
+        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 5.12, 0.2 * 5.12]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k1l_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.sphere_function,
-        spawn_boundaries=sphere_function_search_domain,
-        objective_function_goal_point=sphere_function_goal_point,
+        objective_function_pointer=bench_f.rastrigin_function,
+        spawn_boundaries=rastrigin_function_search_domain,
+        objective_function_goal_point=rastrigin_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.LINEAR, 1.0)),
-        search_and_velocity_boundaries=[[-100, 100], [-0.2 * 100, 0.2 * 100]],
+        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k0p2a_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.sphere_function,
-        spawn_boundaries=sphere_function_search_domain,
-        objective_function_goal_point=sphere_function_goal_point,
+        objective_function_pointer=bench_f.rastrigin_function,
+        spawn_boundaries=rastrigin_function_search_domain,
+        objective_function_goal_point=rastrigin_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.ADAPTIVE, 0.2)),
-        search_and_velocity_boundaries=[[-100, 100], [-0.2 * 100, 0.2 * 100]],
+        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k1a_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.sphere_function,
-        spawn_boundaries=sphere_function_search_domain,
-        objective_function_goal_point=sphere_function_goal_point,
+        objective_function_pointer=bench_f.rastrigin_function,
+        spawn_boundaries=rastrigin_function_search_domain,
+        objective_function_goal_point=rastrigin_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.ADAPTIVE, 1.0)),
-        search_and_velocity_boundaries=[[-100, 100], [-0.2 * 100, 0.2 * 100]],
+        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
         # wt=WallTypes.ELIMINATING
     )
 
@@ -372,8 +372,8 @@ def main():
         )
     }
 
-    pandas.DataFrame(sphere_collected_data).to_csv("test sphere 3x10 with ELS.csv")
-    print("File for Sphere test function with 3 clans of 10 particles was created!")
+    pandas.DataFrame(sphere_collected_data).to_csv(f'rastrigin_{number_of_clans}x{particles_per_clan}_with_ELS.csv')
+    print(f'File for Rastrigin test function with {number_of_clans} clans of {particles_per_clan} particles was created!')
 
 
 
