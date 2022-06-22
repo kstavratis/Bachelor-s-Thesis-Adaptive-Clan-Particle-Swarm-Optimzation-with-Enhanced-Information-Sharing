@@ -17,10 +17,6 @@ Code for my Bachelor's Thesis in the Informatics department of the Aristotle Uni
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from time import process_time
-
-from scipy.constants import pi
-from scipy.linalg import norm
 
 from classes.PSOs.clanPSOswarm import ClanSwarm
 from classes.enums.enhanced_information_sharing.control_factor_types import ControlFactorTypes
@@ -32,7 +28,6 @@ import scripts.experiments.experiment
 import scripts.experiments.experiments_data_creation
 
 from numpy import array as vector, zeros, ones, seterr, mean, std, median, inf
-import matplotlib.pyplot as plt
 import pandas
 from concurrent.futures.process import ProcessPoolExecutor
 
@@ -77,138 +72,138 @@ def main():
     particles_per_clan = 5
     simple_pso_particles = number_of_clans * particles_per_clan
     maximum_iterations = 5000
-    experiments = 64
+    experiments = 256
     executor = ProcessPoolExecutor()
 
 
 
-    print(f'rastrigin function: {number_of_clans} clans of {particles_per_clan} particles each')
+    print(f'Alpine N.1 function: {number_of_clans} clans of {particles_per_clan} particles each')
     print("---------------")
 
     simple_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.rastrigin_function,
-        spawn_boundaries=rastrigin_function_search_domain,
-        objective_function_goal_point=rastrigin_function_goal_point,
+        objective_function_pointer=bench_f.alpinen1_function,
+        spawn_boundaries=alpinen1_function_search_domain,
+        objective_function_goal_point=alpinen1_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
-        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
+        search_and_velocity_boundaries=[[-0, 10], [-0.2 * 10, 0.2 * 10]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k0p2c_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.rastrigin_function,
-        spawn_boundaries=rastrigin_function_search_domain,
-        objective_function_goal_point=rastrigin_function_goal_point,
+        objective_function_pointer=bench_f.alpinen1_function,
+        spawn_boundaries=alpinen1_function_search_domain,
+        objective_function_goal_point=alpinen1_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans*particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.CONSTANT, 0.2)),
-        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
+        search_and_velocity_boundaries=[[-0, 10], [-0.2 * 10, 0.2 * 10]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k1c_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.rastrigin_function,
-        spawn_boundaries=rastrigin_function_search_domain,
-        objective_function_goal_point=rastrigin_function_goal_point,
+        objective_function_pointer=bench_f.alpinen1_function,
+        spawn_boundaries=alpinen1_function_search_domain,
+        objective_function_goal_point=alpinen1_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.CONSTANT, 1.0)),
-        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
+        search_and_velocity_boundaries=[[-0, 10], [-0.2 * 10, 0.2 * 10]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k2c_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.rastrigin_function,
-        spawn_boundaries=rastrigin_function_search_domain,
-        objective_function_goal_point=rastrigin_function_goal_point,
+        objective_function_pointer=bench_f.alpinen1_function,
+        spawn_boundaries=alpinen1_function_search_domain,
+        objective_function_goal_point=alpinen1_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.CONSTANT, 2.0)),
-        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
+        search_and_velocity_boundaries=[[-0, 10], [-0.2 * 10, 0.2 * 10]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k0p2l_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.rastrigin_function,
-        spawn_boundaries=rastrigin_function_search_domain,
-        objective_function_goal_point=rastrigin_function_goal_point,
+        objective_function_pointer=bench_f.alpinen1_function,
+        spawn_boundaries=alpinen1_function_search_domain,
+        objective_function_goal_point=alpinen1_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.LINEAR, 0.2)),
-        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 5.12, 0.2 * 5.12]],
+        search_and_velocity_boundaries=[[-0, 10], [-0.2 * 10, 0.2 * 10]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k1l_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.rastrigin_function,
-        spawn_boundaries=rastrigin_function_search_domain,
-        objective_function_goal_point=rastrigin_function_goal_point,
+        objective_function_pointer=bench_f.alpinen1_function,
+        spawn_boundaries=alpinen1_function_search_domain,
+        objective_function_goal_point=alpinen1_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.LINEAR, 1.0)),
-        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
+        search_and_velocity_boundaries=[[-0, 10], [-0.2 * 10, 0.2 * 10]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k0p2a_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.rastrigin_function,
-        spawn_boundaries=rastrigin_function_search_domain,
-        objective_function_goal_point=rastrigin_function_goal_point,
+        objective_function_pointer=bench_f.alpinen1_function,
+        spawn_boundaries=alpinen1_function_search_domain,
+        objective_function_goal_point=alpinen1_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.ADAPTIVE, 0.2)),
-        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
+        search_and_velocity_boundaries=[[-0, 10], [-0.2 * 10, 0.2 * 10]],
         # wt=WallTypes.ELIMINATING
     )
 
     eis_l2_k1a_AClanPSO = scripts.experiments.experiments_data_creation.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=bench_f.rastrigin_function,
-        spawn_boundaries=rastrigin_function_search_domain,
-        objective_function_goal_point=rastrigin_function_goal_point,
+        objective_function_pointer=bench_f.alpinen1_function,
+        spawn_boundaries=alpinen1_function_search_domain,
+        objective_function_goal_point=alpinen1_function_goal_point,
         maximum_iterations=maximum_iterations,
         swarm_size=number_of_clans * particles_per_clan,
         isClan=True,
         number_of_clans=number_of_clans,
         adaptivePSO=True,
         eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.ADAPTIVE, 1.0)),
-        search_and_velocity_boundaries=[[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
+        search_and_velocity_boundaries=[[-0, 10], [-0.2 * 10, 0.2 * 10]],
         # wt=WallTypes.ELIMINATING
     )
 
@@ -372,8 +367,8 @@ def main():
         )
     }
 
-    pandas.DataFrame(sphere_collected_data).to_csv(f'rastrigin_{number_of_clans}x{particles_per_clan}_with_ELS.csv')
-    print(f'File for Rastrigin test function with {number_of_clans} clans of {particles_per_clan} particles was created!')
+    pandas.DataFrame(sphere_collected_data).to_csv(f'alpinen1_{number_of_clans}x{particles_per_clan}_without_ELS.csv')
+    print(f'File for Alpine N.1 benchmark function with {number_of_clans} clans of {particles_per_clan} particles was created!')
 
 
 

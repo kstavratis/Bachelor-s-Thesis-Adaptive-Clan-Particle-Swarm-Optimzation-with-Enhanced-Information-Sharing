@@ -3,7 +3,6 @@ Copyright (C) 2021  Konstantinos Stavratis
 For the full notice of the program, see "main.py"
 """
 
-import os
 from time import process_time
 from typing import Any, List, Tuple
 from numpy import inf, array, mean
@@ -14,6 +13,10 @@ from classes.PSOs.clanPSOswarm import ClanSwarm
 from classes.enums.enhanced_information_sharing.global_local_coefficient_types import GlobalLocalCoefficientTypes
 from classes.enums.enhanced_information_sharing.control_factor_types import ControlFactorTypes
 from classes.enums.wall_types import WallTypes
+
+# This strict policy is enacted so as to catch rounding errors (overflows/underflows) as well.
+import warnings
+warnings.filterwarnings("error")
 
 loop_stop_condition_limit = 5 * 10 ** (-15)
 
@@ -69,18 +72,27 @@ def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
 
     iteration = 0
     loop_stop_condition_value = inf
+    
 
     while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
         loop_start = process_time()
 
         try:
             experiment_swarm.update_swarm()
+        # Stopping process when rounding errors (overflow or underflow) appear.
         except FloatingPointError:
             iteration += 1
             loop_end = process_time()
             loop_times.append(loop_end - loop_start)
             break
+        except RuntimeWarning:
+            iteration += 1
+            loop_end = process_time()
+            loop_times.append(loop_end - loop_start)
+            print("RuntimeWarning has been handled.")
+            break
 
+            
         loop_stop_condition_value = experiment_swarm.calculate_swarm_distance_from_swarm_centroid()
         iteration += 1
 

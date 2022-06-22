@@ -1,9 +1,8 @@
 """
-Copyright (C) 2021  Konstantinos Stavratis
+Copyright (C) 2022  Konstantinos Stavratis
 For the full notice of the program, see "main.py"
 """
 
-from random import random as r1_r2_generator
 from random import uniform
 
 import numpy
@@ -62,6 +61,10 @@ class Particle:
                     # If an adaptive strategy is used, show bias towards:
                     # - global, if state = {CONVERGENCE, JUMP-OUT}
                     # - local, if state = {EXPLORATION. EXPLOITATION}
+                    # NOTE: There is no need to create an if-clause to change the bias/direction of the third
+                    # component. That is because the change in direction ALREADY takes place when the sign
+                    # of the c3_k control factor adapts (positive for {CONVERGENCE, JUMP-OUT} and negative
+                    # for {EXPLORATION, EXPLOITATION})
                     phi3 = c3 * r3.dot((global_best_position - self._personal_best_position))
 
 
