@@ -8,7 +8,7 @@ from random import random as r1_r2_r3_generator, uniform, randrange, gauss
 from numpy import mean, e, diag
 from numpy.linalg import norm
 from types import FunctionType
-from enum import Enum
+from enum import Enum, auto
 from typing import List, Tuple#, Final
 
 from classes.PSOs.particle import Particle
@@ -262,12 +262,6 @@ class ClassicSwarm:
 
         self.__update_parameters()
 
-        # TODO different random per dimension
-        #   This code does not satisfy the above "2doo". This creates a different random number for each particle,
-        #   ΝΟΤ for each dimension. Keeping it in case that I would like to integrate both techniques
-        #   (different random for each particle with if each of its dimensions having different random numbers).
-        #   POSSIBLE IMPLEMENTATION: Create diagonal random (following the U[0,1] distribution) matrices
-        #   and applying them to the direction vectors.
         random_multipliers = tuple(
             [
                 diag([r1_r2_r3_generator() for _ in range(len(self.__spawn_boundaries))]),
@@ -289,7 +283,7 @@ class ClassicSwarm:
                                       self.c3, random_multipliers[random_multipliers_index][2], self._control_factor_method)
             random_multipliers_index += 1
 
-        # This is executed only when the Last-Elimination Principle is enabled.
+        # This is executed only when the Last-Elimination Principle is enabled. TODO: Why only then?
         if self.__domain_and_velocity_boundaries is not None:
             wall_enforcement()
             limit_particle_velocity()
@@ -352,7 +346,7 @@ class ClassicSwarm:
         swarm_centroid = mean(swarm_positions, axis=0)
         # SD = √(1/N * Σ(||x_avg - x_i||^2))
         swarm_standard_deviation = sqrt(sum(norm(
-            swarm_centroid - self.swarm[i]._position) ** 2 for i in range(len(self.swarm))) / len(self.swarm))
+            swarm_centroid - swarm_positions[i]) ** 2 for i in range(len(swarm_positions))) / len(self.swarm))
         return swarm_standard_deviation
 
     def __estimate_evolutionary_state(self):
@@ -433,10 +427,10 @@ class ClassicSwarm:
     def __determine_accelaration_coefficients(self, evolutionary_state: EvolutionaryStates):
 
         class CoefficientOperations(Enum):
-            INCREASE = 0,
-            DECREASE = 1,
-            INCREASE_SLIGHTLY = 2,
-            DECREASE_SLIGHTLY = 3
+            INCREASE = auto(),
+            DECREASE = auto(),
+            INCREASE_SLIGHTLY = auto(),
+            DECREASE_SLIGHTLY = auto()
 
         acceleration_rate = uniform(0.05, 0.10)
         c1_strategy, c2_strategy = "", ""

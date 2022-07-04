@@ -27,7 +27,7 @@ import scripts.benchmark_functions as bench_f
 import scripts.experiments.experiment
 import scripts.experiments.experiments_data_creation
 
-from numpy import array as vector, zeros, ones, seterr, mean, std, median, inf
+from numpy import seterr
 import pandas
 from concurrent.futures.process import ProcessPoolExecutor
 

@@ -89,7 +89,6 @@ def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
             iteration += 1
             loop_end = process_time()
             loop_times.append(loop_end - loop_start)
-            print("RuntimeWarning has been handled.")
             break
 
             

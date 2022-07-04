@@ -46,8 +46,8 @@ class Particle:
             # Classic velocity adjustment ensues a.k.a. Enhanced Information Sharing is disabled.
             def update_velocity():
                 self.__velocity = w * self.__velocity \
-                                  + c1 * r1.dot((self._personal_best_position - self._position)) \
-                                  + c2 * r2.dot((global_best_position - self._position))
+                                  + c1 * r1.dot(self._personal_best_position - self._position) \
+                                  + c2 * r2.dot(global_best_position - self._position)
         else:
             # Enhanced information sharing is enabled.
             # For details see "Improved Particle Swarm Optimization Algorithm Based on
@@ -65,12 +65,12 @@ class Particle:
                     # component. That is because the change in direction ALREADY takes place when the sign
                     # of the c3_k control factor adapts (positive for {CONVERGENCE, JUMP-OUT} and negative
                     # for {EXPLORATION, EXPLOITATION})
-                    phi3 = c3 * r3.dot((global_best_position - self._personal_best_position))
+                    phi3 = c3 * r3.dot(global_best_position - self._personal_best_position)
 
 
                 self.__velocity = w * self.__velocity \
-                                  + c1 * r1.dot((self._personal_best_position - self._position)) \
-                                  + c2 * r2.dot((global_best_position - self._position)) \
+                                  + c1 * r1.dot(self._personal_best_position - self._position) \
+                                  + c2 * r2.dot(global_best_position - self._position) \
                                   + phi3
 
 
