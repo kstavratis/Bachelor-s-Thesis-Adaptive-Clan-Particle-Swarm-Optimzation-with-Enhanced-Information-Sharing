@@ -98,6 +98,3 @@ class ClanSwarm:
         return 1/len(self.clans) *\
                sum(clan.calculate_swarm_distance_from_swarm_centroid()
                                        for clan in self.clans)
-
-
-

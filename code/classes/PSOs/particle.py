@@ -37,6 +37,11 @@ class Particle:
 
         Particle.fitness_function = fitness_function
 
+
+    # This overload remains unused, however, as this comparison is not needed (yet).
+    def __lt__(self, other):
+        return Particle.fitness_function(self._position) < Particle.fitness_function(other._position)
+
     def _update_position(self, global_best_position: vector,
                          w: float,
                          c1: float, r1: float or numpy.array,

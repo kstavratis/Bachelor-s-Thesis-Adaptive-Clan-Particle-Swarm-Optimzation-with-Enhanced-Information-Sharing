@@ -30,3 +30,27 @@ class TestPSOSolvesMinimizationProblem(unittest.TestCase):
                          second=particle3,
                          msg=f'Expected best particle was "particle 3", with position = {particle3._position}')
 
+class TestComparisonOperatorAppliesOnBuiltInFunctions(unittest.TestCase):
+
+    def test_built_in_min_function(self):
+        sphere_benchmark_function = sphere_function['formula']
+
+        # The particle closest to the sphere function's minimum ( f(0,...,0) = 0 ) is particle3
+        particle1 = Particle(fitness_function=sphere_benchmark_function,
+                             convex_boundaries=[[-10, 10], [-10, 10]],
+                             spawn_position=array([1, 1]))
+        particle2 = Particle(fitness_function=sphere_benchmark_function,
+                             convex_boundaries=[[-10, 10], [-10, 10]],
+                             spawn_position=array([2, 2]))
+        particle3 = Particle(fitness_function=sphere_benchmark_function,
+                             convex_boundaries=[[-10, 10], [-10, 10]],
+                             spawn_position=array([0.5, 0.5]))
+
+        test_swarm = ClassicSwarm(swarm_or_fitness_function=[particle1, particle2, particle3],
+                                  spawn_boundaries=[[-100, 100], [-100, 100]],
+                                  maximum_iterations=5000)
+
+        particle_with_min_value = min(test_swarm.swarm)
+
+        self.assertEqual(particle3, particle_with_min_value, 'The particle with the lowest value should have been particle3')
+

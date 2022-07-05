@@ -64,6 +64,10 @@ class ClassicSwarm:
 
         # Initializing the fitness_function's global best _position particle with the optimal value on spawn.
         self.__fitness_function = swarm_or_fitness_function
+
+        # The best particle is stored as a local variable (pointer), as it is required in many stages of the algorithm
+        # This is expected to enhance runtime performance by cutting down on objective function evaluations.ZZZZZ
+        self.__particle_with_best_personal_best = self.__find_particle_with_best_personal_best()
         self.global_best_position = self._find_global_best_position()  # Could become a dynamically-added field.
         # Storing the learning rates c1, c2.
         # Both are shared among all particles of the swarm.
@@ -123,6 +127,7 @@ class ClassicSwarm:
         # used a Vmax of 20% the domain limits in each dimension.
         # Adaptive Particle Swarm Optimization -> II. PSO AND ITS DEVELOPMENTS -> A. PSO Framework
 
+
     def __find_particle_with_best_personal_best(self, greater_than: bool = False) -> Particle:
         """
         Particle that at some point had the best-known position (global min).
@@ -169,7 +174,7 @@ class ClassicSwarm:
         Best position that the swarm has found during execution of the algorithm.
         :return:
         """
-        return self.__find_particle_with_best_personal_best()._personal_best_position
+        return self.__particle_with_best_personal_best._personal_best_position
 
     def update_swarm(self):
 
@@ -406,7 +411,24 @@ class ClassicSwarm:
             # return numba_implementation(particle_positions)
 
         def evaluate_evolutionary_factor(d: list) -> float:
-            best_particle_of_the_swarm = self.__find_particle_with_best_personal_best()
+            # TODO: Is use of the command: "best_particle_of_the_swarm = self.__particle_with_best_personal_best"
+            #       WRONG in this case?
+            #       'particle_with_best_personal_best' returns the particle which AT SOME POINT had the best phenotype
+            #       found during the (up until that point) execution of the algorithm, not the particle which
+            #       CURRENTLY has the best phenotype. These two can differ, because the CURRENT best value
+            #       may be worse than the best value to has ever been found, but the latter was 'lost'
+            #       due to the movement of the particles.
+            #       That would leave 3 points of interest:
+            #       1) gbest
+            #       2) particle which *at some point* had gbest, but doesn't at the current iteration
+            #       3) particle which *at the current iteration* has the best phenotype, which is worse than f(gbest).
+            #       The point of the procedure is to estimate distribution of PARTICLES, therefore following
+            #       option 1) might be a false approach.
+            #       In the end, I select option 2), but it might be a point of contingency.
+
+            # best_particle_of_the_swarm = min(self.swarm) # Option 3). Requires a comparison operator among the set {lt, le, gt, ge} to have been overloaded.
+            best_particle_of_the_swarm = self.__particle_with_best_personal_best
+
             d_g = 1 / (len(self.swarm) - 1) * \
                   sum(norm(best_particle_of_the_swarm._position - particle._position)
                       for particle in self.swarm)
@@ -515,8 +537,6 @@ class ClassicSwarm:
             # Picking a dimension at random for the mutation to take place.
             search_space_dimension = randrange(len(self.__spawn_boundaries))
 
-            current_best_particle = self.__find_particle_with_best_personal_best()
-
             search_space_range = \
                 self.__spawn_boundaries[search_space_dimension][1] - self.__spawn_boundaries[search_space_dimension][0]
             # "Adaptive Particle Swarm Optimization, Zhi et al." -> "IV. APSO" -> "C. ELS" ->
@@ -525,7 +545,8 @@ class ClassicSwarm:
             sigma = (1 - (1 - 0.1) / self.__max_iterations * self.current_iteration)
             elitist_learning_rate = gauss(0, sigma)
 
-            mutated_position = current_best_particle._position
+            # 'mutated_position' variable initialization. To be finalized in the following lines of code.
+            mutated_position = self.__particle_with_best_personal_best._position
 
             # Making sure that the particle will still be inside the search space after the mutation.
             # First two conditions (if and elif) enforce that the particle remains inside the search boundaries where they to be exceeded.
@@ -536,18 +557,18 @@ class ClassicSwarm:
             #  it showed that this can slow down the PSO significantly, because of its random nature, especially in the
             #  early stages of the algorithm. Cutting down mutation step range to "search_space_range/2" attempt was made
             #  but it did not lead to a satisfying speed-up.
-            if current_best_particle._position[search_space_dimension] + search_space_range * elitist_learning_rate < \
+            if self.__particle_with_best_personal_best._position[search_space_dimension] + search_space_range * elitist_learning_rate < \
                     self.__spawn_boundaries[search_space_dimension][0]:
                 mutated_position[search_space_dimension] = self.__spawn_boundaries[search_space_dimension][0]
-            elif current_best_particle._position[search_space_dimension] + search_space_range * elitist_learning_rate > \
+            elif self.__particle_with_best_personal_best._position[search_space_dimension] + search_space_range * elitist_learning_rate > \
                 self.__spawn_boundaries[search_space_dimension][1]:
                 mutated_position[search_space_dimension] = self.__spawn_boundaries[search_space_dimension][1]
             else:
                 mutated_position[search_space_dimension] += search_space_range * elitist_learning_rate
 
             # If the mutated position achieves a better (lower) fitness value, then have the best particle move there.
-            if Particle.fitness_function(mutated_position) < Particle.fitness_function(current_best_particle._position):
-                current_best_particle._position = mutated_position
+            if Particle.fitness_function(mutated_position) < Particle.fitness_function(self.__particle_with_best_personal_best._position):
+                self.__particle_with_best_personal_best._position = mutated_position
             else:  # Replacing particle with worst position with particle with mutated best position.
                 current_worst_particle = self.__find_particle_with_best_personal_best(greater_than=True)
                 self.swarm.remove(current_worst_particle)
