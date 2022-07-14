@@ -66,7 +66,7 @@ class ClassicSwarm:
         self.__fitness_function = swarm_or_fitness_function
 
         # The best particle is stored as a local variable (pointer), as it is required in many stages of the algorithm
-        # This is expected to enhance runtime performance by cutting down on objective function evaluations.ZZZZZ
+        # This is expected to enhance runtime performance by cutting down on objective function evaluations.
         self.__particle_with_best_personal_best = self.__find_particle_with_best_personal_best()
         self.global_best_position = self._find_global_best_position()  # Could become a dynamically-added field.
         # Storing the learning rates c1, c2.
@@ -294,8 +294,10 @@ class ClassicSwarm:
             limit_particle_velocity()
             # replace_similar_particles()
 
-        # Calculating the new best position of the swarm.
+        # Calculating the new best particle and position of the swarm.
+        self.__particle_with_best_personal_best = self.__find_particle_with_best_personal_best()
         self.global_best_position = self._find_global_best_position()
+
 
         self.current_iteration += 1
 
@@ -432,6 +434,10 @@ class ClassicSwarm:
             d_g = 1 / (len(self.swarm) - 1) * \
                   sum(norm(best_particle_of_the_swarm._position - particle._position)
                       for particle in self.swarm)
+
+            if d_g not in d:
+                raise ValueError("Average distance d_g does not match any of the average distances d previously calculated.")
+
             d_min, d_max = min(d), max(d)
 
             # Note that this value (the evolutionary factor) is bounded in the values [0,1].

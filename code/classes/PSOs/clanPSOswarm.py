@@ -81,18 +81,11 @@ class ClanSwarm:
     #   POSSIBLE SOLUTION: Store the best particle population at runtime, using either a pointer to the
     #   particle object or an index to its position in the array/list.
     def find_population_global_best_position(self):
-        best_position = self.clans[0].global_best_position
-        best_value = self.__fitness_function(self.clans[0].global_best_position)
-        for swarm in self.clans:
-            swarm_best_value = self.__fitness_function(swarm.global_best_position)
-            # Following the standard implementation, where PSO is tasked to solve a minimization problem.
-            # Therefore a "better" solution is defined as a solution (phenotype) which has a lower
-            # fitness value.
-            if swarm_best_value < best_value:
-                best_position = swarm.global_best_position
-                best_value = swarm_best_value
-
-        return best_position
+        # Essentially, what is done:
+        # Step 1) Find best particle in each clan (inner 'min' function).
+        # Step 2) Among the clan leaders calculated in the previous step, find the best particle among them.
+        # 'min' function is used because the implementation follows the "better => lower" convention.
+        return min([min(self.clans[i].swarm) for i in range(len(self.clans))])._position
 
     def calculate_swarm_distance_from_swarm_centroid(self):
         return 1/len(self.clans) *\
