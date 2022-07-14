@@ -11,6 +11,7 @@ from types import FunctionType
 from enum import Enum
 from typing import List, Tuple#, Final
 
+
 from classes.PSOs.particle import Particle
 from classes.enums.evolutionary_states import EvolutionaryStates
 from classes.enums.wall_types import WallTypes
@@ -43,7 +44,7 @@ class ClassicSwarm:
                  current_iteration: int = 0,
                  search_and_velocity_boundaries: List[List[float]] = None, wt: WallTypes = WallTypes.NONE):
         if isinstance(swarm_or_fitness_function, FunctionType):
-            self.swarm = [Particle(swarm_or_fitness_function, spawn_boundaries) for i in range(swarm_size)]
+            self.swarm = [Particle(swarm_or_fitness_function, spawn_boundaries) for _ in range(swarm_size)]
         if isinstance(swarm_or_fitness_function, list):
             self.swarm = swarm_or_fitness_function
         if adaptivePSO or search_and_velocity_boundaries is not None:
