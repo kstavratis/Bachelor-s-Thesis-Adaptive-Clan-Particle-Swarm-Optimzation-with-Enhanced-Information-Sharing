@@ -15,6 +15,10 @@ from classes.enums.enhanced_information_sharing.global_local_coefficient_types i
 from classes.enums.enhanced_information_sharing.control_factor_types import ControlFactorTypes
 from classes.enums.wall_types import WallTypes
 
+# This strict policy is enacted so as to catch rounding errors (overflows/underflows) as well.
+import warnings
+warnings.filterwarnings("error")
+
 loop_stop_condition_limit = 5 * 10 ** (-15)
 
 
@@ -74,6 +78,11 @@ def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
         try:
             experiment_swarm.update_swarm()
         except FloatingPointError:
+            iteration += 1
+            loop_end = process_time()
+            loop_times.append(loop_end - loop_start)
+            break
+        except RuntimeWarning:
             iteration += 1
             loop_end = process_time()
             loop_times.append(loop_end - loop_start)
