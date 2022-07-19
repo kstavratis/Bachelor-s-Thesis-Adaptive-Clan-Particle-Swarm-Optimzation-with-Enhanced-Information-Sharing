@@ -36,6 +36,7 @@ class ClanSwarm:
 
 
         self.__max_iterations = maximum_iterations
+        self.__spawn_boundaries = spawn_boundaries
         self.__search_and_velocity_boundaries, self.__wall_type = search_and_velocity_boundaries, wt
 
     def update_swarm(self):
@@ -54,7 +55,9 @@ class ClanSwarm:
 
         def update_clan_leaders(leaders: list):
             clan_leaders_swarm = ClassicSwarm(
-                leaders, spawn_boundaries=[], maximum_iterations=self.__max_iterations,
+                leaders,
+                spawn_boundaries=self.__spawn_boundaries,
+                maximum_iterations=self.__max_iterations,
                 current_iteration=self.clans[0].current_iteration,  # Note: all clans have the same value in their "current_iteration" variable.
                 eis=((self.clans[0]._global_local_coefficient_method, self.clans[0].c3),
                      (self.clans[0]._control_factor_method, self.clans[0].c3_k)),

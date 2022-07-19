@@ -4,8 +4,8 @@ For the full notice of the program, see "main.py"
 """
 
 from numpy.ma import sqrt
-from random import random as r1_r2_r3_generator, uniform, randrange, gauss
-from numpy import mean, e
+from random import uniform, randrange, gauss
+from numpy import mean, e, diag
 from numpy.linalg import norm
 from types import FunctionType
 from enum import Enum
@@ -130,11 +130,13 @@ class ClassicSwarm:
         # Initializing it into the 1st particle for comparison.
         particle_with_best_personal_best = self.swarm[0]
         for particle in self.swarm:
+            # Maximization problem
             if greater_than:
                 if Particle.fitness_function(particle._personal_best_position) \
                         > \
                         Particle.fitness_function(particle_with_best_personal_best._personal_best_position):
                     particle_with_best_personal_best = particle
+            # Minimization problem (default)
             else:
                 if Particle.fitness_function(particle._personal_best_position) \
                         < \
@@ -241,16 +243,18 @@ class ClassicSwarm:
 
         self.__update_parameters()
 
-        # TODO different random per dimension
-        # This code does not satisfy the above "2doo". This creates a different random number for each particle,
-        # not for each dimenstion. Keeping it in case that I would like to integrate both techniques
-        # (different random for each particle with if each of its dimensions having different random numbers).
-        random_multipliers = tuple(([r1_r2_r3_generator(), r1_r2_r3_generator(), None]
-                                    for i in range(len(self.swarm))))
-        # r1, r2, r3 = r1_r2_r3_generator(), r1_r2_r3_generator(), None
+        random_multipliers = tuple(
+            [
+                diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))]),  # r1
+                diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))]),  # r2
+                None                                                                # r3 (potentially)
+            ]
+            for i in range(len(self.swarm))
+        )
+
         if isinstance(self.c3, float):
             for triad in random_multipliers:
-                triad[2] = r1_r2_r3_generator()
+                triad[2] = diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))])
 
         random_multipliers_index = 0
         for particle in self.swarm:
@@ -280,7 +284,7 @@ class ClassicSwarm:
                 evolutionary_state = classify_evolutionary_state(f_evol)
 
                 self.__determine_accelaration_coefficients(evolutionary_state)
-                self.__apply_eliticism_learning_strategy(evolutionary_state)
+                # self.__apply_eliticism_learning_strategy(evolutionary_state)
                 self.__adapt_inertia_factor(f_evol)
             else:  # Follow classic PSO learning strategy: decrease inertia weight linearly.
                 self.w = w_max - ((w_max - w_min) / self.__max_iterations) * self.current_iteration
@@ -322,8 +326,9 @@ class ClassicSwarm:
     def calculate_swarm_distance_from_swarm_centroid(self):
         swarm_positions = [self.swarm[i]._position for i in range(len(self.swarm))]
         swarm_centroid = mean(swarm_positions, axis=0)
+        # SD = √(1/N * Σ(||x_avg - x_i||^2))
         swarm_standard_deviation = sqrt(sum(norm(
-            swarm_centroid - self.swarm[i]._position) ** 2 for i in range(len(self.swarm)))) / len(self.swarm)
+            swarm_centroid - self.swarm[i]._position) ** 2 for i in range(len(self.swarm))) / len(self.swarm))
         return swarm_standard_deviation
 
     def __estimate_evolutionary_state(self):
