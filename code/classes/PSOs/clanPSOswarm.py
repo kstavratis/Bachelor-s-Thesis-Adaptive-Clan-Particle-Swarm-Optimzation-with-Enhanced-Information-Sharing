@@ -74,7 +74,8 @@ class ClanSwarm:
         best_value = self.__fitness_function(self.clans[0].global_best_position)
         for swarm in self.clans:
             swarm_best_value = self.__fitness_function(swarm.global_best_position)
-            if swarm_best_value > best_value:
+            # Implementation follows minimization approach. Better <=> Lower value
+            if swarm_best_value < best_value:
                 best_position = swarm.global_best_position
                 best_value = swarm_best_value
 

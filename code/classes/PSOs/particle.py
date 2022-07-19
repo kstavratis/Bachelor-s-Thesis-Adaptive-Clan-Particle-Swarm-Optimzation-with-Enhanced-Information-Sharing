@@ -72,8 +72,8 @@ class Particle:
         update_velocity()
         # Updating the particle's _position.
         self._position = self._position + self.__velocity
-        # Checking whether the new _position is a new personal best (maximum).
-        if self.__get_fitness_at_current_position() > Particle.fitness_function(self._personal_best_position):
+        # Checking whether the new _position is a new personal best (minimum).
+        if self.__get_fitness_at_current_position() < Particle.fitness_function(self._personal_best_position):
             self._personal_best_position = self._position
 
     def __get_fitness_at_current_position(self):

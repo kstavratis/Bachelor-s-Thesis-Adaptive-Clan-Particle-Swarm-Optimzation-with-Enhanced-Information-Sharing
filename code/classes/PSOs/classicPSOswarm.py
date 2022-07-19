@@ -117,7 +117,7 @@ class ClassicSwarm:
         # used a Vmax of 20% the domain limits in each dimension.
         # Adaptive Particle Swarm Optimization -> II. PSO AND ITS DEVELOPMENTS -> A. PSO Framework
 
-    def __find_particle_with_best_personal_best(self, greater_than: bool = True) -> Particle:
+    def __find_particle_with_best_personal_best(self, greater_than: bool = False) -> Particle:
         """
         Particle that at some point had the best-known position (global max).
         Take into account the possibility that no particle is on that position when this function is called.
@@ -523,10 +523,11 @@ class ClassicSwarm:
                 mutated_position[search_space_dimension] += search_space_range * elitist_learning_rate
 
             # If the mutated position achieves a better fitness function, then have the best particle move there.
-            if Particle.fitness_function(mutated_position) > Particle.fitness_function(current_best_particle._position):
+            # Note: This PSO implementation follows a minimization approach. Therefore, "better" is equivalent to "lower value".
+            if Particle.fitness_function(mutated_position) < Particle.fitness_function(current_best_particle._position):
                 current_best_particle._position = mutated_position
             else:  # Replacing particle with worst position with particle with mutated best position.
-                current_worst_particle = self.__find_particle_with_best_personal_best(greater_than=False)
+                current_worst_particle = self.__find_particle_with_best_personal_best(greater_than=True)
                 self.swarm.remove(current_worst_particle)
                 self.swarm.append(Particle(Particle.fitness_function, self.__spawn_boundaries, spawn_position=mutated_position))
 
