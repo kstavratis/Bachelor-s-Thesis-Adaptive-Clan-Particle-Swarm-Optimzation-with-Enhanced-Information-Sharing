@@ -7,6 +7,7 @@ from numpy import absolute, sum as npsum, sqrt, square, sin, cos, prod, pi, e, a
 from scipy.linalg import norm
 
 
+
 # Theorem: min g(x) = -max (-g(x)).
 # PSO traditionally follows the maximization problem,
 # and it is for that reason that this approach has been followed in this implementation as well.

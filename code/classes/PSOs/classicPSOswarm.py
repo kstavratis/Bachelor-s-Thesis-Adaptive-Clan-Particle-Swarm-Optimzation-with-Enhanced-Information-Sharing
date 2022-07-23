@@ -4,12 +4,13 @@ For the full notice of the program, see "main.py"
 """
 
 from numpy.ma import sqrt
-from random import random as r1_r2_r3_generator, uniform, randrange, gauss
+from random import uniform, randrange, gauss
 from numpy import mean, e, diag
 from numpy.linalg import norm
 from types import FunctionType
 from enum import Enum, auto
 from typing import List, Tuple#, Final
+
 
 from classes.PSOs.particle import Particle
 from classes.enums.evolutionary_states import EvolutionaryStates
@@ -50,7 +51,7 @@ class ClassicSwarm:
                  current_iteration: int = 0,
                  search_and_velocity_boundaries: List[List[float]] = None, wt: WallTypes = WallTypes.NONE):
         if isinstance(swarm_or_fitness_function, FunctionType):
-            self.swarm = [Particle(swarm_or_fitness_function, spawn_boundaries) for i in range(swarm_size)]
+            self.swarm = [Particle(swarm_or_fitness_function, spawn_boundaries) for _ in range(swarm_size)]
         if isinstance(swarm_or_fitness_function, list):
             self.swarm = swarm_or_fitness_function
         if adaptivePSO or search_and_velocity_boundaries is not None:
@@ -126,7 +127,6 @@ class ClassicSwarm:
         # In the article "Adaptive Particle Swarm Optimization", Zhan et al. (https://ieeexplore.ieee.org/document/4812104)
         # used a Vmax of 20% the domain limits in each dimension.
         # Adaptive Particle Swarm Optimization -> II. PSO AND ITS DEVELOPMENTS -> A. PSO Framework
-
 
     def __find_particle_with_best_personal_best(self, greater_than: bool = False) -> Particle:
         """
@@ -269,15 +269,16 @@ class ClassicSwarm:
 
         random_multipliers = tuple(
             [
-                diag([r1_r2_r3_generator() for _ in range(len(self.__spawn_boundaries))]),
-                diag([r1_r2_r3_generator() for _ in range(len(self.__spawn_boundaries))]),
-                None
+                diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))]),  # r1
+                diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))]),  # r2
+                None                                                                # r3 (potentially)
             ]
-            for _ in range(len(self.swarm)))
+            for i in range(len(self.swarm))
+        )
 
         if isinstance(self.c3, float):
             for triad in random_multipliers:
-                triad[2] = diag([r1_r2_r3_generator() for _ in range(len(self.__spawn_boundaries))])
+                triad[2] = diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))])
 
         random_multipliers_index = 0
         for particle in self.swarm:
@@ -309,7 +310,7 @@ class ClassicSwarm:
                 evolutionary_state = classify_evolutionary_state(f_evol)
 
                 self.__determine_accelaration_coefficients(evolutionary_state)
-                self.__apply_eliticism_learning_strategy(evolutionary_state)
+                # self.__apply_eliticism_learning_strategy(evolutionary_state)
                 self.__adapt_inertia_factor(f_evol)
             else:  # Follow classic PSO learning strategy: decrease inertia weight linearly.
                 self.w = w_max - ((w_max - w_min) / self.__max_iterations) * self.current_iteration
@@ -572,9 +573,10 @@ class ClassicSwarm:
             else:
                 mutated_position[search_space_dimension] += search_space_range * elitist_learning_rate
 
-            # If the mutated position achieves a better (lower) fitness value, then have the best particle move there.
-            if Particle.fitness_function(mutated_position) < Particle.fitness_function(self.__particle_with_best_personal_best._position):
-                self.__particle_with_best_personal_best._position = mutated_position
+            # If the mutated position achieves a better fitness function, then have the best particle move there.
+            # Note: This PSO implementation follows a minimization approach. Therefore, "better" is equivalent to "lower value".
+            if Particle.fitness_function(mutated_position) < Particle.fitness_function(current_best_particle._position):
+                current_best_particle._position = mutated_position
             else:  # Replacing particle with worst position with particle with mutated best position.
                 current_worst_particle = self.__find_particle_with_best_personal_best(greater_than=True)
                 self.swarm.remove(current_worst_particle)

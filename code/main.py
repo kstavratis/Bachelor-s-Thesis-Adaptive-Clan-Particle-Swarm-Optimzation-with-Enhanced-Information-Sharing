@@ -23,7 +23,6 @@ from classes.enums.enhanced_information_sharing.control_factor_types import Cont
 from classes.enums.enhanced_information_sharing.global_local_coefficient_types import GlobalLocalCoefficientTypes
 from classes.enums.wall_types import WallTypes
 
-import scripts.benchmark_functions as bench_f
 import scripts.experiments.experiment
 import scripts.experiments.experiments_data_creation
 
@@ -31,22 +30,24 @@ from numpy import seterr
 import pandas
 from concurrent.futures.process import ProcessPoolExecutor
 
+import scripts.benchmark_functions as bench_f
+
 
 def main():
     seterr(all='raise')
 
+    benchmark_function = bench_f.sphere_function
 
-    benchmark_function = bench_f.ackley_function
-
-
-    number_of_clans = 6
-    particles_per_clan = 5
+    number_of_clans = 3
+    particles_per_clan = 10
     simple_pso_particles = number_of_clans * particles_per_clan
     maximum_iterations = 5000
     experiments = 256
     executor = ProcessPoolExecutor()
 
-    print(f'Alpine N.1 function: {number_of_clans} clans of {particles_per_clan} particles each')
+
+
+    print(f'sphere function: {number_of_clans} clans of {particles_per_clan} particles each')
     print("---------------")
 
     simple_AClanPSO = scripts.experiments.experiments_data_creation.run(
@@ -336,8 +337,8 @@ def main():
         )
     }
 
-    pandas.DataFrame(sphere_collected_data).to_csv(f'alpinen1_{number_of_clans}x{particles_per_clan}_without_ELS.csv')
-    print(f'File for Alpine N.1 benchmark function with {number_of_clans} clans of {particles_per_clan} particles was created!')
+    pandas.DataFrame(sphere_collected_data).to_csv(f'sphere_{number_of_clans}x{particles_per_clan}_with_ELS_max_implementation.csv')
+    print(f'File for Rastrigin test function with {number_of_clans} clans of {particles_per_clan} particles was created!')
 
 
 
