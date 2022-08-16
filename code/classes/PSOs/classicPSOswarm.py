@@ -66,7 +66,7 @@ class ClassicSwarm:
         # Initializing the fitness_function's global best _position particle with the optimal value on spawn.
         self.__fitness_function = swarm_or_fitness_function
 
-        # The best particle is stored as a local variable (pointer), as it is required in many stages of the algorithm
+        # The best particle is stored as a local variable (pointer), as it is required in many stages of the algorithm.
         # This is expected to enhance runtime performance by cutting down on objective function evaluations.
         self.__particle_with_best_personal_best = self.__find_particle_with_best_personal_best()
         self.global_best_position = self._find_global_best_position()  # Could become a dynamically-added field.
@@ -236,6 +236,10 @@ class ClassicSwarm:
             :param gamma: constant determining the range from the mean μ mentioned in Step 2.
             """
 
+            # Another approach could be using the "Nearest Neighbour algorithm".
+            # Note: Inherently, any attempt at making out similarity in the swarm will result in another high complexity
+            # operation. Specifically, it would be O(number of particles) * O(complexity of fitness function).
+
             # # Step 1
             # average_distances = []
             # for particle_i in range(len(self.swarm)):
@@ -267,13 +271,20 @@ class ClassicSwarm:
 
         self.__update_parameters()
 
+        # TODO: Possibly parallelize operation (namely, position update) at particle level.
+        #   Think of possibly creating two matrices by concatinating all needed information;
+        #   one matrix P for positions and one matrix V for velocities and apply matrix multiplications
+        #   (RV, where R would be a 3D matrix and V would be a 2D matrix containing the particles' velocities)
+        #   and additions (P = P + V) respectively.
+        #   Ideally, utilize GPU for the operations.
+
         random_multipliers = tuple(
             [
                 diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))]),  # r1
                 diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))]),  # r2
                 None                                                                # r3 (potentially)
             ]
-            for i in range(len(self.swarm))
+            for _ in range(len(self.swarm))
         )
 
         if isinstance(self.c3, float):
@@ -292,7 +303,7 @@ class ClassicSwarm:
         # This is executed only when the Last-Elimination Principle is enabled. TODO: Why only then?
         if self.__domain_and_velocity_boundaries is not None:
             wall_enforcement()
-            limit_particle_velocity()
+            # limit_particle_velocity() # Velocity limitation has been moved to inside of the particle class. Doing it here is too late, as all the particles have already updated their positions.
             # replace_similar_particles()
 
         # Calculating the new best particle and position of the swarm.
@@ -310,7 +321,7 @@ class ClassicSwarm:
                 evolutionary_state = classify_evolutionary_state(f_evol)
 
                 self.__determine_accelaration_coefficients(evolutionary_state)
-                # self.__apply_eliticism_learning_strategy(evolutionary_state)
+                self.__apply_eliticism_learning_strategy(evolutionary_state)
                 self.__adapt_inertia_factor(f_evol)
             else:  # Follow classic PSO learning strategy: decrease inertia weight linearly.
                 self.w = w_max - ((w_max - w_min) / self.__max_iterations) * self.current_iteration
@@ -388,7 +399,8 @@ class ClassicSwarm:
 
             # Single-threaded version.
             for particle1 in self.swarm:
-                # "Adaptive Clan Particle Swarm Optimization" -> equation (3)
+                # "Adaptive Clan Particle Swarm Optimization" -> equation (3), i.e.
+                # d_i = 1/(N-1) * Σ||x_i - x_j||
                 d.append(
                     1 / (len(self.swarm) - 1) * sum(norm(particle1._position - particle2._position)
                                                     for particle2 in self.swarm)
@@ -436,6 +448,8 @@ class ClassicSwarm:
                   sum(norm(best_particle_of_the_swarm._position - particle._position)
                       for particle in self.swarm)
 
+            # The only case this is possible if "best_particle_of_the_swarm" does not match any particle of the "self.swarm",
+            # due to some bug.
             if d_g not in d:
                 raise ValueError("Average distance d_g does not match any of the average distances d previously calculated.")
 
@@ -575,8 +589,8 @@ class ClassicSwarm:
 
             # If the mutated position achieves a better fitness function, then have the best particle move there.
             # Note: This PSO implementation follows a minimization approach. Therefore, "better" is equivalent to "lower value".
-            if Particle.fitness_function(mutated_position) < Particle.fitness_function(current_best_particle._position):
-                current_best_particle._position = mutated_position
+            if Particle.fitness_function(mutated_position) < Particle.fitness_function(self.__particle_with_best_personal_best._position):
+                self.__particle_with_best_personal_best._position = mutated_position
             else:  # Replacing particle with worst position with particle with mutated best position.
                 current_worst_particle = self.__find_particle_with_best_personal_best(greater_than=True)
                 self.swarm.remove(current_worst_particle)

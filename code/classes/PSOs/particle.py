@@ -14,8 +14,28 @@ from classes.enums.enhanced_information_sharing.control_factor_types import Cont
 class Particle:
     # w, c1, c2, c3, r1, r2, r3 = None, None, None, None, None, None, None
     fitness_function = None
+    convex_boundaries = None
+    velocity_boundaries = None
 
     def __init__(self, fitness_function, convex_boundaries: list, spawn_position: vector = None):
+        # In case of false user input, (upper boundary has been given first and lower boundary second).
+        # the boundaries are swapped, in order to proceed to the next part of code correctly.
+        for dimension in range(len(convex_boundaries)):
+            if convex_boundaries[dimension][0] > convex_boundaries[dimension][1]:
+                convex_boundaries[dimension][0], convex_boundaries[dimension][1] = convex_boundaries[dimension][1], convex_boundaries[dimension][0]
+        Particle.convex_boundaries = convex_boundaries
+        # Note: It is good practice to have the speed limits be a multiple of the domain limits.
+        # In the article "Adaptive Particle Swarm Optimization", Zhan et al. (https://ieeexplore.ieee.org/document/4812104)
+        # used a Vmax of 20% the domain limits in each dimension.
+        # Adaptive Particle Swarm Optimization -> II. PSO AND ITS DEVELOPMENTS -> A. PSO Framework
+        # Desired limits: # −0.2max{ |𝑋𝑚𝑖𝑛𝑑|, |𝑋𝑚𝑎𝑥𝑑|}) and 0.2max{|𝑋𝑚𝑖𝑛𝑑|,|𝑋𝑚𝑎𝑥𝑑|}, ∀d∈D (D===problem domain)
+        # Note: There is no need to check for false user input, as (currently) the velocity boundaries are extracted
+        # by the convex boundaries, which have already been corrected above.
+        velocity_boundaries = vector(Particle.convex_boundaries); velocity_boundaries = 0.2 * abs(velocity_boundaries)
+        for dimension_limits in velocity_boundaries:
+            dimension_limits[0] = -dimension_limits[0]
+        Particle.velocity_boundaries = velocity_boundaries # Setting the velocity boundaries swarm-wise, utilizing a shared variable. This is to reduce computational load in "__limit_velocity()".
+
         # Randomly spawning the particle according to the problem's convex boundaries.
         if spawn_position is None:
             self._position: vector = vector([uniform(
@@ -37,8 +57,6 @@ class Particle:
 
         Particle.fitness_function = fitness_function
 
-
-    # This overload remains unused, however, as this comparison is not needed (yet).
     def __lt__(self, other):
         return Particle.fitness_function(self._position) < Particle.fitness_function(other._position)
 
@@ -80,26 +98,35 @@ class Particle:
 
 
         update_velocity()
+        self.__limit_velocity(Particle.velocity_boundaries)
         # Updating the particle's _position.
         self._position = self._position + self.__velocity
+        # "Glue in" the particle whenever it would exceed the search boundaries, instead of letting it move freely.
+        self.__bind_particle_to_convex_boundaries()
         # Checking whether the new _position is a new personal best (minimum).
         if self.__get_fitness_at_current_position() < Particle.fitness_function(self._personal_best_position):
             self._personal_best_position = self._position
+        # TODO: Should the best global particle be updated at this point as well or should there be a wait for all
+        #   particles to complete their iteration? According to the pseudocode in Wikipedia (), the former approach
+        #   is implied.
+        # CURRENTLY, THE ABOVE "2DO" IS EXPLORED IN A DIFFERENT BRANCH.
 
     def __get_fitness_at_current_position(self):
         return Particle.fitness_function(self._position)
 
-    def _limit_velocity(self, velocity_boundaries: list):
-        # In case of false user input, (upper boundary has been given first and lower boundary second).
-        # the boundaries are swapped, in order to proceed to the next part of code correctly.
-        if velocity_boundaries[0] > velocity_boundaries[1]:
-            velocity_boundaries[0], velocity_boundaries[1] = velocity_boundaries[1], velocity_boundaries[0]
+    def __limit_velocity(self, velocity_boundaries: list):
+        for dimension in range(len(velocity_boundaries)):
+            if self.__velocity[dimension] < velocity_boundaries[dimension][0]:
+                self.__velocity[dimension] = velocity_boundaries[dimension][0]
+            if self.__velocity[dimension] > velocity_boundaries[dimension][1]:
+                self.__velocity[dimension] = velocity_boundaries[dimension][1]
 
-        for i in range(len(self.__velocity)):
-            if self.__velocity[i] < velocity_boundaries[0]:
-                self.__velocity[i] = velocity_boundaries[0]
-            if self.__velocity[i] > velocity_boundaries[1]:
-                self.__velocity[i] = velocity_boundaries[1]
+    def __bind_particle_to_convex_boundaries(self):
+        for dimension in range(len(self._position)):
+            if self._position[dimension] < Particle.convex_boundaries[dimension][0]:
+                self._position[dimension] = Particle.convex_boundaries[dimension][0]
+            if self._position[dimension] > Particle.convex_boundaries[dimension][1]:
+                self._position[dimension] = Particle.convex_boundaries[dimension][1]
 
     def _zero_velocity(self, axis_index: int):
         self.__velocity[axis_index] = 0
