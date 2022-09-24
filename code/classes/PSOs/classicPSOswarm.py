@@ -280,8 +280,8 @@ class ClassicSwarm:
 
         random_multipliers = tuple(
             [
-                diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))]),  # r1
-                diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))]),  # r2
+                uniform(0,1), # diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))]),  # r1
+                uniform(0,1), # diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))]),  # r2
                 None                                                                # r3 (potentially)
             ]
             for _ in range(len(self.swarm))
@@ -289,7 +289,7 @@ class ClassicSwarm:
 
         if isinstance(self.c3, float):
             for triad in random_multipliers:
-                triad[2] = diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))])
+                triad[2] = uniform(0,1) # diag([uniform(0,1) for _ in range(len(self.__spawn_boundaries))])
 
         random_multipliers_index = 0
         for particle in self.swarm:
@@ -318,10 +318,9 @@ class ClassicSwarm:
         def update_pso_inertia_weight_and_coefficients():
             if self.__adaptivePSO:
                 f_evol = self.__estimate_evolutionary_state()
-                evolutionary_state = classify_evolutionary_state(f_evol)
-
-                self.__determine_accelaration_coefficients(evolutionary_state)
-                self.__apply_eliticism_learning_strategy(evolutionary_state)
+                self.__evolutionary_state = classify_evolutionary_state(f_evol)
+                self.__determine_accelaration_coefficients(self.__evolutionary_state)
+                # self.__apply_eliticism_learning_strategy(evolutionary_state)
                 self.__adapt_inertia_factor(f_evol)
             else:  # Follow classic PSO learning strategy: decrease inertia weight linearly.
                 self.w = w_max - ((w_max - w_min) / self.__max_iterations) * self.current_iteration
@@ -333,12 +332,24 @@ class ClassicSwarm:
                 if self._global_local_coefficient_method == GlobalLocalCoefficientTypes.NONE or \
                         self._global_local_coefficient_method == GlobalLocalCoefficientTypes.CONSTANT:
                     pass
+
                 # Global optimization capability is strong when c_3 is linearly decreasing (c3_k > 0) according to the article.
                 elif self._global_local_coefficient_method == GlobalLocalCoefficientTypes.LINEAR:
                     self.c3 = self.c3_k * (
                                 c3_start - (c3_start - c3_end) / self.__max_iterations * self.current_iteration)
+
                 elif self._global_local_coefficient_method == GlobalLocalCoefficientTypes.ADAPTIVE:
-                    pass  # It is handled in the "determine_accelaration_coefficients" function called above (see "if self adaptivePSO").
+                    # When local exploration is encouraged, the coefficient contributes a vector starting
+                    # from the swarm's global best pointing towards the particle's local best.
+                    if self.__evolutionary_state == EvolutionaryStates.EXPLORATION or \
+                            self.__evolutionary_state == EvolutionaryStates.EXPLOITATION:
+                        self.c3 = -(abs(self.c3))
+                    # When global exploration is encouraged, the coefficient contributes a vector starting
+                    # from the particle's best pointing towards the swarm's global best.
+                    elif self.__evolutionary_state == EvolutionaryStates.CONVERGENCE or \
+                            self.__evolutionary_state == EvolutionaryStates.JUMP_OUT:
+                        self.c3 = abs(self.c3)
+
 
             def update_global_local_control_factor():
                 if self._control_factor_method == ControlFactorTypes.NONE or \
@@ -351,7 +362,17 @@ class ClassicSwarm:
                                 self.__c3_k_start - 0) / self.__max_iterations * self.current_iteration
 
                 elif self._control_factor_method == ControlFactorTypes.ADAPTIVE:
-                    pass  # handled in "__determince accelaration coefficients" function.
+                    # When local exploration is encouraged, the coefficient contributes a vector starting
+                    # from the swarm's global best pointing towards the particle's local best.
+                    if self.__evolutionary_state == EvolutionaryStates.EXPLORATION or \
+                        self.__evolutionary_state == EvolutionaryStates.EXPLOITATION:
+                        self.c3_k = -(abs(self.c3_k))
+                    # When global exploration is encouraged, the coefficient contributes a vector starting
+                    # from the particle's best pointing towards the swarm's global best.
+                    elif self.__evolutionary_state == EvolutionaryStates.CONVERGENCE or \
+                            self.__evolutionary_state == EvolutionaryStates.JUMP_OUT:
+                        self.c3_k = abs(self.c3_k)
+
 
             update_global_local_coefficient()
             update_global_local_control_factor()
@@ -469,6 +490,7 @@ class ClassicSwarm:
 
     def __determine_accelaration_coefficients(self, evolutionary_state: EvolutionaryStates):
 
+
         class CoefficientOperations(Enum):
             INCREASE = auto(),
             DECREASE = auto(),
@@ -523,30 +545,6 @@ class ClassicSwarm:
             c1_old, c2_old = self.c1, self.c2
             self.c1 = c1_old / (c1_old + c2_old) * (c_min + c_max)
             self.c2 = c2_old / (c1_old + c2_old) * (c_min + c_max)
-
-        if self._global_local_coefficient_method == GlobalLocalCoefficientTypes.ADAPTIVE:
-            # When local exploration is encouraged, the coefficient contributes a vector starting
-            # from the swarm's global best pointing towards the particle's local best.
-            if evolutionary_state == EvolutionaryStates.EXPLORATION or \
-                    evolutionary_state == EvolutionaryStates.EXPLOITATION:
-                self.c3 = -(abs(self.c3))
-            # When global exploration is encouraged, the coefficient contributes a vector starting
-            # from the particle's best pointing towards the swarm's global best.
-            elif evolutionary_state == EvolutionaryStates.CONVERGENCE or \
-                    evolutionary_state == EvolutionaryStates.JUMP_OUT:
-                self.c3 = abs(self.c3)
-
-        if self._control_factor_method == ControlFactorTypes.ADAPTIVE:
-            # When local exploration is encouraged, the coefficient contributes a vector starting
-            # from the swarm's global best pointing towards the particle's local best.
-            if evolutionary_state == EvolutionaryStates.EXPLORATION or \
-                    evolutionary_state == EvolutionaryStates.EXPLOITATION:
-                self.c3_k = -(abs(self.c3_k))
-            # When global exploration is encouraged, the coefficient contributes a vector starting
-            # from the particle's best pointing towards the swarm's global best.
-            elif evolutionary_state == EvolutionaryStates.CONVERGENCE or \
-                    evolutionary_state == EvolutionaryStates.JUMP_OUT:
-                self.c3_k = abs(self.c3_k)
 
 
 
