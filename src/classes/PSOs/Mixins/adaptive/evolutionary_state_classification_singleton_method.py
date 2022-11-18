@@ -10,14 +10,17 @@ from classes.PSOs.Mixins.adaptive.enums.evolutionary_states import EvolutionaryS
 """
 For details see "Adaptive Particle Swarm Optimization (Zhan et al.)" -> III ESE for PSO -> B. ESE -> Step 3
 The singleton defuzzification classification technique is used to determine the state the swarm is in.
+
+The ruletable according to which conflicts are solved is
+
+Confusion \ Current State   S1  S2  S3  S4
+------------------------------------------
+    S1 - S2|                S1  S2  S2  S1
+    S1 - S4|                S1  S1  S4  S4
+    S2 - S3|                S2  S2  S3  S3
 """
 
 
-#  Confusion\ Current State   S1 S2 S3 S4
-# ----------------------------------------
-#         S1-S2|             |S1 S2 S2 S1
-#         S1-S4|             |S1 S1 S4 S4
-#         S2-S3|             |S2 S2 S3 S3
 # Defining transition matrix as a tuple, so as to make it unchangeable.
 transition_matrix = (
     (EvolutionaryStates.EXPLORATION, EvolutionaryStates.EXPLOITATION, EvolutionaryStates.EXPLOITATION, EvolutionaryStates.EXPLORATION),
@@ -30,55 +33,21 @@ current_state = EvolutionaryStates.EXPLORATION
 
 
 def classify_evolutionary_state(evolutionary_factor: float):
-    def exploration_membership_function(f: float):
-        if 0 <= f <= 0.4 or 0.8 < f <= 1.0:
-            return 0
-        elif 0.4 < f <= 0.6:
-            return 5 * f - 2
-        elif 0.6 < f <= 0.7:
-            return 1
-        elif 0.7 < f <= 0.8:
-            return -10 * f + 8
-        else:
-            raise ValueError("The evolutionary factor is bounded in the values [0,1].")
+    """
+    The ruletable according to which conflicts are solved is
 
-    def exploitation_membership_function(f: float):
-        if 0 <= f <= 0.2 or 0.6 < f <= 1:
-            return 0
-        elif 0.2 < f <= 0.3:
-            return 10 * f - 2
-        elif 0.3 < f <= 0.4:
-            return 1
-        elif 0.4 < f <= 0.6:
-            return -5 * f + 3
-        else:
-            raise ValueError("The evolutionary factor is bounded in the values [0,1].")
-
-    def convergence_membership_function(f: float):
-        if 0 <= f <= 0.1:
-            return 1
-        elif 0.1 < f <= 0.3:
-            return -5 * f + 1.5
-        elif 0.3 < f <= 1:
-            return 0
-        else:
-            raise ValueError("The evolutionary factor is bounded in the values [0,1].")
-
-    def jumping_out_membership_function(f: float):
-        if 0 <= f <= 0.7:
-            return 0
-        elif 0.7 < f <= 0.9:
-            return 5 * f - 3.5
-        elif 0.9 < f <= 1:
-            return 1
-        else:
-            raise ValueError("The evolutionary factor is bounded in the values [0,1].")
-
+    Confusion \ Current State   S1  S2  S3  S4
+    ------------------------------------------
+        S1 - S2|                S1  S2  S2  S1
+        S1 - S4|                S1  S1  S4  S4
+        S2 - S3|                S2  S2  S3  S3
+    """
+    
     membership_function_dict = {
-        EvolutionaryStates.EXPLORATION: exploration_membership_function,
-        EvolutionaryStates.EXPLOITATION: exploitation_membership_function,
-        EvolutionaryStates.CONVERGENCE: convergence_membership_function,
-        EvolutionaryStates.JUMP_OUT: jumping_out_membership_function
+        EvolutionaryStates.EXPLORATION: __exploration_membership_function,
+        EvolutionaryStates.EXPLOITATION: __exploitation_membership_function,
+        EvolutionaryStates.CONVERGENCE: __convergence_membership_function,
+        EvolutionaryStates.JUMP_OUT: __jumping_out_membership_function
     }
 
 
@@ -113,7 +82,7 @@ def classify_evolutionary_state(evolutionary_factor: float):
     global current_state
 
     if greater_than_zero_membership_values <= 0:
-        raise ValueError("# f_evol must be classified to at least one evolutionary state.")
+        raise ValueError("f_evol must be classified to at least one evolutionary state.")
     elif greater_than_zero_membership_values == 1:
         next_evolutionary_state = EvolutionaryStates(f.index(max(f)))
         current_state = next_evolutionary_state
@@ -128,3 +97,50 @@ def classify_evolutionary_state(evolutionary_factor: float):
         elif f[EvolutionaryStates.EXPLOITATION.value] > 0 and f[EvolutionaryStates.CONVERGENCE.value] > 0:
             current_state = transition_matrix[2][current_state.value]
             return current_state
+
+def __membership_value_error_message(f):
+    return f"The evolutionary factor is bounded in the values [0,1].\n\ Its value is {f} instead."
+
+def __exploration_membership_function(f: float) -> float:
+        if 0 <= f <= 0.4 or 0.8 < f <= 1.0:
+            return 0
+        elif 0.4 < f <= 0.6:
+            return 5 * f - 2
+        elif 0.6 < f <= 0.7:
+            return 1
+        elif 0.7 < f <= 0.8:
+            return -10 * f + 8
+        else:
+            raise ValueError(__membership_value_error_message(f))
+
+def __exploitation_membership_function(f: float) -> float:
+        if 0 <= f <= 0.2 or 0.6 < f <= 1:
+            return 0
+        elif 0.2 < f <= 0.3:
+            return 10 * f - 2
+        elif 0.3 < f <= 0.4:
+            return 1
+        elif 0.4 < f <= 0.6:
+            return -5 * f + 3
+        else:
+            raise ValueError(__membership_value_error_message(f))
+
+def __convergence_membership_function(f: float) -> float:
+        if 0 <= f <= 0.1:
+            return 1
+        elif 0.1 < f <= 0.3:
+            return -5 * f + 1.5
+        elif 0.3 < f <= 1:
+            return 0
+        else:
+            raise ValueError(__membership_value_error_message(f))
+
+def __jumping_out_membership_function(f: float) -> float:
+        if 0 <= f <= 0.7:
+            return 0
+        elif 0.7 < f <= 0.9:
+            return 5 * f - 3.5
+        elif 0.9 < f <= 1:
+            return 1
+        else:
+            raise ValueError(__membership_value_error_message(f))

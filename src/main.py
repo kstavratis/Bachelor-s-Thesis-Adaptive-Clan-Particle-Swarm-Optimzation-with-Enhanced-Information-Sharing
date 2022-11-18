@@ -18,16 +18,13 @@ Code for my Bachelor's Thesis in the Informatics department of the Aristotle Uni
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from classes.PSOs.clanPSOswarm import ClanSwarm
-from classes.PSOs.Mixins.enhanced_information_sharing.enums.control_factor_types import ControlFactorTypes
-from classes.PSOs.Mixins.enhanced_information_sharing.enums.global_local_coefficient_types import GlobalLocalCoefficientTypes
-from classes.PSOs.wall_types import WallTypes
-
-import scripts.experiments.experiment
-import scripts.experiments.experiments_data_creation
+#import scripts.experiments.experiment
+#import scripts.experiments.experiments_data_creation
+import scripts.experiments.experiments_data_creation2
+import scripts.experiments.experimental_data_manipulation as data_avg
 
 from numpy import seterr
-import pandas
+import pandas as pd
 from concurrent.futures.process import ProcessPoolExecutor
 
 import scripts.benchmark_functions as bench_f
@@ -36,308 +33,40 @@ import scripts.benchmark_functions as bench_f
 def main():
     seterr(all='raise')
 
-    benchmark_function = bench_f.alpinen1_function
+    benchmark_function = bench_f.sphere_function
 
     number_of_clans = 6
     particles_per_clan = 5
     simple_pso_particles = number_of_clans * particles_per_clan
-    maximum_iterations = 5000
-    experiments = 1
+    maximum_iterations = 50
+    experiments = 8
     executor = ProcessPoolExecutor()
 
+    shared_keyword_input_parameters_dict = {
+        'objective_function_pointer' : benchmark_function['formula'] ,
+        'spawn_boundaries' : benchmark_function['search_domain'],
+        'objective_function_goal_point' : benchmark_function['goal_point'],
+        'maximum_iterations' : maximum_iterations,
+        'swarm_size' : number_of_clans * particles_per_clan,
+        'number_of_clans' : number_of_clans,
+        'search_and_velocity_boundaries' : benchmark_function['search_and_velocity_boundaries']
+    }
 
 
-    print(f'alpinen1 function: {number_of_clans} clans of {particles_per_clan} particles each')
+
+    print(f'{benchmark_function["name"]} function: {number_of_clans} clans of {particles_per_clan} particles each')
     print("---------------")
-
-    simple_AClanPSO = scripts.experiments.experiments_data_creation.run(
+    simple_AClanPSO_raw_data = scripts.experiments.experiments_data_creation2.run(
         executor=executor,
         num_of_experiments=experiments,
-        objective_function_pointer=benchmark_function['formula'],
-        spawn_boundaries=benchmark_function['search_domain'],
-        objective_function_goal_point=benchmark_function['goal_point'],
-        maximum_iterations=maximum_iterations,
-        swarm_size=number_of_clans * particles_per_clan,
-        isClan=True,
-        number_of_clans=number_of_clans,
-        adaptivePSO=True,
-        search_and_velocity_boundaries=benchmark_function['search_and_velocity_boundaries'],
+        kwargs = dict(**shared_keyword_input_parameters_dict, is_clan = True, is_adaptive = True)
         # wt=WallTypes.ELIMINATING
     )
 
-    # eis_l2_k0p2c_AClanPSO = scripts.experiments.experiments_data_creation.run(
-    #     executor=executor,
-    #     num_of_experiments=experiments,
-    #     objective_function_pointer=benchmark_function['formula'],
-    #     spawn_boundaries=benchmark_function['search_domain'],
-    #     objective_function_goal_point=benchmark_function['goal_point'],
-    #     maximum_iterations=maximum_iterations,
-    #     swarm_size=number_of_clans*particles_per_clan,
-    #     isClan=True,
-    #     number_of_clans=number_of_clans,
-    #     adaptivePSO=True,
-    #     eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.CONSTANT, 0.2)),
-    #     search_and_velocity_boundaries=benchmark_function['search_and_velocity_boundaries'],
-    #     # wt=WallTypes.ELIMINATING
-    # )
+    simple_AClanPSO_raw_data.to_csv(f'{benchmark_function["name"]}_function_simple_aclan_pso_raw_data.csv')
 
-    # eis_l2_k1c_AClanPSO = scripts.experiments.experiments_data_creation.run(
-    #     executor=executor,
-    #     num_of_experiments=experiments,
-    #     objective_function_pointer=benchmark_function['formula'],
-    #     spawn_boundaries=benchmark_function['search_domain'],
-    #     objective_function_goal_point=benchmark_function['goal_point'],
-    #     maximum_iterations=maximum_iterations,
-    #     swarm_size=number_of_clans * particles_per_clan,
-    #     isClan=True,
-    #     number_of_clans=number_of_clans,
-    #     adaptivePSO=True,
-    #     eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.CONSTANT, 1.0)),
-    #     search_and_velocity_boundaries=benchmark_function['search_and_velocity_boundaries'],
-    #     # wt=WallTypes.ELIMINATING
-    # )
-
-    # eis_l2_k2c_AClanPSO = scripts.experiments.experiments_data_creation.run(
-    #     executor=executor,
-    #     num_of_experiments=experiments,
-    #     objective_function_pointer=benchmark_function['formula'],
-    #     spawn_boundaries=benchmark_function['search_domain'],
-    #     objective_function_goal_point=benchmark_function['goal_point'],
-    #     maximum_iterations=maximum_iterations,
-    #     swarm_size=number_of_clans * particles_per_clan,
-    #     isClan=True,
-    #     number_of_clans=number_of_clans,
-    #     adaptivePSO=True,
-    #     eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.CONSTANT, 2.0)),
-    #     search_and_velocity_boundaries=benchmark_function['search_and_velocity_boundaries'],
-    #     # wt=WallTypes.ELIMINATING
-    # )
-    # eis_l2_k0p2l_AClanPSO = scripts.experiments.experiments_data_creation.run(
-    #     executor=executor,
-    #     num_of_experiments=experiments,
-    #     objective_function_pointer=benchmark_function['formula'],
-    #     spawn_boundaries=benchmark_function['search_domain'],
-    #     objective_function_goal_point=benchmark_function['goal_point'],
-    #     maximum_iterations=maximum_iterations,
-    #     swarm_size=number_of_clans * particles_per_clan,
-    #     isClan=True,
-    #     number_of_clans=number_of_clans,
-    #     adaptivePSO=True,
-    #     eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.LINEAR, 0.2)),
-    #     search_and_velocity_boundaries=benchmark_function['search_and_velocity_boundaries'],
-    #     # wt=WallTypes.ELIMINATING
-    # )
-
-    # eis_l2_k1l_AClanPSO = scripts.experiments.experiments_data_creation.run(
-    #     executor=executor,
-    #     num_of_experiments=experiments,
-    #     objective_function_pointer=benchmark_function['formula'],
-    #     spawn_boundaries=benchmark_function['search_domain'],
-    #     objective_function_goal_point=benchmark_function['goal_point'],
-    #     maximum_iterations=maximum_iterations,
-    #     swarm_size=number_of_clans * particles_per_clan,
-    #     isClan=True,
-    #     number_of_clans=number_of_clans,
-    #     adaptivePSO=True,
-    #     eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.LINEAR, 1.0)),
-    #     search_and_velocity_boundaries=benchmark_function['search_and_velocity_boundaries'],
-    #     # wt=WallTypes.ELIMINATING
-    # )
-
-    # eis_l2_k0p2a_AClanPSO = scripts.experiments.experiments_data_creation.run(
-    #     executor=executor,
-    #     num_of_experiments=experiments,
-    #     objective_function_pointer=benchmark_function['formula'],
-    #     spawn_boundaries=benchmark_function['search_domain'],
-    #     objective_function_goal_point=benchmark_function['goal_point'],
-    #     maximum_iterations=maximum_iterations,
-    #     swarm_size=number_of_clans * particles_per_clan,
-    #     isClan=True,
-    #     number_of_clans=number_of_clans,
-    #     adaptivePSO=True,
-    #     eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.ADAPTIVE, 0.2)),
-    #     search_and_velocity_boundaries=benchmark_function['search_and_velocity_boundaries'],
-    #     # wt=WallTypes.ELIMINATING
-    # )
-
-    # eis_l2_k1a_AClanPSO = scripts.experiments.experiments_data_creation.run(
-    #     executor=executor,
-    #     num_of_experiments=experiments,
-    #     objective_function_pointer=benchmark_function['formula'],
-    #     spawn_boundaries=benchmark_function['search_domain'],
-    #     objective_function_goal_point=benchmark_function['goal_point'],
-    #     maximum_iterations=maximum_iterations,
-    #     swarm_size=number_of_clans * particles_per_clan,
-    #     isClan=True,
-    #     number_of_clans=number_of_clans,
-    #     adaptivePSO=True,
-    #     eis=((GlobalLocalCoefficientTypes.LINEAR, 2.0), (ControlFactorTypes.ADAPTIVE, 1.0)),
-    #     search_and_velocity_boundaries=benchmark_function['search_and_velocity_boundaries'],
-    #     # wt=WallTypes.ELIMINATING
-    # )
-
-
-
-    sphere_collected_data = {
-        "Simple AClanPSO": pandas.Series([simple_AClanPSO["Precision mean"], simple_AClanPSO["Precision std"], simple_AClanPSO["Precision median"],
-                                         simple_AClanPSO["Best precision"],
-                                          simple_AClanPSO["Mean iterations per experiment"], maximum_iterations,
-                                         simple_AClanPSO["Mean iteration CPU time"], simple_AClanPSO["Mean experiment CPU time"],
-                                         experiments,
-                                          number_of_clans, particles_per_clan],
-                                        index=["Precision mean",
-                                               "Precision std",
-                                               "Precision median",
-                                               "Best precision",
-                                               "Mean iterations per experiment",
-                                               "Maximum iterations per experiment",
-                                               "Mean iteration CPU time",
-                                               "Mean experiment CPU time",
-                                               "Experiments",
-                                               "No. clans",
-                                               "Particles per clan"]),
-
-        # "EIS-L2-k0.2C AClanPSO": pandas.Series(
-        #     [eis_l2_k0p2c_AClanPSO["Precision mean"], eis_l2_k0p2c_AClanPSO["Precision std"],
-        #      eis_l2_k0p2c_AClanPSO["Precision median"], eis_l2_k0p2c_AClanPSO["Best precision"],
-        #      eis_l2_k0p2c_AClanPSO["Mean iterations per experiment"], maximum_iterations,
-        #      eis_l2_k0p2c_AClanPSO["Mean iteration CPU time"], eis_l2_k0p2c_AClanPSO["Mean experiment CPU time"],
-        #      experiments,
-        #      number_of_clans, particles_per_clan],
-        #     index=["Precision mean",
-        #            "Precision std",
-        #            "Precision median",
-        #            "Best precision",
-        #            "Mean iterations per experiment",
-        #            "Maximum iterations per experiment",
-        #            "Mean iteration CPU time",
-        #            "Mean experiment CPU time",
-        #            "Experiments",
-        #            "No. clans",
-        #            "Particles per clan"]),
-
-        # "EIS-L2-k1C AClanPSO": pandas.Series(
-        #     [eis_l2_k1c_AClanPSO["Precision mean"], eis_l2_k1c_AClanPSO["Precision std"], eis_l2_k1c_AClanPSO["Precision median"],
-        #      eis_l2_k1c_AClanPSO["Best precision"],
-        #      eis_l2_k1c_AClanPSO["Mean iterations per experiment"], maximum_iterations,
-        #      eis_l2_k1c_AClanPSO["Mean iteration CPU time"], eis_l2_k1c_AClanPSO["Mean experiment CPU time"],
-        #      experiments,
-        #      number_of_clans, particles_per_clan],
-        #     index=["Precision mean",
-        #            "Precision std",
-        #            "Precision median",
-        #            "Best precision",
-        #            "Mean iterations per experiment",
-        #            "Maximum iterations per experiment",
-        #            "Mean iteration CPU time",
-        #            "Mean experiment CPU time",
-        #            "Experiments",
-        #            "No. clans",
-        #            "Particles per clan"]),
-
-        # "EIS-L2-k2C AClanPSO": pandas.Series(
-        #     [eis_l2_k2c_AClanPSO["Precision mean"], eis_l2_k2c_AClanPSO["Precision std"],
-        #      eis_l2_k2c_AClanPSO["Precision median"], eis_l2_k2c_AClanPSO["Best precision"],
-        #      eis_l2_k2c_AClanPSO["Mean iterations per experiment"], maximum_iterations,
-        #      eis_l2_k2c_AClanPSO["Mean iteration CPU time"], eis_l2_k2c_AClanPSO["Mean experiment CPU time"],
-        #      experiments,
-        #      number_of_clans, particles_per_clan],
-        #     index=["Precision mean",
-        #            "Precision std",
-        #            "Precision median",
-        #            "Best precision",
-        #            "Mean iterations per experiment",
-        #            "Maximum iterations per experiment",
-        #            "Mean iteration CPU time",
-        #            "Mean experiment CPU time",
-        #            "Experiments",
-        #            "No. clans",
-        #            "Particles per clan"]),
-
-        # "EIS-L2-k0.2L AClanPSO": pandas.Series(
-        #     [eis_l2_k0p2l_AClanPSO["Precision mean"], eis_l2_k0p2l_AClanPSO["Precision std"],
-        #      eis_l2_k0p2l_AClanPSO["Precision median"], eis_l2_k0p2l_AClanPSO["Best precision"],
-        #      eis_l2_k0p2l_AClanPSO["Mean iterations per experiment"], maximum_iterations,
-        #      eis_l2_k0p2l_AClanPSO["Mean iteration CPU time"], eis_l2_k0p2l_AClanPSO["Mean experiment CPU time"],
-        #      experiments,
-        #      number_of_clans, particles_per_clan],
-        #     index=["Precision mean",
-        #            "Precision std",
-        #            "Precision median",
-        #            "Best precision",
-        #            "Mean iterations per experiment",
-        #            "Maximum iterations per experiment",
-        #            "Mean iteration CPU time",
-        #            "Mean experiment CPU time",
-        #            "Experiments",
-        #            "No. clans",
-        #            "Particles per clan"]
-        # ),
-
-        # "EIS-L2-k1L AClanPSO": pandas.Series(
-        #     [eis_l2_k1l_AClanPSO["Precision mean"], eis_l2_k1l_AClanPSO["Precision std"],
-        #      eis_l2_k1l_AClanPSO["Precision median"], eis_l2_k1l_AClanPSO["Best precision"],
-        #      eis_l2_k1l_AClanPSO["Mean iterations per experiment"], maximum_iterations,
-        #      eis_l2_k1l_AClanPSO["Mean iteration CPU time"], eis_l2_k1l_AClanPSO["Mean experiment CPU time"],
-        #      experiments,
-        #      number_of_clans, particles_per_clan],
-        #     index=["Precision mean",
-        #            "Precision std",
-        #            "Precision median",
-        #            "Best precision",
-        #            "Mean iterations per experiment",
-        #            "Maximum iterations per experiment",
-        #            "Mean iteration CPU time",
-        #            "Mean experiment CPU time",
-        #            "Experiments",
-        #            "No. clans",
-        #            "Particles per clan"]
-        # ),
-
-        # "EIS-L2-k0.2A AClanPSO": pandas.Series(
-        #     [eis_l2_k0p2a_AClanPSO["Precision mean"], eis_l2_k0p2a_AClanPSO["Precision std"],
-        #      eis_l2_k0p2a_AClanPSO["Precision median"],
-        #      eis_l2_k0p2a_AClanPSO["Best precision"],
-        #      eis_l2_k0p2a_AClanPSO["Mean iterations per experiment"], maximum_iterations,
-        #      eis_l2_k0p2a_AClanPSO["Mean iteration CPU time"], eis_l2_k0p2a_AClanPSO["Mean experiment CPU time"],
-        #      experiments,
-        #      number_of_clans, particles_per_clan],
-        #     index=["Precision mean",
-        #            "Precision std",
-        #            "Precision median",
-        #            "Best precision",
-        #            "Mean iterations per experiment",
-        #            "Maximum iterations per experiment",
-        #            "Mean iteration CPU time",
-        #            "Mean experiment CPU time",
-        #            "Experiments",
-        #            "No. clans",
-        #            "Particles per clan"]
-        # ),
-
-        # "EIS-L2-k1A AClanPSO": pandas.Series(
-        #     [eis_l2_k1a_AClanPSO["Precision mean"], eis_l2_k1a_AClanPSO["Precision std"],
-        #      eis_l2_k1a_AClanPSO["Precision median"], eis_l2_k1a_AClanPSO["Best precision"],
-        #      eis_l2_k1a_AClanPSO["Mean iterations per experiment"], maximum_iterations,
-        #      eis_l2_k1a_AClanPSO["Mean iteration CPU time"], eis_l2_k1a_AClanPSO["Mean experiment CPU time"],
-        #      experiments,
-        #      number_of_clans, particles_per_clan],
-        #     index=["Precision mean",
-        #            "Precision std",
-        #            "Precision median",
-        #            "Best precision",
-        #            "Mean iterations per experiment",
-        #            "Maximum iterations per experiment",
-        #            "Mean iteration CPU time",
-        #            "Mean experiment CPU time",
-        #            "Experiments",
-        #            "No. clans",
-        #            "Particles per clan"]
-        # )
-    }
-
-    pandas.DataFrame(sphere_collected_data).to_csv(f'alpinen1_{number_of_clans}x{particles_per_clan}_without_ELS_r1_r2_r3_scalars.csv')
-    print(f'File for alpinen1 test function with {number_of_clans} clans of {particles_per_clan} particles was created!')
+    simple_AClanPSO_averaged_data = data_avg.distance_metric_mean(simple_AClanPSO_raw_data)
+    simple_AClanPSO_averaged_data.to_csv(f'{benchmark_function["name"]}_function_simple_aclan_mean_of_experiments_per_iteration.csv')
 
 
 

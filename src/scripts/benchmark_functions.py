@@ -85,6 +85,7 @@ def styblinski_tang_function_formula(x: list) -> float:
 # Defining dictionaries containing crucial information for each benchmark function.
 # This is for code readability, as well as reusability in 'main.py' file.
 sphere_function = {
+    'name' : 'sphere',
     'formula': sphere_function_formula,
     'search_domain': [[-10 ** 2, 10 ** 2] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
@@ -92,6 +93,7 @@ sphere_function = {
 }
 
 quadric_function = {
+    'name' : 'quadric',
     'formula': quadric_function_formula,
     'search_domain': [[-10 ** 2, 10 ** 2] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
@@ -99,6 +101,7 @@ quadric_function = {
 }
 
 schwefel222_function = {
+    'name' : 'schwefel222',
     'formula': schwefel222_function_formula,
     'search_domain': [[-10, 10] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
@@ -106,6 +109,7 @@ schwefel222_function = {
 }
 
 rosenbrock_function = {
+    'name' : 'rosenbrock',
     'formula': rosenbrock_function_formula,
     'search_domain': [[-10, 10] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-10, 10], [-0.2 * 10, 0.2 * 10]],
@@ -113,6 +117,7 @@ rosenbrock_function = {
 }
 
 rastrigin_function = {
+    'name' : 'rastrigin',
     'formula': rastrigin_function_formula,
     'search_domain': [[-5.12, 5.12] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
@@ -120,6 +125,7 @@ rastrigin_function = {
 }
 
 ackley_function = {
+    'name' : 'ackley',
     'formula': ackley_function_formula,
     'search_domain': [[-32, 32] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-32, 32], [-0.2 * 32, 0.2 * 32]],
@@ -127,6 +133,7 @@ ackley_function = {
 }
 
 salomon_function = {
+    'name' : 'salomon',
     'formula': salomon_function_formula,
     'search_domain': [[-10**2, 10**2] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
@@ -134,6 +141,7 @@ salomon_function = {
 }
 
 alpinen1_function = {
+    'name' : 'alpinen1',
     'formula': alpinen1_function_formula,
     'search_domain': [[0, 10] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[0, 10], [-0.2 * 10, 0.2 * 10]],

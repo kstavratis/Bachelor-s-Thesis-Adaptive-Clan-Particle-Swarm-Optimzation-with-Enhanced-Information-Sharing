@@ -25,7 +25,7 @@ class EnhancedInformationSharingPSO(object):
             if isinstance(c3, float):
                 self.c3 = c3
             else:
-                raise TypeError(f"Global-local coefficient c3 that was given is not a real number.\n\
+                raise TypeError(f"Global-local coefficient c3 that was given is not a real number {type(float)}.\n\
                 Instead, {type(c3)} was provided.")
 
         elif self._global_local_coefficient_method == glct.LINEAR:
@@ -35,7 +35,7 @@ class EnhancedInformationSharingPSO(object):
             if isinstance(c3, float):
                 self.c3 = c3
             else:
-                raise TypeError(f"Global-local coefficient c3 that was given is not a real number.\n\
+                raise TypeError(f"Global-local coefficient c3 that was given is not a real number {type(float)}.\n\
                 Instead {type(c3)} was provided.")
             self.c3_k = None  # c3 is dependent on c3_k only in the case of a linear c3.
 
@@ -49,7 +49,7 @@ class EnhancedInformationSharingPSO(object):
             if isinstance(c3_k, float):
                 self.c3_k = c3_k
             else:
-                raise TypeError(f"The value assigned to the control factor c3_k is not a floating-point number.\n\
+                raise TypeError(f"The value assigned to the control factor c3_k is not a floating-point number {type(float)}.\n\
                 Instead, {type(c3_k)} was provided.")
 
         if self._control_factor_method == cft.LINEAR:

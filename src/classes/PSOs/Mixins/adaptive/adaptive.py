@@ -18,7 +18,8 @@ class AdaptivePSO(object):
         if isinstance(is_adaptive, bool): # Sanity check
             self._is_adaptive = is_adaptive
         else:
-            raise TypeError(f"The input parameter is_adaptive must be of type {type(bool)}. {type(is_adaptive)} was provided instead.")
+            raise TypeError(f"The input parameter is_adaptive must be of type {type(bool)}.\n\
+            {type(is_adaptive)} was provided instead.")
         
     def _classify_evolutionary_state(self, f_evol):
         # Sanity check
@@ -31,7 +32,7 @@ class AdaptivePSO(object):
 
     def _estimate_evolutionary_state(self):
         if not self._is_adaptive:
-            raise TypeError("This PSO instantiation is not adaptive.")
+            raise ValueError("This PSO instantiation is not adaptive.")
         return self.__evaluate_evolutionary_factor(self.__evaluate_average_between_each_particle_to_all_others())
 
         ...
@@ -77,6 +78,7 @@ class AdaptivePSO(object):
         #
         # return numba_implementation(particle_positions)
 
+    
     def __evaluate_evolutionary_factor(self, d: list) -> float:
         # TODO: Is use of the command: "best_particle_of_the_swarm = self.__particle_with_best_personal_best"
         #       WRONG in this case?
@@ -100,8 +102,8 @@ class AdaptivePSO(object):
                 sum(norm(best_particle_of_the_swarm._position - particle._position)
                     for particle in self.swarm)
 
-        # The only case this is possible if "best_particle_of_the_swarm" does not match any particle of the "self.swarm",
-        # due to some bug.
+        #! The only case this is possible if "best_particle_of_the_swarm" does not match any particle of the "self.swarm",
+        #! due to some bug.
         if d_g not in d:
             raise ValueError("Average distance d_g does not match any of the average distances d previously calculated.")
 
@@ -114,51 +116,44 @@ class AdaptivePSO(object):
     
     def _determine_accelaration_coefficients(self, evolutionary_state: EvolutionaryStates):
 
-
-        class CoefficientOperations(Enum):
-            INCREASE = auto(),
-            DECREASE = auto(),
-            INCREASE_SLIGHTLY = auto(),
-            DECREASE_SLIGHTLY = auto()
-
         acceleration_rate = uniform(0.05, 0.10)
         c1_strategy, c2_strategy = "", ""
         if evolutionary_state == EvolutionaryStates.EXPLORATION:
-            c1_strategy = CoefficientOperations.INCREASE
-            c2_strategy = CoefficientOperations.DECREASE
+            c1_strategy = _CoefficientOperations.INCREASE
+            c2_strategy = _CoefficientOperations.DECREASE
         elif evolutionary_state == EvolutionaryStates.EXPLOITATION:
-            c1_strategy = CoefficientOperations.INCREASE_SLIGHTLY
-            c2_strategy = CoefficientOperations.DECREASE_SLIGHTLY
+            c1_strategy = _CoefficientOperations.INCREASE_SLIGHTLY
+            c2_strategy = _CoefficientOperations.DECREASE_SLIGHTLY
         elif evolutionary_state == EvolutionaryStates.CONVERGENCE:
-            c1_strategy = CoefficientOperations.INCREASE_SLIGHTLY
-            c2_strategy = CoefficientOperations.INCREASE_SLIGHTLY
+            c1_strategy = _CoefficientOperations.INCREASE_SLIGHTLY
+            c2_strategy = _CoefficientOperations.INCREASE_SLIGHTLY
         elif evolutionary_state == EvolutionaryStates.JUMP_OUT:
-            c1_strategy = CoefficientOperations.DECREASE
-            c2_strategy = CoefficientOperations.INCREASE
+            c1_strategy = _CoefficientOperations.DECREASE
+            c2_strategy = _CoefficientOperations.INCREASE
         else:
             raise ValueError(f"The evolutionary state can only be in one of the {len(EvolutionaryStates)} allowed states {[state for state in EvolutionaryStates.__members__.keys()]}.\n\
             The 'evolutionary_state' parameter has the value {evolutionary_state} instead.")
 
-        if c1_strategy == CoefficientOperations.INCREASE:
+        if c1_strategy == _CoefficientOperations.INCREASE:
             if self.c1 + acceleration_rate <= c_max:
                 self.c1 += acceleration_rate
-        elif c1_strategy == CoefficientOperations.INCREASE_SLIGHTLY:
+        elif c1_strategy == _CoefficientOperations.INCREASE_SLIGHTLY:
             if self.c1 + 0.5 * acceleration_rate <= c_max:
                 self.c1 += 0.5 * acceleration_rate
-        elif c1_strategy == CoefficientOperations.DECREASE:
+        elif c1_strategy == _CoefficientOperations.DECREASE:
             if self.c1 - acceleration_rate >= c_min:
                 self.c1 -= acceleration_rate
 
-        if c2_strategy == CoefficientOperations.INCREASE:
+        if c2_strategy == _CoefficientOperations.INCREASE:
             if self.c2 + acceleration_rate <= c_max:
                 self.c2 += acceleration_rate
-        elif c2_strategy == CoefficientOperations.INCREASE_SLIGHTLY:
+        elif c2_strategy == _CoefficientOperations.INCREASE_SLIGHTLY:
             if self.c2 + 0.5 * acceleration_rate <= c_max:
                 self.c2 += 0.5 * acceleration_rate
-        elif c2_strategy == CoefficientOperations.DECREASE:
+        elif c2_strategy == _CoefficientOperations.DECREASE:
             if self.c2 - acceleration_rate >= c_min:
                 self.c2 -= acceleration_rate
-        elif c2_strategy == CoefficientOperations.DECREASE_SLIGHTLY:
+        elif c2_strategy == _CoefficientOperations.DECREASE_SLIGHTLY:
             if self.c2 - 0.5 * acceleration_rate >= c_min:
                 self.c2 -= 0.5 * acceleration_rate
 
@@ -223,8 +218,8 @@ class AdaptivePSO(object):
         self.w = 1 / (1 + 1.5 * e ** (-2.6 * f_evol))  # ∈[0.4, 0.9]  ∀f_evol ∈[0,1]
 
 
-class CoefficientOperations(Enum):
-            INCREASE = auto(),
-            DECREASE = auto(),
-            INCREASE_SLIGHTLY = auto(),
-            DECREASE_SLIGHTLY = auto()
+class _CoefficientOperations(Enum):
+    INCREASE = auto(),
+    DECREASE = auto(),
+    INCREASE_SLIGHTLY = auto(),
+    DECREASE_SLIGHTLY = auto()

@@ -19,8 +19,8 @@ def run(executor: ProcessPoolExecutor,
         objective_function_pointer: Any, spawn_boundaries: List[List[float]],
         objective_function_goal_point: array,
         maximum_iterations: int,
-        swarm_size: int = 40, isClan: bool = False, number_of_clans: int = 4, c1: float = 2.0, c2: float = 2.0,
-        adaptivePSO: bool = False,
+        swarm_size: int = 40, is_clan: bool = False, number_of_clans: int = 4, c1: float = 2.0, c2: float = 2.0,
+        is_adaptive: bool = False,
         eis: Tuple[Tuple[GlobalLocalCoefficientTypes, float or None], Tuple[ControlFactorTypes, float or None]] =
         ((GlobalLocalCoefficientTypes.NONE, None), (ControlFactorTypes.NONE, None)),
         search_and_velocity_boundaries: List[List[float]] = None, wt: WallTypes = WallTypes.NONE
@@ -38,9 +38,9 @@ def run(executor: ProcessPoolExecutor,
                                         spawn_boundaries=spawn_boundaries,
                                         objective_function_goal_point=objective_function_goal_point,
                                         maximum_iterations=maximum_iterations,
-                                        swarm_size=swarm_size, isClan=isClan, number_of_clans=number_of_clans,
+                                        swarm_size=swarm_size, is_clan=is_clan, number_of_clans=number_of_clans,
                                         c1=c1, c2=c2,
-                                        adaptivePSO=adaptivePSO,
+                                        is_adaptive=is_adaptive,
                                         eis=eis,
                                         search_and_velocity_boundaries=search_and_velocity_boundaries, wt=wt
                                         )

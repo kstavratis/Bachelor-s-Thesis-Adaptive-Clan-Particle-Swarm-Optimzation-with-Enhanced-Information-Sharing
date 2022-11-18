@@ -43,17 +43,19 @@ PARTICLE_SIMILARITY_LIMIT = 10 ** (-20)
 
 
 class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
-    def __init__(self, swarm_or_fitness_function, spawn_boundaries: list,
-                 maximum_iterations: int,
-                 # w: float,
-                 swarm_size: int = 50,
-                 c1: float = 2, c2: float = 2,
-                 is_adaptive: bool = False,
-                 eis: Tuple[
+    def __init__(self,
+                swarm_or_fitness_function,
+                spawn_boundaries: list,
+                maximum_iterations: int,
+                # w: float,
+                swarm_size: int = 50,
+                c1: float = 2, c2: float = 2,
+                is_adaptive: bool = False,
+                eis: Tuple[
                      Tuple[GlobalLocalCoefficientTypes, float or None], Tuple[ControlFactorTypes, float or None]] =
                  ((GlobalLocalCoefficientTypes.NONE, None), (ControlFactorTypes.NONE, None)),
-                 current_iteration: int = 0,
-                 search_and_velocity_boundaries: List[List[float]] = None, wt: WallTypes = WallTypes.NONE):
+                current_iteration: int = 0,
+                search_and_velocity_boundaries: List[List[float]] = None, wt: WallTypes = WallTypes.NONE):
         if isinstance(swarm_or_fitness_function, FunctionType):
             self.swarm = [Particle(swarm_or_fitness_function, spawn_boundaries) for _ in range(swarm_size)]
         if isinstance(swarm_or_fitness_function, list):
@@ -73,8 +75,8 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
 
         
 
-        # Note that in all PSO variations used, inertia weight "w" is calculated dynamically
-        # in the "update_parameters" function.
+        #* Note that in all PSO variations used, inertia weight "w" is calculated dynamically
+        #* in the "update_parameters" function.
 
         self.__max_iterations, self.current_iteration = maximum_iterations, current_iteration
         self.__domain_and_velocity_boundaries = search_and_velocity_boundaries
@@ -83,8 +85,10 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
         # used a Vmax of 20% the domain limits in each dimension.
         # Adaptive Particle Swarm Optimization -> II. PSO AND ITS DEVELOPMENTS -> A. PSO Framework
 
+
+        # TODO : Look into the "cooperative multiple inheritance" pattern to potentially call __init__ of all parent classes/mixins.
         # super(ClassicSwarm, AdaptivePSO).__init__(is_adaptive) # AdaptivePSO
-        AdaptivePSO.__init__(self, is_adaptive)
+        AdaptivePSO.__init__(self, is_adaptive) 
         # super(ClassicSwarm, EnhancedInformationSharingPSO).__init__(True, eis[0][0], eis[0][1], eis[1][0], eis[1][1]) # Enhanced Information Sharing
         EnhancedInformationSharingPSO.__init__(self, True, eis[0][0], eis[0][1], eis[1][0], eis[1][1])
 
@@ -105,7 +109,7 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
 
         :param greater_than: Returns particle with greatest position if True . Returns particle with lowest position if False (Default).
 
-        :return:
+        :return: Particle with least (greater_than = False) or greatest (greater_than = True)value
         """
 
         # TODO: While the implementation below is computationally correct, it has one main weakness:
@@ -117,6 +121,8 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
         #   particle object or an index to its position in the array/list.
 
 
+        # TODO: Maybe, it would be better to override operators or create a lambda function so as to utilize the standard
+        # functions "min" and "max" so as to better performance.
         # Initializing it into the 1st particle for comparison.
         particle_with_best_personal_best = self.swarm[0]
         for particle in self.swarm:
@@ -270,7 +276,7 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
                                       self.c3, random_multipliers[random_multipliers_index][2], self._control_factor_method)
             random_multipliers_index += 1
 
-        # This is executed only when the Last-Elimination Principle is enabled. TODO: Why only then?
+        #? This is executed only when the Last-Elimination Principle is enabled. TODO: Why only then?
         if self.__domain_and_velocity_boundaries is not None:
             wall_enforcement()
             # limit_particle_velocity() # Velocity limitation has been moved to inside of the particle class. Doing it here is too late, as all the particles have already updated their positions.
@@ -285,51 +291,21 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
 
     def __update_parameters(self):
 
-        def update_pso_inertia_weight_and_coefficients():
-
-            if self._is_adaptive:
+        # Updating pso inertia weight (ω) and coefficients (c1, c2)
+        if self._is_adaptive:
                 f_evol = self._estimate_evolutionary_state()
                 self.__evolutionary_state = self._classify_evolutionary_state(f_evol)
                 self._determine_accelaration_coefficients(self.__evolutionary_state)
                 self._apply_eliticism_learning_strategy
                 self._adapt_inertia_factor(f_evol)
-            else:  # Follow classic PSO learning strategy: decrease inertia weight linearly.
-                self.w = w_max - ((w_max - w_min) / self.__max_iterations) * self.current_iteration
+        else:  # Follow classic PSO learning strategy: decrease inertia weight linearly.
+            self.w = w_max - ((w_max - w_min) / self.__max_iterations) * self.current_iteration
 
-        def update_global_local():
 
-            if self._global_local_coefficient_method != GlobalLocalCoefficientTypes.ADAPTIVE:
-                super(ClassicSwarm, self)._update_global_local_coefficient()
-            else:
-                # When local exploration is encouraged, the coefficient contributes a vector starting
-                # from the swarm's global best pointing towards the particle's local best.
-                if self.__evolutionary_state == EvolutionaryStates.EXPLORATION or \
-                        self.__evolutionary_state == EvolutionaryStates.EXPLOITATION:
-                    self.c3 = -(abs(self.c3))
-                # When global exploration is encouraged, the coefficient contributes a vector starting
-                # from the particle's best pointing towards the swarm's global best.
-                elif self.__evolutionary_state == EvolutionaryStates.CONVERGENCE or \
-                        self.__evolutionary_state == EvolutionaryStates.JUMP_OUT:
-                    self.c3 = abs(self.c3)
+        # Updating global-local coefficient (c3) and control factor (c3_k).
+        super(ClassicSwarm, self)._update_global_local_coefficient()
+        super(ClassicSwarm, self)._update_global_local_control_factor()
 
-            
-            if self._control_factor_method != ControlFactorTypes.ADAPTIVE:
-                super(ClassicSwarm, self)._update_global_local_control_factor()
-            else:
-                # When local exploration is encouraged, the coefficient contributes a vector starting
-                # from the swarm's global best pointing towards the particle's local best.
-                if self.__evolutionary_state == EvolutionaryStates.EXPLORATION or \
-                        self.__evolutionary_state == EvolutionaryStates.EXPLOITATION:
-                    self.c3 = -(abs(self.c3))
-                # When global exploration is encouraged, the coefficient contributes a vector starting
-                # from the particle's best pointing towards the swarm's global best.
-                elif self.__evolutionary_state == EvolutionaryStates.CONVERGENCE or \
-                        self.__evolutionary_state == EvolutionaryStates.JUMP_OUT:
-                    self.c3 = abs(self.c3)
-
-        # Executing the two functions defined above.
-        update_pso_inertia_weight_and_coefficients()
-        update_global_local()
 
     def calculate_swarm_distance_from_swarm_centroid(self):
         swarm_positions = [self.swarm[i]._position for i in range(len(self.swarm))]

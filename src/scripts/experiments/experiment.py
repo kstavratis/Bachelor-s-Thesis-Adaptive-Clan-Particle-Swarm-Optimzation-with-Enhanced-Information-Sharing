@@ -18,14 +18,14 @@ from classes.PSOs.wall_types import WallTypes
 import warnings
 warnings.filterwarnings("error")
 
-loop_stop_condition_limit = 5 * 10 ** (-15)
+loop_stop_condition_limit = 5e-15
 
 
 def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
                objective_function_goal_point: array,
                maximum_iterations: int,
-               swarm_size: int = 40, isClan: bool = False, number_of_clans: int = 4, c1: float = 2.0, c2: float = 2.0,
-               adaptivePSO: bool = False,
+               swarm_size: int = 40, is_clan: bool = False, number_of_clans: int = 4, c1: float = 2.0, c2: float = 2.0,
+               is_adaptive: bool = False,
                eis: Tuple[Tuple[GlobalLocalCoefficientTypes, float or None], Tuple[ControlFactorTypes, float or None]] =
                ((GlobalLocalCoefficientTypes.NONE, None), (ControlFactorTypes.NONE, None)),
                search_and_velocity_boundaries: List[List[float]] = None, wt: WallTypes = WallTypes.NONE):
@@ -34,11 +34,11 @@ def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
     :param spawn_boundaries:
     :param maximum_iterations:
     :param swarm_size:
-    :param isClan:
+    :param is_clan:
     :param number_of_clans:
     :param c1:
     :param c2:
-    :param adaptivePSO:
+    :param is_adaptive:
     :param eis:
     :param search_and_velocity_boundaries:
     :param wt:
@@ -46,23 +46,23 @@ def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
     :return:
     """
 
-    global experiment_swarm
+    # global experiment_swarm
 
-    if not isClan:
+    if not is_clan:
         experiment_swarm = ClassicSwarm(swarm_or_fitness_function=objective_function,
                                         spawn_boundaries=spawn_boundaries,
                                         swarm_size=swarm_size,
                                         maximum_iterations=maximum_iterations,
-                                        is_adaptive=adaptivePSO, eis=eis, current_iteration=0,
+                                        is_adaptive=is_adaptive, eis=eis, current_iteration=0,
                                         search_and_velocity_boundaries=search_and_velocity_boundaries, wt=wt)
 
-    if isClan:
+    if is_clan:
         experiment_swarm = ClanSwarm(fitness_function=objective_function,
                                      spawn_boundaries=spawn_boundaries,
                                      swarm_size=swarm_size // number_of_clans, number_of_clans=number_of_clans,
                                      maximum_iterations=maximum_iterations,
                                      c1=c1, c2=c2,
-                                     is_adaptive=adaptivePSO, eis=eis, current_iteration=0,
+                                     is_adaptive=is_adaptive, eis=eis, current_iteration=0,
                                      search_and_velocity_boundaries=search_and_velocity_boundaries, wt=wt)
 
     loop_times = []
@@ -102,9 +102,9 @@ def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
     # END EXPERIMENT
 
     precision = None
-    if not isClan:
+    if not is_clan:
         precision = norm(experiment_swarm.global_best_position - objective_function_goal_point)
-    if isClan:
+    if is_clan:
         precision = norm(experiment_swarm.find_population_global_best_position() - objective_function_goal_point)
 
     iterations = iteration
