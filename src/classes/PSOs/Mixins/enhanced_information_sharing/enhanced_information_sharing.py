@@ -1,5 +1,6 @@
 from .enums.global_local_coefficient_types import GlobalLocalCoefficientTypes as glct
 from .enums.control_factor_types import ControlFactorTypes as cft
+from ..adaptive.enums.evolutionary_states import EvolutionaryStates
 
 c3_start, c3_end = 2.0, 0.0  # We'll have to see whether this line of code is executed according to the import command. e.g. import only class, is this being executed?
 
@@ -65,18 +66,18 @@ class EnhancedInformationSharingPSO(object):
         # Global optimization capability is strong when c_3 is linearly decreasing (c3_k > 0) according to the article.
         elif self._global_local_coefficient_method == glct.LINEAR:
             self.c3 = self.c3_k * (
-                        c3_start - (c3_start - c3_end) / self.__max_iterations * self.current_iteration)
+                        c3_start - (c3_start - c3_end) / self._max_iterations * self.current_iteration)
 
         elif self._global_local_coefficient_method == glct.ADAPTIVE:
             # When local exploration is encouraged, the coefficient contributes a vector starting
             # from the swarm's global best pointing towards the particle's local best.
-            if self.__evolutionary_state == EvolutionaryStates.EXPLORATION or \
-                    self.__evolutionary_state == EvolutionaryStates.EXPLOITATION:
+            if self._evolutionary_state == EvolutionaryStates.EXPLORATION or \
+                    self._evolutionary_state == EvolutionaryStates.EXPLOITATION:
                 self.c3 = -(abs(self.c3))
             # When global exploration is encouraged, the coefficient contributes a vector starting
             # from the particle's best pointing towards the swarm's global best.
-            elif self.__evolutionary_state == EvolutionaryStates.CONVERGENCE or \
-                    self.__evolutionary_state == EvolutionaryStates.JUMP_OUT:
+            elif self._evolutionary_state == EvolutionaryStates.CONVERGENCE or \
+                    self._evolutionary_state == EvolutionaryStates.JUMP_OUT:
                 self.c3 = abs(self.c3)
 
     
@@ -88,18 +89,18 @@ class EnhancedInformationSharingPSO(object):
         # Changing global-local coefficient control factor k.
         elif self._control_factor_method == cft.LINEAR:
             self.c3_k = self.__c3_k_start - (
-                        self.__c3_k_start - 0) / self.__max_iterations * self.current_iteration
+                        self.__c3_k_start - 0) / self._max_iterations * self.current_iteration
 
         elif self._control_factor_method == cft.ADAPTIVE:
             # When local exploration is encouraged, the coefficient contributes a vector starting
             # from the swarm's global best pointing towards the particle's local best.
-            if self.__evolutionary_state == EvolutionaryStates.EXPLORATION or \
-                self.__evolutionary_state == EvolutionaryStates.EXPLOITATION:
+            if self._evolutionary_state == EvolutionaryStates.EXPLORATION or \
+                self._evolutionary_state == EvolutionaryStates.EXPLOITATION:
                 self.c3_k = -(abs(self.c3_k))
             # When global exploration is encouraged, the coefficient contributes a vector starting
             # from the particle's best pointing towards the swarm's global best.
-            elif self.__evolutionary_state == EvolutionaryStates.CONVERGENCE or \
-                    self.__evolutionary_state == EvolutionaryStates.JUMP_OUT:
+            elif self._evolutionary_state == EvolutionaryStates.CONVERGENCE or \
+                    self._evolutionary_state == EvolutionaryStates.JUMP_OUT:
                 self.c3_k = abs(self.c3_k)
 
 

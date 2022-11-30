@@ -22,6 +22,9 @@ Code for my Bachelor's Thesis in the Informatics department of the Aristotle Uni
 #import scripts.experiments.experiments_data_creation
 import scripts.experiments.experiments_data_creation2
 import scripts.experiments.experimental_data_manipulation as data_avg
+from classes.PSOs.Mixins.enhanced_information_sharing.enums.global_local_coefficient_types import GlobalLocalCoefficientTypes
+from classes.PSOs.Mixins.enhanced_information_sharing.enums.control_factor_types import ControlFactorTypes
+
 
 from numpy import seterr
 import pandas as pd
@@ -31,42 +34,59 @@ import scripts.benchmark_functions as bench_f
 
 
 def main():
-    seterr(all='raise')
-
-    benchmark_function = bench_f.sphere_function
-
+    #benchmark_function = bench_f.alpinen1_function
+ 
     number_of_clans = 6
     particles_per_clan = 5
     simple_pso_particles = number_of_clans * particles_per_clan
-    maximum_iterations = 50
-    experiments = 8
+    maximum_iterations = 100
+    experiments = 4
     executor = ProcessPoolExecutor()
+ 
+    
+    c3_initial_value = 2.0; c3_type = 'linear'
+    c3k_initial_value = 1.0; c3k_type = 'linear'
 
-    shared_keyword_input_parameters_dict = {
-        'objective_function_pointer' : benchmark_function['formula'] ,
-        'spawn_boundaries' : benchmark_function['search_domain'],
-        'objective_function_goal_point' : benchmark_function['goal_point'],
-        'maximum_iterations' : maximum_iterations,
-        'swarm_size' : number_of_clans * particles_per_clan,
-        'number_of_clans' : number_of_clans,
-        'search_and_velocity_boundaries' : benchmark_function['search_and_velocity_boundaries']
-    }
+    # benchmark_functions_list = [bench_f.ackley_function, bench_f.alpinen1_function, bench_f.quadric_function, 
+    # bench_f.rastrigin_function, bench_f.rosenbrock_function, bench_f.schwefel222_function, bench_f.salomon_function, bench_f.sphere_function]
 
+    benchmark_functions_list = [bench_f.alpinen1_function, bench_f.ackley_function, bench_f.rastrigin_function, bench_f.rosenbrock_function]
 
 
-    print(f'{benchmark_function["name"]} function: {number_of_clans} clans of {particles_per_clan} particles each')
-    print("---------------")
-    simple_AClanPSO_raw_data = scripts.experiments.experiments_data_creation2.run(
-        executor=executor,
-        num_of_experiments=experiments,
-        kwargs = dict(**shared_keyword_input_parameters_dict, is_clan = True, is_adaptive = True)
-        # wt=WallTypes.ELIMINATING
-    )
+    for benchmark_function in benchmark_functions_list:
+        for c3k_initial_value in [0.2, 1.0, 2.0]:
 
-    simple_AClanPSO_raw_data.to_csv(f'{benchmark_function["name"]}_function_simple_aclan_pso_raw_data.csv')
+            shared_keyword_input_parameters_dict = {
+                    'objective_function_pointer' : benchmark_function['formula'] ,
+                    'spawn_boundaries' : benchmark_function['search_domain'],
+                    'objective_function_goal_point' : benchmark_function['goal_point'],
+                    'maximum_iterations' : maximum_iterations,
+                    'swarm_size' : number_of_clans * particles_per_clan,
+                    'number_of_clans' : number_of_clans,
+                    'search_and_velocity_boundaries' : benchmark_function['search_and_velocity_boundaries']
+            }
 
-    simple_AClanPSO_averaged_data = data_avg.distance_metric_mean(simple_AClanPSO_raw_data)
-    simple_AClanPSO_averaged_data.to_csv(f'{benchmark_function["name"]}_function_simple_aclan_mean_of_experiments_per_iteration.csv')
+            for mode in [ControlFactorTypes.CONSTANT, ControlFactorTypes.LINEAR, ControlFactorTypes.ADAPTIVE]:
+
+                eis_kL2_kcC02_tuple = ((GlobalLocalCoefficientTypes.LINEAR, c3_initial_value), (mode, c3k_initial_value))
+
+                print(f'{benchmark_function["name"]} function: {number_of_clans} clans of {particles_per_clan} particles each')
+                print("---------------")
+                simple_AClanPSO_raw_data = scripts.experiments.experiments_data_creation2.run(
+                    executor=executor,
+                    num_of_experiments=experiments,
+                    kwargs = dict(**shared_keyword_input_parameters_dict, is_clan=True, is_adaptive=True, eis=eis_kL2_kcC02_tuple)
+                    # wt=WallTypes.ELIMINATING
+                )
+
+                simple_AClanPSO_raw_data.to_csv(f'{benchmark_function["name"]}_function_eis_aclan_pso_'\
+                    f'c3_{c3_type}_{c3_initial_value}_c3k_{"constant" if mode == ControlFactorTypes.ADAPTIVE else "linear" if mode == ControlFactorTypes.LINEAR else "adaptive"}'\
+                    f'_{c3k_initial_value}_{number_of_clans}x{particles_per_clan}_raw_data.csv')
+
+                simple_AClanPSO_averaged_data = data_avg.distance_metric_mean(simple_AClanPSO_raw_data)
+                simple_AClanPSO_averaged_data.to_csv(f'{benchmark_function["name"]}_function_eis_aclan_pso_'\
+                    f'c3_{c3_type}_{c3_initial_value}_c3k_{"constant" if mode == ControlFactorTypes.ADAPTIVE else "linear" if mode == ControlFactorTypes.LINEAR else "adaptive"}'\
+                    f'_{c3k_initial_value}_{number_of_clans}x{particles_per_clan}_mean_of_experiments_per_iteration.csv')
 
 
 

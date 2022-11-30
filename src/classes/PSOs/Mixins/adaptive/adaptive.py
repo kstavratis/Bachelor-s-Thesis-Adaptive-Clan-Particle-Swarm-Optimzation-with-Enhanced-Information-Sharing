@@ -17,6 +17,7 @@ class AdaptivePSO(object):
     def __init__(self, is_adaptive: bool = False):
         if isinstance(is_adaptive, bool): # Sanity check
             self._is_adaptive = is_adaptive
+            self._evolutionary_state = None
         else:
             raise TypeError(f"The input parameter is_adaptive must be of type {type(bool)}.\n\
             {type(is_adaptive)} was provided instead.")
@@ -174,14 +175,14 @@ class AdaptivePSO(object):
         # That is why this strategy is executed only in case of convergence.
         if evolutionary_state == EvolutionaryStates.CONVERGENCE:
             # Picking a dimension at random for the mutation to take place.
-            search_space_dimension = randrange(len(self.__spawn_boundaries))
+            search_space_dimension = randrange(len(self._spawn_boundaries))
 
             search_space_range = \
-                self.__spawn_boundaries[search_space_dimension][1] - self.__spawn_boundaries[search_space_dimension][0]
+                self._spawn_boundaries[search_space_dimension][1] - self._spawn_boundaries[search_space_dimension][0]
             # "Adaptive Particle Swarm Optimization, Zhi et al." -> "IV. APSO" -> "C. ELS" ->
             # "Empirical study shows that σ_max = 1.0 and σ_min = 0.1
             # result in good performance on most of the test functions"
-            sigma = (1 - (1 - 0.1) / self.__max_iterations * self.current_iteration)
+            sigma = (1 - (1 - 0.1) / self._max_iterations * self.current_iteration)
             elitist_learning_rate = gauss(0, sigma)
 
             # 'mutated_position' variable initialization. To be finalized in the following lines of code.
@@ -197,11 +198,11 @@ class AdaptivePSO(object):
             #  early stages of the algorithm. Cutting down mutation step range to "search_space_range/2" attempt was made
             #  but it did not lead to a satisfying speed-up.
             if self._particle_with_best_personal_best._position[search_space_dimension] + search_space_range * elitist_learning_rate < \
-                    self.__spawn_boundaries[search_space_dimension][0]:
-                mutated_position[search_space_dimension] = self.__spawn_boundaries[search_space_dimension][0]
+                    self._spawn_boundaries[search_space_dimension][0]:
+                mutated_position[search_space_dimension] = self._spawn_boundaries[search_space_dimension][0]
             elif self._particle_with_best_personal_best._position[search_space_dimension] + search_space_range * elitist_learning_rate > \
-                self.__spawn_boundaries[search_space_dimension][1]:
-                mutated_position[search_space_dimension] = self.__spawn_boundaries[search_space_dimension][1]
+                self._spawn_boundaries[search_space_dimension][1]:
+                mutated_position[search_space_dimension] = self._spawn_boundaries[search_space_dimension][1]
             else:
                 mutated_position[search_space_dimension] += search_space_range * elitist_learning_rate
 
@@ -210,9 +211,9 @@ class AdaptivePSO(object):
             if Particle.fitness_function(mutated_position) < Particle.fitness_function(self._particle_with_best_personal_best._position):
                 self._particle_with_best_personal_best._position = mutated_position
             else:  # Replacing particle with worst position with particle with mutated best position.
-                current_worst_particle = self.__find_particle_with_best_personal_best(greater_than=True)
+                current_worst_particle = self._find_particle_with_best_personal_best(greater_than=True)
                 self.swarm.remove(current_worst_particle)
-                self.swarm.append(Particle(Particle.fitness_function, self.__spawn_boundaries, spawn_position=mutated_position))
+                self.swarm.append(Particle(Particle.fitness_function, self._spawn_boundaries, spawn_position=mutated_position))
 
     def _adapt_inertia_factor(self, f_evol: float):
         self.w = 1 / (1 + 1.5 * e ** (-2.6 * f_evol))  # ∈[0.4, 0.9]  ∀f_evol ∈[0,1]

@@ -67,7 +67,18 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
 
         # The best particle is stored as a local variable (pointer), as it is required in many stages of the algorithm.
         # This is expected to enhance runtime performance by cutting down on objective function evaluations.
-        self._particle_with_best_personal_best = self.__find_particle_with_best_personal_best()
+
+        #! Software engineering note: It would be a better practice to define "current_iteration"
+        #! as a private variable and implement (trivial) getter and incrementer public functions.
+        #! This way, object encapsulation is achieved.
+        #! To demonstrate, malicious client may manually frequently change (decrease) the value of "current_iteration"
+        #! in such a way that the termination condition "self._max_iterations == self.current_iteration" of the main
+        #! algorithm may never be satisfied.
+        #! In the case which:
+        #!  1) the distribution of the particles of the swarm is "sparse" enough such that Underflow Error doesn't occur.
+        #!  2) the swarm does not satisfyingly converge to the global optimum, because it has been trapped in a local optimum.
+        #! the program may encounter an infinite loop!
+        self._particle_with_best_personal_best = self._find_particle_with_best_personal_best()
         self.global_best_position = self._find_global_best_position()  # Could become a dynamically-added field.
         # Storing the learning rates c1, c2.
         # Both are shared among all particles of the swarm.
@@ -78,7 +89,7 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
         #* Note that in all PSO variations used, inertia weight "w" is calculated dynamically
         #* in the "update_parameters" function.
 
-        self.__max_iterations, self.current_iteration = maximum_iterations, current_iteration
+        self._max_iterations, self.current_iteration = maximum_iterations, current_iteration
         self.__domain_and_velocity_boundaries = search_and_velocity_boundaries
         # Note: It is good practice to have the speed limits be a multiple of the domain limits.
         # In the article "Adaptive Particle Swarm Optimization", Zhan et al. (https://ieeexplore.ieee.org/document/4812104)
@@ -97,11 +108,11 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
             # the learning strategy (using eliticism)
             # For details, see -> "Adaptive Clan Particle Swarm Optimization" ->
             # -> "III. ADAPTIVE PARTICLE SWARM OPTIMIZATION" -> "D. Learning Strategy using Elitism"
-            self.__spawn_boundaries = spawn_boundaries
+            self._spawn_boundaries = spawn_boundaries
         if search_and_velocity_boundaries is not None:
             self.__wall_type = wt
 
-    def __find_particle_with_best_personal_best(self, greater_than: bool = False) -> Particle:
+    def _find_particle_with_best_personal_best(self, greater_than: bool = False) -> Particle:
         """
         Particle that at some point had the best-known position (global min).
         Take into account the possibility that no particle is on that position when this function is called.
@@ -163,7 +174,7 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
                             # Remove this particle, which has exceeded the allowed boundaries.
                             self.swarm.remove(particle)
                             # Replace the deleted particle with a new one.
-                            self.swarm.append(Particle(Particle.fitness_function, self.__spawn_boundaries))
+                            self.swarm.append(Particle(Particle.fitness_function, self._spawn_boundaries))
                             break
 
             def absorb():
@@ -241,7 +252,7 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
                             # Delete this particle, since it is (very) similar to a different particle.
                             self.swarm.remove(particle)
                             # Replace the deleted particle with a new one.
-                            self.swarm.append(Particle(self.__fitness_function, self.__spawn_boundaries))
+                            self.swarm.append(Particle(self.__fitness_function, self._spawn_boundaries))
                             break
 
 
@@ -283,7 +294,7 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
             # replace_similar_particles()
 
         # Calculating the new best particle and position of the swarm.
-        self._particle_with_best_personal_best = self.__find_particle_with_best_personal_best()
+        self._particle_with_best_personal_best = self._find_particle_with_best_personal_best()
         self.global_best_position = self._find_global_best_position()
 
 
@@ -294,12 +305,12 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
         # Updating pso inertia weight (ω) and coefficients (c1, c2)
         if self._is_adaptive:
                 f_evol = self._estimate_evolutionary_state()
-                self.__evolutionary_state = self._classify_evolutionary_state(f_evol)
-                self._determine_accelaration_coefficients(self.__evolutionary_state)
-                self._apply_eliticism_learning_strategy
+                self._evolutionary_state = self._classify_evolutionary_state(f_evol)
+                self._determine_accelaration_coefficients(self._evolutionary_state)
+                self._apply_eliticism_learning_strategy(self._evolutionary_state)
                 self._adapt_inertia_factor(f_evol)
         else:  # Follow classic PSO learning strategy: decrease inertia weight linearly.
-            self.w = w_max - ((w_max - w_min) / self.__max_iterations) * self.current_iteration
+            self.w = w_max - ((w_max - w_min) / self._max_iterations) * self.current_iteration
 
 
         # Updating global-local coefficient (c3) and control factor (c3_k).
