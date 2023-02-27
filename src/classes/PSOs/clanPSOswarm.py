@@ -84,10 +84,14 @@ class ClanSwarm:
         # Essentially, what is done:
         # Step 1) Find best particle in each clan (inner 'min' function).
         # Step 2) Among the clan leaders calculated in the previous step, find the best particle among them.
+        #! Step 2 error!
+        #! Finds the best position at the CURRENT CONFIGURATION of the each swarm.
+        #! However, it may be the case that the global best of the swarm is not included
+        #! in (at least one) swarm considered in the (inner) "min" function! 
         # 'min' function is used because the implementation follows the "better => lower" convention.
         # Programming note: Using python built-in function increases performance, as the functions run in C internally,
         # while "for" loops in Python are a while-try-catch loop, which is computationally more expensive.
-        return min([min(self.clans[i].swarm) for i in range(len(self.clans))])._position
+        return min([self.clans[i].f_global_best for i in range(len(self.clans))])
 
     def calculate_swarm_distance_from_swarm_centroid(self):
         return 1/len(self.clans) *\

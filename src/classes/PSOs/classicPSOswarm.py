@@ -68,6 +68,18 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
         # The best particle is stored as a local variable (pointer), as it is required in many stages of the algorithm.
         # This is expected to enhance runtime performance by cutting down on objective function evaluations.
 
+        self._particle_with_best_personal_best = self._find_particle_with_best_personal_best()
+        self.global_best_position = self._particle_with_best_personal_best._personal_best_position
+        self.f_global_best = Particle.fitness_function(self.global_best_position)
+        # Storing the learning rates c1, c2.
+        # Both are shared among all particles of the swarm.
+        self.c1, self.c2 = c1, c2
+
+        
+
+        #* Note that in all PSO variations used, inertia weight "w" is calculated dynamically
+        #* in the "update_parameters" function.
+
         #! Software engineering note: It would be a better practice to define "current_iteration"
         #! as a private variable and implement (trivial) getter and incrementer public functions.
         #! This way, object encapsulation is achieved.
@@ -78,17 +90,6 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
         #!  1) the distribution of the particles of the swarm is "sparse" enough such that Underflow Error doesn't occur.
         #!  2) the swarm does not satisfyingly converge to the global optimum, because it has been trapped in a local optimum.
         #! the program may encounter an infinite loop!
-        self._particle_with_best_personal_best = self._find_particle_with_best_personal_best()
-        self.global_best_position = self._find_global_best_position()  # Could become a dynamically-added field.
-        # Storing the learning rates c1, c2.
-        # Both are shared among all particles of the swarm.
-        self.c1, self.c2 = c1, c2
-
-        
-
-        #* Note that in all PSO variations used, inertia weight "w" is calculated dynamically
-        #* in the "update_parameters" function.
-
         self._max_iterations, self.current_iteration = maximum_iterations, current_iteration
         self.__domain_and_velocity_boundaries = search_and_velocity_boundaries
         # Note: It is good practice to have the speed limits be a multiple of the domain limits.
@@ -116,7 +117,7 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
         """
         Particle that at some point had the best-known position (global min).
         Take into account the possibility that no particle is on that position when this function is called.
-        This can happen when the particle which found this position moved to a worse position.
+        This can happen when the particle which found this (i.e. the best-known) position moved to a worse position.
 
         :param greater_than: Returns particle with greatest position if True . Returns particle with lowest position if False (Default).
 
@@ -142,25 +143,20 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
 
             # Maximization problem.
             if greater_than:
-                if Particle.fitness_function(particle._personal_best_position) \
+                if particle._f_personal_best \
                         > \
                         Particle.fitness_function(particle_with_best_personal_best._personal_best_position):
                     particle_with_best_personal_best = particle
             # Minimization problem (Default).
             else:
-                if Particle.fitness_function(particle._personal_best_position) \
+                if particle._f_personal_best\
                         < \
                         Particle.fitness_function(particle_with_best_personal_best._personal_best_position):
                     particle_with_best_personal_best = particle
 
         return particle_with_best_personal_best
 
-    def _find_global_best_position(self):
-        """
-        Best position that the swarm has found during execution of the algorithm.
-        :return:
-        """
-        return self._particle_with_best_personal_best._personal_best_position
+
 
     def update_swarm(self):
 
@@ -295,7 +291,13 @@ class ClassicSwarm(AdaptivePSO, EnhancedInformationSharingPSO):
 
         # Calculating the new best particle and position of the swarm.
         self._particle_with_best_personal_best = self._find_particle_with_best_personal_best()
-        self.global_best_position = self._find_global_best_position()
+        self.global_best_position = self._particle_with_best_personal_best._personal_best_position
+        self.f_global_best = min(self.f_global_best, Particle.fitness_function(self.global_best_position))
+        # print(f'gb = {self.global_best_position},\nf(gb) = {self.f_global_best}')
+        # if(self._is_adaptive):
+        #     print(f'ω = {self.w}, c1 = {self.c1}, c2 = {self.c2} , evolutionary state = {self._evolutionary_state}')
+        # print()
+
 
 
         self.current_iteration += 1

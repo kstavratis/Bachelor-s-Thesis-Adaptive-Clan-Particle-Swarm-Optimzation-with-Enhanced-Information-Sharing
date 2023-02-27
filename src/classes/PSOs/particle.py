@@ -18,6 +18,13 @@ class Particle:
     velocity_boundaries = None
 
     def __init__(self, fitness_function, convex_boundaries: list, spawn_position: vector = None):
+
+        # Particle common attributes
+        # --------------------------
+        # 1) "Convex boundaries"    := The subspace of R^n which the particle is allowed to move in.
+        # 2) "Velocity boundaries"  := The minimum and maximum velocity each particle is allowed to reach.
+        # 3) "Objective function"   := Particles of the swarm "live" inside the same "environment".
+
         # In case of false user input, (upper boundary has been given first and lower boundary second).
         # the boundaries are swapped, in order to proceed to the next part of code correctly.
         for dimension in range(len(convex_boundaries)):
@@ -35,7 +42,16 @@ class Particle:
         for dimension_limits in velocity_boundaries:
             dimension_limits[0] = -dimension_limits[0]
         Particle.velocity_boundaries = velocity_boundaries # Setting the velocity boundaries swarm-wise, utilizing a shared variable. This is to reduce computational load in "__limit_velocity()".
+        Particle.fitness_function = fitness_function
 
+
+        # Individual particle attributes
+        # ------------------------------
+        # 1) Position
+        # 2) Velocity
+        # 3) Memory
+
+        # 1) Position
         # Randomly spawning the particle according to the problem's convex boundaries.
         if spawn_position is None:
             self._position: vector = vector([uniform(
@@ -43,9 +59,8 @@ class Particle:
                 for vector_space_dimension in range(len(convex_boundaries))])
         if isinstance(spawn_position, ndarray):
             self._position: vector = spawn_position
-        # The particle's first personal best _position is the _position where it is spawned.
-        self._personal_best_position: vector = self._position
 
+        # 2) Velocity
         # TODO
         #  1)Verify whether the velocities will have boundaries or not.
         #  Will depend on algorithm used, e.g. Last-Eliminated Principle PSO.
@@ -55,7 +70,15 @@ class Particle:
         #                                  for vector_space_dimension in range(len(spawn_boundaries))])
         self.__velocity: vector = zeros(len(convex_boundaries))  # Initialize the particles as being still.
 
-        Particle.fitness_function = fitness_function
+        # 3) Memory
+        # The particle's first personal best _position is the _position where it is spawned.
+        self._personal_best_position: vector = self._position
+        # Auxiliary variable which stores the evaluation of the objective function at the particle's personal best position.
+        # This variable serves to bring speed-up to the algorithm.
+        self._f_personal_best = Particle.fitness_function(self._personal_best_position)
+
+
+
 
     def __lt__(self, other):
         return Particle.fitness_function(self._position) < Particle.fitness_function(other._position)
@@ -101,18 +124,21 @@ class Particle:
         self.__limit_velocity(Particle.velocity_boundaries)
         # Updating the particle's _position.
         self._position = self._position + self.__velocity
-        # "Glue in" the particle whenever it would exceed the search boundaries, instead of letting it move freely.
+        # "Glue" the particle whenever it would exceed the search boundaries, instead of letting it move freely.
         self.__bind_particle_to_convex_boundaries()
         # Checking whether the new _position is a new personal best (minimum).
-        if self.__get_fitness_at_current_position() < Particle.fitness_function(self._personal_best_position):
+        #! PERFORMANCE COMMENT
+        #! One additional evaluation of the objective function is made for each particle at each iteration!
+        # TODO: Move this portion of the code to a higher level (the swarm), where the evaluations already take place.
+        f_current = Particle.fitness_function(self._position)
+        if f_current < self._f_personal_best:
             self._personal_best_position = self._position
+            self._f_personal_best = f_current
         # TODO: Should the best global particle be updated at this point as well or should there be a wait for all
         #   particles to complete their iteration? According to the pseudocode in Wikipedia (), the former approach
         #   is implied.
         # CURRENTLY, THE ABOVE "2DO" IS EXPLORED IN A DIFFERENT BRANCH.
 
-    def __get_fitness_at_current_position(self):
-        return Particle.fitness_function(self._position)
 
     def __limit_velocity(self, velocity_boundaries: list):
         for dimension in range(len(velocity_boundaries)):

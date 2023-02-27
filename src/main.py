@@ -21,6 +21,7 @@ Code for my Bachelor's Thesis in the Informatics department of the Aristotle Uni
 #import scripts.experiments.experiment
 #import scripts.experiments.experiments_data_creation
 import scripts.experiments.experiments_data_creation2
+import scripts.experiments.experiments_animation_data_creation
 import scripts.experiments.experimental_data_manipulation as data_avg
 from classes.PSOs.Mixins.enhanced_information_sharing.enums.global_local_coefficient_types import GlobalLocalCoefficientTypes
 from classes.PSOs.Mixins.enhanced_information_sharing.enums.control_factor_types import ControlFactorTypes
@@ -39,8 +40,8 @@ def main():
     number_of_clans = 6
     particles_per_clan = 5
     simple_pso_particles = number_of_clans * particles_per_clan
-    maximum_iterations = 100
-    experiments = 4
+    maximum_iterations = 10
+    experiments = 1
     executor = ProcessPoolExecutor()
  
     
@@ -50,11 +51,11 @@ def main():
     # benchmark_functions_list = [bench_f.ackley_function, bench_f.alpinen1_function, bench_f.quadric_function, 
     # bench_f.rastrigin_function, bench_f.rosenbrock_function, bench_f.schwefel222_function, bench_f.salomon_function, bench_f.sphere_function]
 
-    benchmark_functions_list = [bench_f.alpinen1_function, bench_f.ackley_function, bench_f.rastrigin_function, bench_f.rosenbrock_function]
+    benchmark_functions_list = [ bench_f.sphere_function]
 
 
     for benchmark_function in benchmark_functions_list:
-        for c3k_initial_value in [0.2, 1.0, 2.0]:
+        for c3k_initial_value in [1.0]:
 
             shared_keyword_input_parameters_dict = {
                     'objective_function_pointer' : benchmark_function['formula'] ,
@@ -66,27 +67,36 @@ def main():
                     'search_and_velocity_boundaries' : benchmark_function['search_and_velocity_boundaries']
             }
 
-            for mode in [ControlFactorTypes.CONSTANT, ControlFactorTypes.LINEAR, ControlFactorTypes.ADAPTIVE]:
+            for mode in [ControlFactorTypes.CONSTANT]:
 
                 eis_kL2_kcC02_tuple = ((GlobalLocalCoefficientTypes.LINEAR, c3_initial_value), (mode, c3k_initial_value))
 
                 print(f'{benchmark_function["name"]} function: {number_of_clans} clans of {particles_per_clan} particles each')
                 print("---------------")
-                simple_AClanPSO_raw_data = scripts.experiments.experiments_data_creation2.run(
-                    executor=executor,
-                    num_of_experiments=experiments,
-                    kwargs = dict(**shared_keyword_input_parameters_dict, is_clan=True, is_adaptive=True, eis=eis_kL2_kcC02_tuple)
-                    # wt=WallTypes.ELIMINATING
-                )
+                # EXECUTION TO COLLECT STATISTICAL DATA FOR MULTIPLE EXPERIMENTS
+                # simple_AClanPSO_raw_data = scripts.experiments.experiments_data_creation2.run(
+                #     executor=executor,
+                #     num_of_experiments=experiments,
+                #     kwargs = dict(**shared_keyword_input_parameters_dict, is_clan=False, is_adaptive=False)
+                #     # kwargs = dict(**shared_keyword_input_parameters_dict, is_clan=False, is_adaptive=False, eis=eis_kL2_kcC02_tuple)
+
+                #     # wt=WallTypes.ELIMINATING
+                # )
+
+                # COLLECT ANIMATION DATA FOR A SINGLE EXPERIMENT: ONE EXPERIMENT WITH MULTIPLE SNAPSHOTS
+                simple_AClanPSO_raw_data = scripts.experiments.experiments_animation_data_creation.experiment(
+                        kwargs=dict(**shared_keyword_input_parameters_dict, is_clan=False, is_adaptive=False),
+                        # kwargs = dict(**shared_keyword_input_parameters_dict, is_clan=False, is_adaptive=False, eis=eis_kL2_kcC02_tuple)
+                        )
 
                 simple_AClanPSO_raw_data.to_csv(f'{benchmark_function["name"]}_function_eis_aclan_pso_'\
-                    f'c3_{c3_type}_{c3_initial_value}_c3k_{"constant" if mode == ControlFactorTypes.ADAPTIVE else "linear" if mode == ControlFactorTypes.LINEAR else "adaptive"}'\
+                    f'c3_{c3_type}_{c3_initial_value}_c3k_{"constant" if mode == ControlFactorTypes.CONSTANT else "linear" if mode == ControlFactorTypes.LINEAR else "adaptive"}'\
                     f'_{c3k_initial_value}_{number_of_clans}x{particles_per_clan}_raw_data.csv')
 
-                simple_AClanPSO_averaged_data = data_avg.distance_metric_mean(simple_AClanPSO_raw_data)
-                simple_AClanPSO_averaged_data.to_csv(f'{benchmark_function["name"]}_function_eis_aclan_pso_'\
-                    f'c3_{c3_type}_{c3_initial_value}_c3k_{"constant" if mode == ControlFactorTypes.ADAPTIVE else "linear" if mode == ControlFactorTypes.LINEAR else "adaptive"}'\
-                    f'_{c3k_initial_value}_{number_of_clans}x{particles_per_clan}_mean_of_experiments_per_iteration.csv')
+                # simple_AClanPSO_averaged_data = data_avg.distance_metric_mean(simple_AClanPSO_raw_data)
+                # simple_AClanPSO_averaged_data.to_csv(f'{benchmark_function["name"]}_function_eis_aclan_pso_'\
+                #     f'c3_{c3_type}_{c3_initial_value}_c3k_{"constant" if mode == ControlFactorTypes.ADAPTIVE else "linear" if mode == ControlFactorTypes.LINEAR else "adaptive"}'\
+                #     f'_{c3k_initial_value}_{number_of_clans}x{particles_per_clan}_mean_of_experiments_per_iteration.csv')
 
 
 
