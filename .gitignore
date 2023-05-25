@@ -5,4 +5,4 @@
 *.csv
 
 # Any jupyter notebooks created during development will be for testing purposes. They are not relevant to the source code.
-.ipynb
+*.ipynb

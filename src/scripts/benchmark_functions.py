@@ -1,46 +1,97 @@
 """
-Copyright (C) 2022  Konstantinos Stavratis
+Copyright (C) 2023  Konstantinos Stavratis
 For the full notice of the program, see "main.py"
 """
 
-from numpy import absolute, sum as npsum, sqrt, square, sin, cos, prod, pi, e, array, zeros, ones
-from scipy.linalg import norm
-
+import numpy as np
 
 
 # Theorem: min g(x) = -max (-g(x)).
-# PSO traditionally follows the maximization problem,
-# and it is for that reason that this approach has been followed in this implementation as well.
+# PSO traditionally follows the minimization problem formulation, which is standard in (mathematical) optimization.
+# It is for this reason that this approach has been followed in this implementation as well.
 
-domain_dimensions = 10
+domain_dimensions = 2
 
 # Unimodal functions:
 # -------------------
 
 # Min: f(0,0,...,0) = 0, where 0 is repeated n times, where n is the domain dimensions.
-def sphere_function_formula(x: array) -> float:
-    return npsum(square(x))
+def sphere_function_formula(x: np.array) -> float:
+    """
+    Arguments
+    ---------
+    x : np.array
+        shape == (n, m)
+        A 2D matrix of arbitrary (finite) non-negative shape.
+    
+    Returns
+    -------
+    : np.array
+        shape == (n,) 
+        The row-wise sphere function result
+        # Math: f(\mathbf{v}) = \|\mathbf{v}\|^2, \dim(\mathbf{v})= D
+    """
+    return np.sum(np.square(x), axis=1)
 
 # Min: f(0,0,...,0) = 0, where 0 is repeated n times, where n is the domain dimensions.
-def quadric_function_formula(x: array) -> float:
-    return sum(sum(x[j] for j in range(i+1))**2 for i in range(len(x)))
+def quadric_function_formula(x: np.array) -> float:
+    """
+    Arguments
+    ---------
+    x : np.array
+        shape == (n, m)
+        A 2D matrix of arbitrary (finite) non-negative shape.
+
+    Returns
+    -------
+     : np.array
+        shape == (n,)
+        The row-wise quadric function result
+        # Math: f(\mathbf{v}) = Σ_i^D (Σ_j^i v_j)^2, \dim(\mathbf{v})= D
+    """
+    return np.sum(np.cumsum(x, axis=1)**2, axis=1)
 
 
 # Min: f(0,0,...,0) = 0, where 0 is repeated n times, where n is the domain dimensions.
 # The function can be defined on any input domain but it is usually evaluated on xi∈[−100,100]for i=1,…,n
-def schwefel222_function_formula(x: array) -> float:
-    return npsum(absolute(x)) + prod(absolute(x))
+def schwefel222_function_formula(x: np.array) -> float:
+    """
+    Arguments
+    ---------
+    x : np.array
+        shape == (n,m)
+        A 2D matrix of arbitrary (finite) non-negative shape.
+
+    Returns
+    -------
+    : np.array
+        shape == (n,)
+        The row-wise Schwefel P2.22 function result
+        # Math: f(\mathbf{v}) = Σ_i^D |v_i| + Π_i^D |v_i|, \dim(\mathbf{v})= D 
+    """
+    return np.sum(np.absolute(x), axis=1) + np.prod(np.absolute(x), axis=1)
 
 
 # Min: f(1,1,...,1) = 0  , where 1 is repeated n times, where n is the domain dimensions.
-def rosenbrock_function_formula(x: array, problem: bool = True) -> float:
-    sum = 0
-    for i in range(len(x)-1):
-        sum += 100*(x[i+1] - x[i]**2)**2 + (1-x[i])**2
-    if problem:
-        return sum  # Minimization problem (default)
-    else:
-        return 1/sum  # Maximization problem
+def rosenbrock_function_formula(x: np.array) -> float:
+    """
+    Arguments
+    ---------
+    x : np.array
+        shape == (n,m)
+        A 2D matrix of arbitrary (finite) non-negative shape.
+
+    Returns
+    -------
+    : np.array
+        shape == (n,)
+        The row-wise Rosenbrock function result
+        # Math: f(\mathbf{v}) = \sum_i^{D-1} 100(v_{i+1} - v_i)^2 + (1 - v_i)^2, \dim(\mathbf{v}) = D  
+    """
+    xi_plus_1_xi = np.diff(x, n=1, axis=1)
+    one_minus_xi = (np.ones_like(x) - x)[:, :-1]
+
+    return np.sum(100*xi_plus_1_xi**2 + one_minus_xi**2, axis=1)
 
 
 
@@ -50,31 +101,87 @@ def rosenbrock_function_formula(x: array, problem: bool = True) -> float:
 # Because the Rastrigin function is a non-negative function (with f(x) = 0 <=> x = 0),
 # instead of utilizing the theorem above for solving the minimalization problem,
 # the inverse function is used as the objective function instead.
-def rastrigin_function_formula(x: array) -> float:
+def rastrigin_function_formula(x: np.array) -> float:
+    """
+     Arguments
+    ---------
+    x : np.array
+        shape == (n,m)
+        A 2D matrix of arbitrary (finite) non-negative shape.
+
+    Returns
+    -------
+    : np.array
+        shape == (n,)
+        The row-wise Rosenbrock function result
+        # Math: f(\mathbf{v}) = 10 \cdot D  + \sum_i^{D} v_i^2 - 10 \cos(2 \pi v_i), \dim(\mathbf{v}) = D  
+    """
+    
     A = 10
-    return A * len(x) + npsum(square(x) - A * cos(2*pi*x))
-    # return 1/(A * len(x) + sum(square(x) - A * cos(2*pi*x)))
-    # return 1/(A * len(x) + sum(x[i]**2 - A * cos(2*pi*x[i]) for i in range(len(x))))
+    return A * x.shape[1] + np.sum(np.square(x) - A * np.cos(2*np.pi*x), axis=1)
 
 
 # Ackley function's domain is x[i] ∈ [-5, 5] for all i and its minimum is at f(0,...0) = 0.
-def ackley_function_formula(x: array, a: float = 20, b: float = 0.2, c: float = 2*pi) -> float:
+def ackley_function_formula(x: np.array, a: float = 20, b: float = 0.2, c: float = 2*np.pi) -> float:
+    """
+     Arguments
+    ---------
+    x : np.array
+        shape == (n,m)
+        A 2D matrix of arbitrary (finite) non-negative shape.
+
+    Returns
+    -------
+    : np.array
+        shape == (n,)
+        The row-wise Ackley function result
+        # Math: f(\mathbf{v}) = -20 \exp \left(-0.2 \sqrt{\frac{1}{D} \sum_{i=1}^{D} v_i^2} \right)\
+        # Math: -\exp \left( \frac{1}{D} \sum_{i=1}^{D} \cos(2 \pi v_i) \right) + 20 + e, \dim(\mathbf{v}) = D  
+    """
     return -a *\
-             e ** (-b * (sqrt(1 / len(x) * npsum(square(x)))))\
-             - e ** (1 / len(x) * npsum(cos(c * x)))\
-             + a + e
+             np.exp(-b * (np.sqrt(1 / x.shape[1] * np.sum(np.square(x), axis=1))))\
+             - np.exp(1 / x.shape[1] * np.sum(np.cos(c * x), axis=1))\
+             + a + np.e
 
 
-def salomon_function_formula(x: array) -> float:
-    norm_of_x = norm(x)
-    return 1 - cos(2*pi*norm_of_x) + 0.1*norm_of_x
+def salomon_function_formula(x: np.array) -> float:
+    """
+     Arguments
+    ---------
+    x : np.array
+        shape == (n,m)
+        A 2D matrix of arbitrary (finite) non-negative shape.
+
+    Returns
+    -------
+    : np.array
+        shape == (n,)
+        The row-wise Ackley function result
+        # Math: f(\mathbf{v}) = 1 - \cos \left( 2 \pi \sqrt{\sum_{i=1}^{D} v_i^2} \right) +  0.1 \sqrt{\sum_{i=1}^{D}v_i^2}, \dim(\mathbf{v}) = D 
+    """
+    norm_of_x = np.linalg.norm(x, axis=1)
+    return 1 - np.cos(2*np.pi*norm_of_x) + 0.1*norm_of_x
 
 
-def alpinen1_function_formula(x: array) -> float:
-    return npsum(absolute(x * sin(x) + 0.1 * x))
+def alpinen1_function_formula(x: np.array) -> float:
+    """
+     Arguments
+    ---------
+    x : np.array
+        shape == (n,m)
+        A 2D matrix of arbitrary (finite) non-negative shape.
+
+    Returns
+    -------
+    : np.array
+        shape == (n,)
+        The row-wise Ackley function result
+        # Math: f(\mathbf{v}) = \sum_{i=1}^{D} | v_i \sin(v_i) + 0.1 v_i |, \dim(\mathbf{v}) = D 
+    """
+    return np.sum(np.absolute(x * np.sin(x) + 0.1 * x), axis=1)
 
 def styblinski_tang_function_formula(x: list) -> float:
-    return npsum(x[i]**4 -16*x[i]**2 + 5*x[i] for i in range(len(x)))/2
+    return np.sum(x[i]**4 -16*x[i]**2 + 5*x[i] for i in range(len(x)))/2
 
 
 
@@ -89,7 +196,7 @@ sphere_function = {
     'formula': sphere_function_formula,
     'search_domain': [[-10 ** 2, 10 ** 2] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
-    'goal_point': zeros(domain_dimensions)
+    'goal_point': np.zeros(domain_dimensions)
 }
 
 quadric_function = {
@@ -97,7 +204,7 @@ quadric_function = {
     'formula': quadric_function_formula,
     'search_domain': [[-10 ** 2, 10 ** 2] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
-    'goal_point': zeros(domain_dimensions)
+    'goal_point': np.zeros(domain_dimensions)
 }
 
 schwefel222_function = {
@@ -105,7 +212,7 @@ schwefel222_function = {
     'formula': schwefel222_function_formula,
     'search_domain': [[-10, 10] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
-    'goal_point': zeros(domain_dimensions)
+    'goal_point': np.zeros(domain_dimensions)
 }
 
 rosenbrock_function = {
@@ -113,7 +220,7 @@ rosenbrock_function = {
     'formula': rosenbrock_function_formula,
     'search_domain': [[-10, 10] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-10, 10], [-0.2 * 10, 0.2 * 10]],
-    'goal_point': ones(domain_dimensions)
+    'goal_point': np.ones(domain_dimensions)
 }
 
 rastrigin_function = {
@@ -121,7 +228,7 @@ rastrigin_function = {
     'formula': rastrigin_function_formula,
     'search_domain': [[-5.12, 5.12] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
-    'goal_point': zeros(domain_dimensions)
+    'goal_point': np.zeros(domain_dimensions)
 }
 
 ackley_function = {
@@ -129,7 +236,7 @@ ackley_function = {
     'formula': ackley_function_formula,
     'search_domain': [[-32, 32] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-32, 32], [-0.2 * 32, 0.2 * 32]],
-    'goal_point': zeros(domain_dimensions)
+    'goal_point': np.zeros(domain_dimensions)
 }
 
 salomon_function = {
@@ -137,7 +244,7 @@ salomon_function = {
     'formula': salomon_function_formula,
     'search_domain': [[-10**2, 10**2] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
-    'goal_point': zeros(domain_dimensions)
+    'goal_point': np.zeros(domain_dimensions)
 }
 
 alpinen1_function = {
@@ -145,5 +252,5 @@ alpinen1_function = {
     'formula': alpinen1_function_formula,
     'search_domain': [[0, 10] for _ in range(domain_dimensions)],
     'search_and_velocity_boundaries': [[0, 10], [-0.2 * 10, 0.2 * 10]],
-    'goal_point': zeros(domain_dimensions)
+    'goal_point': np.zeros(domain_dimensions)
 }
