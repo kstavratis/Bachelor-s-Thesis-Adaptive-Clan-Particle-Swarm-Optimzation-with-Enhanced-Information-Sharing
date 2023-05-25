@@ -7,14 +7,56 @@ For the full notice of the program, see "main.py"
 import numpy as np
 
 class PSOBackbone():
+    """
+    The "PSOBackone" class encompasses all functionalities essential for any Particle Swarm Optimization (PSO) algorithm.
 
-    # The objective function of the swarm is shared among all swarms.
-    # TODO: This can change in the future according to the implementation.
+    Attributes
+    ----------
+    __nr_particles : int
+        A positive integer which stores the number of particles which composite the swarm
+    
+    __nr_dimensions : int
+        The dimensionality (i.e. number of degrees of freedom) of the optimization problem that the PSO algorithm will solve.
+
+    swarm_positions : np.array
+        size == (__nr_particles, __nr_dimensions)
+        A 2D array whose cells represent the positions of the swarm's particles.
+        The rows index the particle ID, while the column the DOF id.
+
+    swarm_velocities : np.array
+        size == (__nr_particles, __nr_dimensions)
+        A 2D array whose cells represent the velocities of the swarm's particles.
+        The rows index the particle ID, while the column the DOF id.
+
+    __objective_function : function
+        A (class <function>) pointer to the problem landscape, expressed in a mathematical formula, the PSO is tasked with solving.
+
+    w : float
+        The w (ω) value is known as the "inertia weight". w # Math: \omega \in [0, 1]
+        The w weight dictates how much of the previously attained velocity will be used in the next iteration of the algorithm
+        (0 := not at all, 1 := fully).
+        It is initialized to one (1).
+
+    c1 : float
+        The c1 value is known as "cognitive weight" or "greedy learning factor"
+        Its value (in conjunction with c2) determine the behaviour of each particle of the swarm.
+        As a rule of thumb, the higher the ratio c1/c2 is, the more local exploitation is encouraged.
+
+    c2 : float
+        The c2 value is known as "social weight" or "social learning factor"
+        Its value (in conjunction with c1) determine the behaviour of each particle of the swarm.
+        As a rule of the thumb, the higher the ration c2/c1 is, the more global exploration is encouraged.
+    
+        
+
+    Although it can be instantiated on its own, it is suggested that additional schemes are built on top of this class,
+    such that desirable properties (exploration, convergence, stability) are achieved.
+    The recommended way of building additional PSO schemes is by implementing them as Python "Mixins".
+    """
 
     def __init__(self, nr_particles : int, nr_dimensions : int,
-                 objective_function, domain_low_boundaries : np.array, domain_high_boundaries : np.array,
-                 maximum_iterations : int): 
-        super.__init__()
+                 objective_function, domain_low_boundaries : np.array, domain_high_boundaries : np.array): 
+        super().__init__()
 
         # ==================== INITIALIZE ATTRIBUTES FROM INPUT PARAMETERS START ====================
         self.__nr_particles = nr_particles
@@ -27,7 +69,6 @@ class PSOBackbone():
 
         self.__objective_function = objective_function
 
-        self.__maximum_iterations = maximum_iterations
         # ==================== INITIALIZE ATTRIBUTES FROM INPUT PARAMETERS FINISH ====================
 
 
@@ -56,7 +97,7 @@ class PSOBackbone():
         # Therefore, the initial positioning is the currently best presented to the swarm.
         
         # STEP 1
-        objective_values = self.__objective_function(self.swarm)
+        objective_values = self.__objective_function(self.swarm_positions)
 
         # STEP 2a
         best_objective_value_index = np.argmin(objective_values)
@@ -70,7 +111,7 @@ class PSOBackbone():
 
         # STEP 2b
         self.pbest_values = np.copy(objective_values)
-        self.pbest_positions = np.copy(self.swarm)
+        self.pbest_positions = np.copy(self.swarm_positions)
         #! Make sure to copy by value. Simple indexing copies by reference (view).
         #! For more information, read https://numpy.org/doc/stable/user/basics.copies.html
         # ==================== INITIALIZE ATTRIBUTES FROM INTERNAL FUNCTIONS START ====================
@@ -97,10 +138,37 @@ class PSOBackbone():
         # NOTE: Because we are multiplying with random values, whether we do matrix-wise multiplication (@)
         # or element-wise multiplication (*) should be identical.
         # Element-wise multiplication is used, because it is believed to be computationally cheaper.
-        cognitive_velocities = (R1 * (self.pbest_positions - self.swarm_positions).flatten()).reshape(self.__nr_particles, self.__nr_dimensions)
-        social_velocities = (R2 * (self.gbest_position - self.swarm_positions).flatten()).reshape(self.__nr_particles, self.__nr_dimensions)
+        cognitive_velocities = (R1 @ (self.pbest_positions - self.swarm_positions).flatten()).reshape(self.__nr_particles, self.__nr_dimensions)
+        social_velocities = (R2 @ (self.gbest_position - self.swarm_positions).flatten()).reshape(self.__nr_particles, self.__nr_dimensions)
 
-        self.velocities = self.w * self.swarm_velocities + self.c1 * cognitive_velocities + self.c2 * social_velocities
+        self.swarm_velocities = self.w * self.swarm_velocities + self.c1 * cognitive_velocities + self.c2 * social_velocities
+        print(f'Update velocities to {self.velocities}')
+
+    def update_pbest(self, candidate_positions : np.array, candidate_objective_values : np.array) -> None:
+        # For each particle,
+        # in case that f(x) is lower than the currently memorized objective values "pbest_value"
+        # update the personal best value and position
+
+        # A boolean mask whose "True" values indicate which values will be replaced. NumPy allows boolean indexing.
+        update_mask = candidate_objective_values < self.pbest_values
+
+        self.pbest_values[update_mask] = candidate_objective_values[update_mask]
+        self.pbest_positions[update_mask] = candidate_positions[update_mask]
+
+    def update_gbest(self, candidate_positions : np.array, candidate_objective_values : np.array) -> None:
+        # STEP 1: Find the particle with the lowest value.
+        best_objective_value_index = np.argmin(candidate_objective_values)
+
+        # STEP 2: Update the global best value and position
+        #           in case that f(x) is lower than the one currently memorized by the swarm "gbest_value".
+        if candidate_objective_values[best_objective_value_index] < self.gbest_value:
+            self.gbest_value = candidate_objective_values[best_objective_value_index]
+            self.gbest_position = candidate_positions[best_objective_value_index]
+        #! During testing, beware to check for copy by value or by reference! This can be done by checking the "base" attribute of np arrays.
+        #! Make sure to copy by value. Simple indexing copies by reference (view).
+        #! For more information, read https://numpy.org/doc/stable/user/basics.copies.html
+
+
 
     def get_swarm_centroid(self):
         return np.mean(self.swarm, axis=0)

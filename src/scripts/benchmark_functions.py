@@ -159,8 +159,8 @@ def salomon_function_formula(x: np.array) -> float:
         The row-wise Ackley function result
         # Math: f(\mathbf{v}) = 1 - \cos \left( 2 \pi \sqrt{\sum_{i=1}^{D} v_i^2} \right) +  0.1 \sqrt{\sum_{i=1}^{D}v_i^2}, \dim(\mathbf{v}) = D 
     """
-    norm_of_x = np.linalg.norm(x, axis=1)
-    return 1 - np.cos(2*np.pi*norm_of_x) + 0.1*norm_of_x
+    root_norm_of_x = np.sqrt(np.linalg.norm(x, axis=1))
+    return 1 - np.cos(2*np.pi*root_norm_of_x) + 0.1*root_norm_of_x
 
 
 def alpinen1_function_formula(x: np.array) -> float:
