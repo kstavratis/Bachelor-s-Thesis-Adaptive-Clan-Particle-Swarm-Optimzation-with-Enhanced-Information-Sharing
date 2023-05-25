@@ -1,0 +1,8 @@
+# Ignore all ".pyc" files created.
+*.pyc
+
+# Ignore experimental results. These shall be stored locally.
+*.csv
+
+# Any jupyter notebooks created during development will be for testing purposes. They are not relevant to the source code.
+.ipynb
