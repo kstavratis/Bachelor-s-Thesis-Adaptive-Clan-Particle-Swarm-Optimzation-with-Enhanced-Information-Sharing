@@ -5,7 +5,7 @@ For the full notice of the program, see "main.py"
 
 from numpy import inf
 
-from classes.PSOs.Mixins.adaptive.enums.evolutionary_states import EvolutionaryStates
+from classes.PSOs.Mixins.adaptive_pso.enums.evolutionary_states import EvolutionaryStates
 
 """
 For details see "Adaptive Particle Swarm Optimization (Zhan et al.)" -> III ESE for PSO -> B. ESE -> Step 3
@@ -99,7 +99,7 @@ def classify_evolutionary_state(evolutionary_factor: float):
             return current_state
 
 def __membership_value_error_message(f):
-    return f"The evolutionary factor is bounded in the values [0,1].\n\ Its value is {f} instead."
+    return f"The evolutionary factor is bounded in the values [0,1].\nIts value is {f} instead."
 
 def __exploration_membership_function(f: float) -> float:
         if 0 <= f <= 0.4 or 0.8 < f <= 1.0:

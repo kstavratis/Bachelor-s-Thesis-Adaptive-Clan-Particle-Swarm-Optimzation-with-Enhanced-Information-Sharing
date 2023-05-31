@@ -6,3 +6,6 @@
 
 # Any jupyter notebooks created during development will be for testing purposes. They are not relevant to the source code.
 *.ipynb
+
+# The "__init__" files are used so that Python can detect modules. No need to include it in the repository.
+__init__.py

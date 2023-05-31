@@ -6,7 +6,7 @@ For the full notice of the program, see "main.py"
 
 import numpy as np
 
-class PSOBackbone():
+class PSOBackbone:
     """
     The "PSOBackone" class encompasses all functionalities essential for any Particle Swarm Optimization (PSO) algorithm.
 
@@ -19,17 +19,20 @@ class PSOBackbone():
         The dimensionality (i.e. number of degrees of freedom) of the optimization problem that the PSO algorithm will solve.
 
     swarm_positions : np.array
-        size == (__nr_particles, __nr_dimensions)
+        size == (__nr_particles, __nr_dimensions)\n
         A 2D array whose cells represent the positions of the swarm's particles.
         The rows index the particle ID, while the column the DOF id.
 
     swarm_velocities : np.array
-        size == (__nr_particles, __nr_dimensions)
+        size == (__nr_particles, __nr_dimensions)\n
         A 2D array whose cells represent the velocities of the swarm's particles.
         The rows index the particle ID, while the column the DOF id.
 
     __objective_function : function
         A (class <function>) pointer to the problem landscape, expressed in a mathematical formula, the PSO is tasked with solving.
+        The function should be conditioned in such a way such that it produces (__nr_particles,) np.array outputs
+        from a (__nr_particles, __nr_dimensions) 2D np.array. i.e.
+        function(np.array(n,m)) -> np.array(n)
 
     w : float
         The w (ω) value is known as the "inertia weight". w # Math: \omega \in [0, 1]
@@ -39,12 +42,12 @@ class PSOBackbone():
 
     c1 : float
         The c1 value is known as "cognitive weight" or "greedy learning factor"
-        Its value (in conjunction with c2) determine the behaviour of each particle of the swarm.
+        Its value (in conjunction with c2) determines the behaviour of each particle of the swarm.
         As a rule of thumb, the higher the ratio c1/c2 is, the more local exploitation is encouraged.
 
     c2 : float
         The c2 value is known as "social weight" or "social learning factor"
-        Its value (in conjunction with c1) determine the behaviour of each particle of the swarm.
+        Its value (in conjunction with c1) determines the behaviour of each particle of the swarm.
         As a rule of the thumb, the higher the ration c2/c1 is, the more global exploration is encouraged.
     
         
@@ -125,24 +128,39 @@ class PSOBackbone():
         # ==================== INITIALIZE ATTRIBUTES FROM ARBITRARILY FINISH ====================
     
     def step(self) -> None:
+        """
+        Apply the velocity and position updates of the particles.
+        # Math: \mathbf{v}^{(t+1)} = f(\mathbf{x^t}, \mathbf{p^t}, \mathbf{g^t}, ...)
+        # Math: \mathbf{x}^{(t+1)} = \mathbf{x}^t + \mathbf{v}^{(t+1)}
+        """
+        self.update_weights_and_acceleration_coefficients()
         self.step_velocities()
         # Translate the swarm positions according to the updated velocities.
         self.swarm_positions += self.swarm_velocities
 
     def step_velocities(self) -> None:
         random_generator = np.random.default_rng()
-        R1 = np.diag(random_generator.uniform(size=self.__nr_particles * self.__nr_dimensions))
-        R2 = np.diag(random_generator.uniform(size=self.__nr_particles * self.__nr_dimensions))
-        # Reshaping the swarm matrix into a single (column) vector to utilize vectorization of numpy.
-        # Both representations (3D matrix x 2D matrix, larger 2D matrix, large 1D vector) are equivalent.
         # NOTE: Because we are multiplying with random values, whether we do matrix-wise multiplication (@)
         # or element-wise multiplication (*) should be identical.
-        # Element-wise multiplication is used, because it is believed to be computationally cheaper.
-        cognitive_velocities = (R1 @ (self.pbest_positions - self.swarm_positions).flatten()).reshape(self.__nr_particles, self.__nr_dimensions)
-        social_velocities = (R2 @ (self.gbest_position - self.swarm_positions).flatten()).reshape(self.__nr_particles, self.__nr_dimensions)
+        # Element-wise multiplication is used, because it is believed to be computationally cheaper, especially memory-wise.
+
+        # # ==================== Matrix-wise multiplication approach START ====================
+        # # Reshaping the swarm matrix into a single (column) vector to utilize vectorization of numpy.
+        # # Both representations (3D matrix x 2D matrix, larger 2D matrix, large 1D vector) are equivalent.
+        # R1 = np.diag(random_generator.uniform(size=self.__nr_particles * self.__nr_dimensions))
+        # R2 = np.diag(random_generator.uniform(size=self.__nr_particles * self.__nr_dimensions))
+        # cognitive_velocities = (R1 @ (self.pbest_positions - self.swarm_positions).flatten()).reshape(self.__nr_particles, self.__nr_dimensions)
+        # social_velocities = (R2 @ (self.gbest_position - self.swarm_positions).flatten()).reshape(self.__nr_particles, self.__nr_dimensions)
+        # # ==================== Matrix-wise multiplication approach FINISH ====================
+
+        # ==================== Element-wise multiplication approach START ====================
+        R1 = random_generator.uniform(size=(self.__nr_particles, self.__nr_dimensions))
+        R2 = random_generator.uniform(size=(self.__nr_particles, self.__nr_dimensions))
+        cognitive_velocities = (R1 * (self.pbest_positions - self.swarm_positions))
+        social_velocities = (R2 * (self.gbest_position - self.swarm_positions))
+        # ==================== Element-wise multiplication approach FINISH ====================
 
         self.swarm_velocities = self.w * self.swarm_velocities + self.c1 * cognitive_velocities + self.c2 * social_velocities
-        print(f'Update velocities to {self.velocities}')
 
     def update_pbest(self, candidate_positions : np.array, candidate_objective_values : np.array) -> None:
         # For each particle,
@@ -167,6 +185,12 @@ class PSOBackbone():
         #! During testing, beware to check for copy by value or by reference! This can be done by checking the "base" attribute of np arrays.
         #! Make sure to copy by value. Simple indexing copies by reference (view).
         #! For more information, read https://numpy.org/doc/stable/user/basics.copies.html
+
+    
+    def update_weights_and_acceleration_coefficients(self):
+        # The definition of this function acts as a placeholder for any other PSO mixin which behaves in a particular manner.
+        # For example, in the standard PSO, the "update_weights" function could refer to the linear decrease of the inertia weight ω.
+        self.super().update_weights()
 
 
 
