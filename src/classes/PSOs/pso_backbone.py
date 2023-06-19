@@ -1,6 +1,19 @@
 """
 Copyright (C) 2023  Konstantinos Stavratis
-For the full notice of the program, see "main.py"
+e-mail: kostauratis@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
@@ -12,65 +25,117 @@ class PSOBackbone:
 
     Attributes
     ----------
-    __nr_particles : int
-        A positive integer which stores the number of particles which composite the swarm
-    
-    __nr_dimensions : int
-        The dimensionality (i.e. number of degrees of freedom) of the optimization problem that the PSO algorithm will solve.
-
-    swarm_positions : np.array
-        size == (__nr_particles, __nr_dimensions)\n
+    `swarm_positions` : np.array
+        shape == (nr_particles, nr_dimensions)\n
         A 2D array whose cells represent the positions of the swarm's particles.
         The rows index the particle ID, while the column the DOF id.
 
-    swarm_velocities : np.array
-        size == (__nr_particles, __nr_dimensions)\n
+    `swarm_velocities` : np.array
+        shape == (nr_particles, nr_dimensions)\n
         A 2D array whose cells represent the velocities of the swarm's particles.
         The rows index the particle ID, while the column the DOF id.
 
-    __objective_function : function
+    `_objective_function` : function
         A (class <function>) pointer to the problem landscape, expressed in a mathematical formula, the PSO is tasked with solving.
         The function should be conditioned in such a way such that it produces (__nr_particles,) np.array outputs
-        from a (__nr_particles, __nr_dimensions) 2D np.array. i.e.
+        from a (nr_particles, nr_dimensions) 2D np.array. i.e.
         function(np.array(n,m)) -> np.array(n)
 
-    w : float
+    `_domain_boundaries` : np.array
+        shape == (nr_dimensions, 2) or (2,)\n
+        A 2D array whose i-th row contain the lower (position 0) and higher (position 1) bounds of the search domain for the i-th dimension.
+        In the case of a 1D np.array, the argument is expanded so as to accommodate for all domain dimensions. 
+
+    `w` : float
         The w (ω) value is known as the "inertia weight". w # Math: \omega \in [0, 1]
         The w weight dictates how much of the previously attained velocity will be used in the next iteration of the algorithm
-        (0 := not at all, 1 := fully).
-        It is initialized to one (1).
+        (0 := not at all, 1 := fully).\n
+        Default value is 1.0.
 
-    c1 : float
+    `c1` : float
         The c1 value is known as "cognitive weight" or "greedy learning factor"
         Its value (in conjunction with c2) determines the behaviour of each particle of the swarm.
-        As a rule of thumb, the higher the ratio c1/c2 is, the more local exploitation is encouraged.
+        As a rule of thumb, the higher the ratio c1/c2 is, the more local exploitation is encouraged.\n
+        Default value is 2.0
 
-    c2 : float
+    `c2` : float
         The c2 value is known as "social weight" or "social learning factor"
         Its value (in conjunction with c1) determines the behaviour of each particle of the swarm.
-        As a rule of the thumb, the higher the ration c2/c1 is, the more global exploration is encouraged.
+        As a rule of the thumb, the higher the ration c2/c1 is, the more global exploration is encouraged.\n
+        Default value is 2.0
     
         
 
-    Although it can be instantiated on its own, it is suggested that additional schemes are built on top of this class,
+    Although the class `PSOBackbone` can be instantiated on its own, it is recommended that additional schemes are built on top of this class,
     such that desirable properties (exploration, convergence, stability) are achieved.
     The recommended way of building additional PSO schemes is by implementing them as Python "Mixins".
     """
 
     def __init__(self, nr_particles : int, nr_dimensions : int,
-                 objective_function, domain_low_boundaries : np.array, domain_high_boundaries : np.array): 
-        super().__init__()
+                 objective_function, domain_boundaries : np.array,
+                 input_swarm_positions : np.array = None,
+                 **kwargs : dict):
+        """
+        Parameters
+        ----------
+        nr_particles : int
+            The number of particles that form the swarm.
+            Equivalent to the rows of the `swarm_positions` structure.
+            This parameter is ignored in the case where `input_swarm_positions` is provided.
+
+        nr_dimensions : int
+            The number of dimensions of the problem to be solved.
+            Equivalent to the columns of the `swarm_positions` structure.
+            This parameter is ignored in the case where `input_swarm_positions` is provided.
+
+        objective_function : function
+            A pointer to a function which describes the landscape of the problem to solve
+            This function must be formatted in a way such that it accepts 2D arrays as input
+            and extracts 1D arrays as the output.
+
+        domain_boundaries : np.array
+             A 1D or 2D array whose i-th row contain the lower (position 0) and higher (position 1) bounds of the search domain for the i-th dimension.
+            In the case of a 1D np.array, the argument is expanded so as to accommodate for all domain dimensions.
+
+        input_swarm_positions : np.array
+            A (p, d) 2D array representing the swarm.
+            - p are the number of particles of the swarm
+            - d are the dimensions of the problem.
+
+            The inclusion of this parameter overrules parameters `nr_particles` and `nr_dimensions`.\n
+            Default value is `None`.
+
+
+        """ 
+        super().__init__(**kwargs)
 
         # ==================== INITIALIZE ATTRIBUTES FROM INPUT PARAMETERS START ====================
-        self.__nr_particles = nr_particles
-        self.__nr_dimensions = nr_dimensions
-        # Initialize a random swarm of particles, represented by a 2D numpy array of dimensions [nr_particles, nr_dimensions]
-        # Currently, the initialization is done using a uniform distribution.
-        self.swarm_positions = np.random.default_rng().uniform(low=domain_low_boundaries, high=domain_high_boundaries)
+        # Handle input swarm, in case it is provided.
+        self.swarm_positions = None # Declaring the "self.swarm_positions" attribute.
+        if input_swarm_positions is not None and input_swarm_positions.ndim == 2:
+            self.swarm_positions = input_swarm_positions
+            nr_particles, nr_dimensions = input_swarm_positions.shape # Changing the argument values, because they're used later.
+        else:
+            # Dynamic sanity checks.
+            assert isinstance(nr_particles, int), f'Argument "nr_particles" is expected to be an integer. Received a {type(nr_particles)} instead.'
+            assert isinstance(nr_dimensions, int), f'Argument "nr_dimensions" is expected to be an integer. Received a {type(nr_dimensions)} instead.'
+            assert nr_particles > 0, f'Argument "nr_particles" must be natural (a.k.a positive integer) number. {nr_particles} was provided instead.'
+            assert nr_dimensions > 0, f'Argument "nr_particles" must be natural (a.k.a positive integer) number. {nr_dimensions} was provided instead.'
+
+            # Initialize a random swarm of particles, represented by a 2D numpy array of dimensions [nr_particles, nr_dimensions]
+            # Currently, the initialization is done using a uniform distribution.
+            self.swarm_positions = np.random.default_rng().uniform(low=domain_boundaries[:, 0], high=domain_boundaries[:, 1], size=(nr_particles, nr_dimensions))
+
+
         # Currently, the particles will start with zero velocity.
         self.swarm_velocities = np.zeros(shape=(nr_particles, nr_dimensions))
 
-        self.__objective_function = objective_function
+        
+        self._objective_function = objective_function
+
+        if domain_boundaries.ndim == 1:
+            domain_boundaries = np.tile(domain_boundaries, (nr_dimensions, 1)) # Repeat the same limit for all domain dimensions.
+        self._domain_boundaries = domain_boundaries
 
         # ==================== INITIALIZE ATTRIBUTES FROM INPUT PARAMETERS FINISH ====================
 
@@ -100,7 +165,7 @@ class PSOBackbone:
         # Therefore, the initial positioning is the currently best presented to the swarm.
         
         # STEP 1
-        objective_values = self.__objective_function(self.swarm_positions)
+        objective_values = self._objective_function(self.swarm_positions)
 
         # STEP 2a
         best_objective_value_index = np.argmin(objective_values)
@@ -117,8 +182,22 @@ class PSOBackbone:
         self.pbest_positions = np.copy(self.swarm_positions)
         #! Make sure to copy by value. Simple indexing copies by reference (view).
         #! For more information, read https://numpy.org/doc/stable/user/basics.copies.html
+
+
+
         # ==================== INITIALIZE ATTRIBUTES FROM INTERNAL FUNCTIONS START ====================
 
+        # ==================== Filtering (slowing down) the resulting velocities START ====================
+        # Numerous methods to limit the velocities are proposed in the literature.
+        # The current implementation assumes a simple, yet widespread technique: limiting the velocity to 20% of the search domain's range.
+        # NOTE: Desired limits: ( −0.2 * max{ |𝑋𝑚𝑖𝑛𝑑|, |𝑋𝑚𝑎𝑥𝑑|} , 0.2 * max{|𝑋𝑚𝑖𝑛𝑑|,|𝑋𝑚𝑎𝑥𝑑|} ), ∀d∈D (D := problem domain)
+        self.__maximum_speeds = 0.2 * np.abs(self._domain_boundaries).max(axis=1) # Extract the maximum speed per dimension
+        self.__maximum_speeds = np.tile(self.__maximum_speeds, (nr_dimensions, 1)) # Create a copy of the maximum speeds.
+        self.__maximum_speeds[:, 0] = -self.__maximum_speeds[:, 0] #  Allow both positive and negative speeds in the same dimension
+        self.__maximum_speeds = np.tile(self.__maximum_speeds, (nr_particles, 1, 1)) # Expand that it limits all dimensions (done in previous commands) of ALL particles
+        # self.__maximum_speeds[particle ID][dimension ID][2] = np.array(minimum of dimension, maximum of dimension)
+        # TODO: Remove this as a private variable and develop different limiting methodologies. PRIORITY: LOW
+        # ==================== Filtering (slowing down) the resulting velocities FINISH ====================
 
 
 
@@ -133,12 +212,21 @@ class PSOBackbone:
         # Math: \mathbf{v}^{(t+1)} = f(\mathbf{x^t}, \mathbf{p^t}, \mathbf{g^t}, ...)
         # Math: \mathbf{x}^{(t+1)} = \mathbf{x}^t + \mathbf{v}^{(t+1)}
         """
-        self.update_weights_and_acceleration_coefficients()
-        self.step_velocities()
+        self._update_weights_and_acceleration_coefficients()
+        self._step_velocities()
+        # Filtering (slowing down) the resulting velocities
+        self.swarm_velocities = np.clip(self.swarm_velocities, self.__maximum_speeds[:, :, 0], self.__maximum_speeds[:, :, 1])
         # Translate the swarm positions according to the updated velocities.
         self.swarm_positions += self.swarm_velocities
+        # Filtering the result. The current result manually forces the particles to stay in the domain.
+        # However, in literature, numerous "wall" types have been proposed. Examples of names can be seen in "wall_types.py".
+        self.swarm_positions = np.clip(self.swarm_positions, self._domain_boundaries[:, 0], self._domain_boundaries[:, 1])
+        # TODO: Implement different kinds of walls.
 
-    def step_velocities(self) -> None:
+        # Update the pbest and gbest of the swarm for the next step.
+        self._update_pbest_and_gbest()
+
+    def _step_velocities(self) -> None:
         random_generator = np.random.default_rng()
         # NOTE: Because we are multiplying with random values, whether we do matrix-wise multiplication (@)
         # or element-wise multiplication (*) should be identical.
@@ -154,15 +242,28 @@ class PSOBackbone:
         # # ==================== Matrix-wise multiplication approach FINISH ====================
 
         # ==================== Element-wise multiplication approach START ====================
-        R1 = random_generator.uniform(size=(self.__nr_particles, self.__nr_dimensions))
-        R2 = random_generator.uniform(size=(self.__nr_particles, self.__nr_dimensions))
-        cognitive_velocities = (R1 * (self.pbest_positions - self.swarm_positions))
-        social_velocities = (R2 * (self.gbest_position - self.swarm_positions))
+        R1 = random_generator.uniform(size=self.swarm_positions.shape)
+        R2 = random_generator.uniform(size=self.swarm_positions.shape)
+        cognitive_velocities = self.c1 * R1 * (self.pbest_positions - self.swarm_positions)
+        social_velocities = self.c2 * R2 * (self.gbest_position - self.swarm_positions) # "gbest_position" is broadcast to shape of "swarm_positions"
         # ==================== Element-wise multiplication approach FINISH ====================
 
-        self.swarm_velocities = self.w * self.swarm_velocities + self.c1 * cognitive_velocities + self.c2 * social_velocities
+        self.swarm_velocities = self.w * self.swarm_velocities + cognitive_velocities + social_velocities
 
-    def update_pbest(self, candidate_positions : np.array, candidate_objective_values : np.array) -> None:
+    # I have the function updating both, so as to evaluate the objective function only once, thus reducing computational time.
+    def _update_pbest_and_gbest(self):
+        objective_values = self._objective_function(self.swarm_positions)
+        self.__update_pbest(self.swarm_positions, objective_values)
+        self.__update_gbest(self.swarm_positions, objective_values)
+
+
+    # def update_pbest(self):
+    #     self.__update_pbest(self.swarm_positions, self._objective_function(self.swarm_positions))
+
+    # def update_gbest(self):
+    #     self.__update_gbest(self.swarm_positions, self._objective_function(self.swarm_positions))
+
+    def __update_pbest(self, candidate_positions : np.array, candidate_objective_values : np.array) -> None:
         # For each particle,
         # in case that f(x) is lower than the currently memorized objective values "pbest_value"
         # update the personal best value and position
@@ -171,9 +272,10 @@ class PSOBackbone:
         update_mask = candidate_objective_values < self.pbest_values
 
         self.pbest_values[update_mask] = candidate_objective_values[update_mask]
-        self.pbest_positions[update_mask] = candidate_positions[update_mask]
+        self.pbest_positions[update_mask] = candidate_positions[update_mask] #* IMPORTANT: boolean indexing returns copy, not view.
 
-    def update_gbest(self, candidate_positions : np.array, candidate_objective_values : np.array) -> None:
+
+    def __update_gbest(self, candidate_positions : np.array, candidate_objective_values : np.array) -> None:
         # STEP 1: Find the particle with the lowest value.
         best_objective_value_index = np.argmin(candidate_objective_values)
 
@@ -181,18 +283,54 @@ class PSOBackbone:
         #           in case that f(x) is lower than the one currently memorized by the swarm "gbest_value".
         if candidate_objective_values[best_objective_value_index] < self.gbest_value:
             self.gbest_value = candidate_objective_values[best_objective_value_index]
-            self.gbest_position = candidate_positions[best_objective_value_index]
+            self.gbest_position = candidate_positions[best_objective_value_index].copy() #* IMPORTANT: Avoid numpy view.
         #! During testing, beware to check for copy by value or by reference! This can be done by checking the "base" attribute of np arrays.
         #! Make sure to copy by value. Simple indexing copies by reference (view).
         #! For more information, read https://numpy.org/doc/stable/user/basics.copies.html
 
     
-    def update_weights_and_acceleration_coefficients(self):
+    def _update_weights_and_acceleration_coefficients(self):
         # The definition of this function acts as a placeholder for any other PSO mixin which behaves in a particular manner.
         # For example, in the standard PSO, the "update_weights" function could refer to the linear decrease of the inertia weight ω.
-        self.super().update_weights()
+        pass
+
+    def get_current_best_particle(self):
+        """
+        Returns the particle which holds the best (lowest) objective value **at the current configuation**.
+        This is not to be confused with `gbest_position`, which stores the position which held the best objective value
+        at the current **or some previous** configuration!
+
+        Returns
+        -------
+        : int
+            Index (0-indexed) of the particle which holds the best (lowest) objective value
+            *in the current configuration* of the swarm
+
+        : np.array
+            A copy of the vector representing the particle which holds the best (lowest) objective value
+            *in the current configuration* of the swarm.
+            NOTE: shape = (nr_dimensions,)
+
+        : float
+            Objective value of the particle which holds the best (lowest) objective value
+            *in the current configuration* of the swarm.
+        
+
+        """
+        objective_values = self._objective_function(self.swarm_positions)
+        index_of_best_particle = np.argmin(objective_values)
+        best_particle = self.swarm_positions[index_of_best_particle].copy()
+        best_particle_value = objective_values[index_of_best_particle]
+
+        return index_of_best_particle, best_particle, best_particle_value
 
 
 
     def get_swarm_centroid(self):
-        return np.mean(self.swarm, axis=0)
+        return np.mean(self.swarm_positions, axis=0)
+    
+    def std_of_swarm_from_centroid(self):
+        swarm_centroid = self.get_swarm_centroid()
+        result = np.std(np.linalg.norm(swarm_centroid - self.swarm_positions, axis=1, ord=2))
+        # TODO: See whether the return value is a scalar or an array.
+        return result
