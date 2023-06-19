@@ -1,6 +1,19 @@
 """
 Copyright (C) 2023  Konstantinos Stavratis
-For the full notice of the program, see "main.py"
+e-mail: kostauratis@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import numpy as np
@@ -10,7 +23,7 @@ import numpy as np
 # PSO traditionally follows the minimization problem formulation, which is standard in (mathematical) optimization.
 # It is for this reason that this approach has been followed in this implementation as well.
 
-domain_dimensions = 2
+domain_dimensions = 10
 
 # Unimodal functions:
 # -------------------
@@ -194,7 +207,7 @@ def styblinski_tang_function_formula(x: list) -> float:
 sphere_function = {
     'name' : 'sphere',
     'formula': sphere_function_formula,
-    'search_domain': [[-10 ** 2, 10 ** 2] for _ in range(domain_dimensions)],
+    'search_domain': np.tile(np.array([-10 ** 2, 10 ** 2]), (domain_dimensions, 1)),
     'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
     'goal_point': np.zeros(domain_dimensions)
 }
@@ -202,7 +215,7 @@ sphere_function = {
 quadric_function = {
     'name' : 'quadric',
     'formula': quadric_function_formula,
-    'search_domain': [[-10 ** 2, 10 ** 2] for _ in range(domain_dimensions)],
+    'search_domain': np.tile(np.array([-10 ** 2, 10 ** 2]), (domain_dimensions, 1)),
     'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
     'goal_point': np.zeros(domain_dimensions)
 }
@@ -210,15 +223,15 @@ quadric_function = {
 schwefel222_function = {
     'name' : 'schwefel222',
     'formula': schwefel222_function_formula,
-    'search_domain': [[-10, 10] for _ in range(domain_dimensions)],
-    'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
+    'search_domain': np.tile(np.array([-10, 10]), (domain_dimensions, 1)),
+    'search_and_velocity_boundaries': [[-10, 10], [-0.2 * 10, 0.2 * 10]],
     'goal_point': np.zeros(domain_dimensions)
 }
 
 rosenbrock_function = {
     'name' : 'rosenbrock',
     'formula': rosenbrock_function_formula,
-    'search_domain': [[-10, 10] for _ in range(domain_dimensions)],
+    'search_domain': np.tile(np.array([-10, 10]), (domain_dimensions, 1)),
     'search_and_velocity_boundaries': [[-10, 10], [-0.2 * 10, 0.2 * 10]],
     'goal_point': np.ones(domain_dimensions)
 }
@@ -226,7 +239,7 @@ rosenbrock_function = {
 rastrigin_function = {
     'name' : 'rastrigin',
     'formula': rastrigin_function_formula,
-    'search_domain': [[-5.12, 5.12] for _ in range(domain_dimensions)],
+    'search_domain': np.tile(np.array([-5.12, 5.12]), (domain_dimensions, 1)),
     'search_and_velocity_boundaries': [[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
     'goal_point': np.zeros(domain_dimensions)
 }
@@ -234,7 +247,7 @@ rastrigin_function = {
 ackley_function = {
     'name' : 'ackley',
     'formula': ackley_function_formula,
-    'search_domain': [[-32, 32] for _ in range(domain_dimensions)],
+    'search_domain': np.tile(np.array([-32, 32]), (domain_dimensions, 1)),
     'search_and_velocity_boundaries': [[-32, 32], [-0.2 * 32, 0.2 * 32]],
     'goal_point': np.zeros(domain_dimensions)
 }
@@ -242,7 +255,7 @@ ackley_function = {
 salomon_function = {
     'name' : 'salomon',
     'formula': salomon_function_formula,
-    'search_domain': [[-10**2, 10**2] for _ in range(domain_dimensions)],
+    'search_domain': np.tile(np.array([-10**2, 10**2]), (domain_dimensions, 1)),
     'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
     'goal_point': np.zeros(domain_dimensions)
 }
@@ -250,7 +263,7 @@ salomon_function = {
 alpinen1_function = {
     'name' : 'alpinen1',
     'formula': alpinen1_function_formula,
-    'search_domain': [[0, 10] for _ in range(domain_dimensions)],
+    'search_domain': np.tile(np.array([0, 10]), (domain_dimensions, 1)),
     'search_and_velocity_boundaries': [[0, 10], [-0.2 * 10, 0.2 * 10]],
     'goal_point': np.zeros(domain_dimensions)
 }

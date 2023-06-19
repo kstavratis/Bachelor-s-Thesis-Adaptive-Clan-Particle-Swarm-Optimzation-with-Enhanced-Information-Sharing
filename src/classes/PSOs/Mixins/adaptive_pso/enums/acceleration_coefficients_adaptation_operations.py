@@ -1,5 +1,5 @@
 """
-Copyright (C) 2021  Konstantinos Stavratis
+Copyright (C) 2023  Konstantinos Stavratis
 e-mail: kostauratis@gmail.com
 
 This program is free software: you can redistribute it and/or modify
@@ -18,8 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from enum import Enum, auto
 
-
-class ControlFactorTypes(Enum):
-    CONSTANT = auto()
-    LINEAR = auto()
-    ADAPTIVE = auto()
+class CoefficientOperations(Enum):
+    INCREASE = auto(),
+    DECREASE = auto(),
+    INCREASE_SLIGHTLY = auto(),
+    DECREASE_SLIGHTLY = auto()

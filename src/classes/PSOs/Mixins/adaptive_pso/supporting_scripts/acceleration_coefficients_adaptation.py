@@ -1,6 +1,19 @@
 """
 Copyright (C) 2023  Konstantinos Stavratis
-For the full notice of the program, see "main.py"
+e-mail: kostauratis@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import numpy as np
@@ -33,10 +46,12 @@ def determine_acceleration_coefficients(evolutionary_state : EvolutionaryStates,
         The 'evolutionary_state' parameter has the value {evolutionary_state} instead.")
 
 
+    # Declaring random number generator
+    random_generator = np.random.default_rng()
     # Math: |c_i^{t+1} - c_i^{t}| \leq \delta, \text{where } \delta \text{ is called the "acceleration_rate"}
     # "Experiments reveal that a uniformly generated random value of δ in the interval [0.05, 0.1] performs best on most of the test functions".
     # "Note that we use 0.5 δ in strategies 2 and 3, where “slight” changes are recommended"
-    acceleration_rate = np.random.Generator.choice(np.random.uniform(0.05, 0.10), np.random.uniform(-0.10, -0.05), 1).item()
+    acceleration_rate = random_generator.choice(np.array([random_generator.uniform(0.05, 0.10), random_generator.uniform(-0.10, -0.05)]), 1).item()
 
     if c1_strategy == CoefficientOperations.INCREASE:
         if c1 + acceleration_rate <= c_max:
@@ -60,6 +75,10 @@ def determine_acceleration_coefficients(evolutionary_state : EvolutionaryStates,
     elif c2_strategy == CoefficientOperations.DECREASE_SLIGHTLY:
         if c2 - 0.5 * acceleration_rate >= c_min:
             c2 -= 0.5 * acceleration_rate
+
+    
+    # Both acceleration coefficients, c1 and c2, are clamped by the interval [c_min, c_max]
+    c1 = np.clip(c1, c_min, c_max) ; c2 = np.clip(c2, c_min, c_max)
 
     # In order to avoid an explosion state, it is necessary to bound the sum c1+c2.
     # As the minimum and the maximum value for c1 and c2 are c_min = 1.5 and c_max = 2.5,
