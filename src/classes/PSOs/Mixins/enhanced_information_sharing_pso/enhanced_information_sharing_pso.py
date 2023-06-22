@@ -39,16 +39,47 @@ class EnhancedInformationSharingPSO:
     c3_start, c3_end = 2.0, 0.0
 
     def __init__(self,
-                 global_local_coefficient_method: glct = glct.LINEAR, c3: float = None,
-                control_factor_method: cft = cft.CONSTANT, c3_k: float = None,
+                 global_local_coefficient_method: glct or str = glct.LINEAR, c3: float = None,
+                control_factor_method: cft or str = cft.CONSTANT, c3_k: float = None,
                 **kwargs : dict):
         """
-        It is advised to have both `global_local_coefficient_method` and `control_factor_method` to adaptive behaviour
+        Parameters
+        ----------
+        c3 : float
+
+        c3_k : float
+            Control factor of the c3 acceleration coefficient.
+            It is multiplied unto c3, with the intended purpose of alleviating the effect of c3 on the velocities.
+
+        global_local_coefficient_method : str
+            It may be receive one of the following values: `'constant'`, `'linear'` or `'adaptive'`
+
+        control_factor_method : str
+            It may be receive one of the following values: `'constant'`, `'linear'` or `'adaptive'`
+
+        kwargs : dict
+            Keyword arguments which shall be used for initializers of superclasses.
+
+        NOTE: It is advised to have both `global_local_coefficient_method` and `control_factor_method` to adaptive behaviour
         when wishing to observe an adaptive behaviour from the swarm. Anything else may lead to unexpected behaviour.
         """
         
         super().__init__(**kwargs)
 
+        # String-formatted input may be more intuitive to users, rather than having to provide the actual enum themselves.
+        # ==================== Handling cases where the input was provided in string (`str`) format START ====================
+        if type(global_local_coefficient_method) == str:
+            global_local_coefficient_method = global_local_coefficient_method.upper() # Make all the letters capitals.
+            global_local_coefficient_method = getattr(glct, global_local_coefficient_method)
+
+        if type(control_factor_method) == str:
+            control_factor_method = control_factor_method.upper() # Make all the letters capitals.
+            control_factor_method = getattr(cft, control_factor_method)
+        # ==================== Handling cases where the input was provided in string (`str`) format FINISH ====================
+
+        print(global_local_coefficient_method)
+        print(control_factor_method)
+        
         self._global_local_coefficient_method = global_local_coefficient_method
         self.__control_factor_method = control_factor_method
         self._c3_k = c3_k
@@ -142,7 +173,7 @@ class EnhancedInformationSharingPSO:
 
         # Global optimization capability is strong when c3 is linearly decreasing (c3_k > 0) according to the article.
         elif self._global_local_coefficient_method == glct.LINEAR:
-            # c3 = c3_k * c3_s - (c3_s - c3_e) * (t/t_max)
+            # c3 = c3_k * (c3_s - (c3_s - c3_e) * (t/t_max))
             self.c3 = self._c3_k * (
                         EnhancedInformationSharingPSO.c3_start\
                             - (EnhancedInformationSharingPSO.c3_start - EnhancedInformationSharingPSO.c3_end) *\
