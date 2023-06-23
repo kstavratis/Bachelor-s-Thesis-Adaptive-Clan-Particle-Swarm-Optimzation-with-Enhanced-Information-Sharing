@@ -7,7 +7,6 @@
     {
         "nr_particles" : 30,
         "nr_dimensions" : 10,
-        "objective_function" : "ackley",
 
         "classes" : {
             "standard" : {
@@ -46,7 +45,6 @@
     {
         "nr_particles" : 30,
         "nr_dimensions" : 10,
-        "objective_function" : "ackley",
 
         "classes" : {
             "standard" : {
@@ -85,7 +83,6 @@
     {
         "nr_particles" : 30,
         "nr_dimensions" : 10,
-        "objective_function" : "ackley",
 
         "classes" : {
             "standard" : {
@@ -124,7 +121,6 @@
     {
         "nr_particles" : 30,
         "nr_dimensions" : 10,
-        "objective_function" : "ackley",
 
         "classes" : {
             "standard" : {
@@ -161,8 +157,7 @@
     ],
 
     "conference_behaviour" : {
-        "objective_function" : "ackley",
-
+        
         "classes" : {
             "standard" : {
                 "module_path" : "src.classes.PSOs.Mixins.standard_pso.standard_pso",

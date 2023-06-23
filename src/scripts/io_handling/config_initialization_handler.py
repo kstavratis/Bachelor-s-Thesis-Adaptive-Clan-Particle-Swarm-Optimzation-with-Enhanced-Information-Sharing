@@ -72,7 +72,8 @@ def __handle_clan_config_file(data : dict):
     clans = []
 
     for c in data['clans']:
-        clans.append(__handle_pso_backbone_config_data(c)) # [0] in case that the `return` of the function above is made a tuple.
+        clans.append(__handle_pso_backbone_config_data(c | {'objective_function': data['objective_function'] }))
+        # Permits to write the `objective_value` field only once in the JSON configuration file.
 
     clan_pso_instance = ClanPSO(clans)
 
@@ -87,8 +88,9 @@ def __handle_clan_config_file(data : dict):
 
         conference_behaviour_kwargs |= pso_dict['kwargs']
 
+
     # Adding `PSOBackbone` properties
-    objective_function = getattr(bf, f'{data["conference_behaviour"]["objective_function"]}' + '_function')
+    objective_function = getattr(bf, f'{data["objective_function"]}' + '_function')
     conference_behaviour_classes_pointers.append(PSOBackbone)
     conference_behaviour_kwargs |= {
         'nr_particles' : 1, 'nr_dimensions' : 1, # These will be ignored, as clans only take into consideration the already formed clans.
