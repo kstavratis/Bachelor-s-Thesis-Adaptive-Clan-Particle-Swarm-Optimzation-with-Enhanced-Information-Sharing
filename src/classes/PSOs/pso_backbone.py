@@ -192,10 +192,10 @@ class PSOBackbone:
         # The current implementation assumes a simple, yet widespread technique: limiting the velocity to 20% of the search domain's range.
         # NOTE: Desired limits: ( −0.2 * max{ |𝑋𝑚𝑖𝑛𝑑|, |𝑋𝑚𝑎𝑥𝑑|} , 0.2 * max{|𝑋𝑚𝑖𝑛𝑑|,|𝑋𝑚𝑎𝑥𝑑|} ), ∀d∈D (D := problem domain)
         self.__maximum_speeds = 0.2 * np.abs(self._domain_boundaries).max(axis=1) # Extract the maximum speed per dimension
-        self.__maximum_speeds = np.tile(self.__maximum_speeds, (nr_dimensions, 1)) # Create a copy of the maximum speeds.
+        self.__maximum_speeds = np.tile(self.__maximum_speeds, (2, 1)).T # Create a copy column of the maximum speeds.
         self.__maximum_speeds[:, 0] = -self.__maximum_speeds[:, 0] #  Allow both positive and negative speeds in the same dimension
-        self.__maximum_speeds = np.tile(self.__maximum_speeds, (nr_particles, 1, 1)) # Expand that it limits all dimensions (done in previous commands) of ALL particles
-        # self.__maximum_speeds[particle ID][dimension ID][2] = np.array(minimum of dimension, maximum of dimension)
+        self.__maximum_speeds = np.tile(self.__maximum_speeds, (nr_particles, nr_dimensions // domain_boundaries.shape[0], 1)) # Expand that it limits all dimensions (done in previous commands) of ALL particles
+        # NOTE: The final result is `self.__maximum_speeds[particle ID][dimension ID][2] = np.array(minimum of dimension, maximum of dimension)`.
         # TODO: Remove this as a private variable and develop different limiting methodologies. PRIORITY: LOW
         # ==================== Filtering (slowing down) the resulting velocities FINISH ====================
 
@@ -215,12 +215,12 @@ class PSOBackbone:
         self._update_weights_and_acceleration_coefficients()
         self._step_velocities()
         # Filtering (slowing down) the resulting velocities
-        self.swarm_velocities = np.clip(self.swarm_velocities, self.__maximum_speeds[:, :, 0], self.__maximum_speeds[:, :, 1])
+        np.clip(self.swarm_velocities, self.__maximum_speeds[:, :, 0], self.__maximum_speeds[:, :, 1], out=self.swarm_velocities)
         # Translate the swarm positions according to the updated velocities.
         self.swarm_positions += self.swarm_velocities
         # Filtering the result. The current result manually forces the particles to stay in the domain.
         # However, in literature, numerous "wall" types have been proposed. Examples of names can be seen in "wall_types.py".
-        self.swarm_positions = np.clip(self.swarm_positions, self._domain_boundaries[:, 0], self._domain_boundaries[:, 1])
+        np.clip(self.swarm_positions, self._domain_boundaries[:, 0], self._domain_boundaries[:, 1], out=self.swarm_positions)
         # TODO: Implement different kinds of walls.
 
         # Update the pbest and gbest of the swarm for the next step.
