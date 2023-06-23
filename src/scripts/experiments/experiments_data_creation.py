@@ -7,8 +7,8 @@ from typing import Any, List, Tuple
 from numpy import array, mean, std, median
 from concurrent.futures.process import ProcessPoolExecutor
 
-from classes.PSOs.Mixins.enhanced_information_sharing.enums.control_factor_types import ControlFactorTypes
-from classes.PSOs.Mixins.enhanced_information_sharing.enums.global_local_coefficient_types import GlobalLocalCoefficientTypes
+from classes.PSOs.Mixins.enhanced_information_sharing_pso.enums.control_factor_types import ControlFactorTypes
+from classes.PSOs.Mixins.enhanced_information_sharing_pso.enums.global_local_coefficient_types import GlobalLocalCoefficientTypes
 from classes.PSOs.wall_types import WallTypes
 
 import scripts.experiments.experiment

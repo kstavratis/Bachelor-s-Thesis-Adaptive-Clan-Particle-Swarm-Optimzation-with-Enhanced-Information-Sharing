@@ -76,9 +76,6 @@ class EnhancedInformationSharingPSO:
             control_factor_method = control_factor_method.upper() # Make all the letters capitals.
             control_factor_method = getattr(cft, control_factor_method)
         # ==================== Handling cases where the input was provided in string (`str`) format FINISH ====================
-
-        print(global_local_coefficient_method)
-        print(control_factor_method)
         
         self._global_local_coefficient_method = global_local_coefficient_method
         self.__control_factor_method = control_factor_method
@@ -105,7 +102,7 @@ class EnhancedInformationSharingPSO:
             self._c3_k = None  # c3 is dependent on c3_k only in the case of a linear c3.
 
         else:
-            NotImplementedError("A not defined Enhanced Information Sharing (EIS) methodology has been given.")
+            raise NotImplementedError("A not defined Enhanced Information Sharing (EIS) methodology has been given.")
 
         # c3 is a number <=> c3_k is a number
         if self._global_local_coefficient_method == glct.CONSTANT or \

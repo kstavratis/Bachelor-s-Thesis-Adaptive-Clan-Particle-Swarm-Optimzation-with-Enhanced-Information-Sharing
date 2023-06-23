@@ -17,6 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import numpy as np
+
 from ..enums.evolutionary_states import EvolutionaryStates
 
 

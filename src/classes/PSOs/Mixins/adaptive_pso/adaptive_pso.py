@@ -19,13 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import numpy as np
 
 import numbers
-from random import uniform, gauss, randrange
 
 from .supporting_scripts.evolutionary_state_classification_singleton_method import classify_evolutionary_state
 from .supporting_scripts.acceleration_coefficients_adaptation import determine_acceleration_coefficients
 from .supporting_scripts.eliticism_learning_strategy import eliticism_learning_strategy
-from .enums.evolutionary_states import EvolutionaryStates
-
 
 class AdaptivePSO:
     """

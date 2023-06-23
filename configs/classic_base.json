@@ -1,0 +1,42 @@
+{
+    "max_iterations" : 2000,
+
+    "objective_function" : "ackley",
+    "nr_particles" : 30,
+    "nr_dimensions" : 10,
+
+    "topology" : "classic",
+
+    "classes" : {
+        "standard" : {
+            "module_path" : "src.classes.PSOs.Mixins.standard_pso.standard_pso",
+            "class_name" : "StandardPSO",
+            "kwargs" : {
+                "w_min" : 0.4,
+                "w_max" : 0.9,
+                "max_iterations" : 2000
+            }
+        },
+
+        "eis" : {
+            "module_path" : "src.classes.PSOs.Mixins.enhanced_information_sharing_pso.enhanced_information_sharing_pso",
+            "class_name" : "EnhancedInformationSharingPSO",
+            "kwargs" : {
+                "c3" : 1.0,
+                "global_local_coefficient_method" : "linear",
+                "c3_k" : 0.2,
+                "control_factor_method" : "adaptive"
+            }
+        },
+
+        "adaptive" : {
+            "module_path" : "src.classes.PSOs.Mixins.adaptive_pso.adaptive_pso",
+            "class_name" : "AdaptivePSO",
+            "kwargs" : {
+                "c_min" : 1.5,
+                "c_max" : 2.5
+            }
+        }
+    }
+
+}

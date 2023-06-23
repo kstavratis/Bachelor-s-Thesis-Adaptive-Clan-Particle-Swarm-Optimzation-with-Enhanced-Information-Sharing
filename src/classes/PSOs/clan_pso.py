@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import numpy as np
 
 from typing import Iterable, Type
+
 from .pso_backbone import PSOBackbone
 
 class ClanPSO:
@@ -60,20 +61,21 @@ class ClanPSO:
         self.gbest_value = current_best_particles_of_clans[best_clan_leader_index][2]
         self.gbest_position = current_best_particles_of_clans[best_clan_leader_index][1]
 
-    def step(self, conference_pso_behaviour : Iterable, conference_pso_kwargs : dict):
+    def step(self, conference_pso_behaviour : Iterable or Type, conference_pso_kwargs : dict = None):
         """
         Parameters
         ----------
-        conference_pso_behaviour : Iterable
+        conference_pso_behaviour : Iterable or Class
             An iterable (tuple or list) which contains pointers to classes & mixins
             from which the behaviour of the conference shall be determined.
-            It is worth stressing that the clan can follow a different behaviour (i.e. PSO variation) than each clan separately. 
+            It is worth stressing that the clan can follow a different behaviour (i.e. PSO variation) than each clan separately.\n
+            Alternatively, the class object may be directly provided.
 
         conference_pso_kwargs : dict 
             A dictionary of keyword arguments (kwargs) which contains all necessary argument name-value (string : Any) pairs
             for the construction of the conference PSO instance.
             Namely, it contains enough keyword arguments to satisfy all classes encapsulated in "conference_pso_behaviour".
-
+            
         Returns
         -------
         `None`
@@ -99,15 +101,25 @@ class ClanPSO:
         conference_pso_kwargs['input_swarm_positions'] = clan_leaders
 
 
-        # Dynamically create a class which hosts the conference of leaders.
-        # If this code is to be changed to more dynamic format, read https://www.geeksforgeeks.org/create-classes-dynamically-in-python/
-        class ConferencePSO(*conference_pso_behaviour):
-            def __init__(self, kwargs : dict):
-                super().__init__(**kwargs)
+        # Determine the PSO variation of the conference of leaders.
+        conference_pso_class_ptr = None # Variable declaration
+        if type(conference_pso_behaviour) == Type:
+            conference_pso_class_ptr = conference_pso_behaviour
+        elif isinstance(conference_pso_behaviour, Iterable):
+            # Dynamically create a class which hosts the conference of leaders in case a class has not been provided.
+            # If this code is to be changed to more dynamic format, read https://www.geeksforgeeks.org/create-classes-dynamically-in-python/
+            class ConferencePSO(*conference_pso_behaviour):
+                def __init__(self, kwargs : dict):
+                    super().__init__(**kwargs)
 
-        conference_instance = ConferencePSO(conference_pso_kwargs)
+            conference_pso_class_ptr = ConferencePSO
+        else:
+            raise ValueError('Expected type of argument "conference_pso_behaviour" to be either a pointer to class or an iterable.'
+                       f'{type(conference_pso_behaviour)} was provided instead.')
+
+        conference_instance = conference_pso_class_ptr(conference_pso_kwargs)
+
         # NOTE: Reminder that this PSO contains the leaders, as 'input_swarm_positions' is filled in.
-        print()
 
         # Execute "conference of leaders" (i.e. a PSO iteration involving the best particles of each clan).
         conference_instance.step()

@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from numpy import inf
 
-from classes.PSOs.Mixins.adaptive_pso.enums.evolutionary_states import EvolutionaryStates
+from ..enums.evolutionary_states import EvolutionaryStates
 
 """
 For details see "Adaptive Particle Swarm Optimization (Zhan et al.)" -> III ESE for PSO -> B. ESE -> Step 3

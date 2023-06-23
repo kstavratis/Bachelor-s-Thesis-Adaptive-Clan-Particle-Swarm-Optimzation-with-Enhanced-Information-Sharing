@@ -4,8 +4,9 @@ For the full notice of the program, see "main.py"
 """
 
 import unittest
-import classes.PSOs.Mixins.adaptive.evolutionary_state_classification_singleton_method as clasfation
-from classes.PSOs.Mixins.adaptive.enums.evolutionary_states import EvolutionaryStates
+
+import src.classes.PSOs.Mixins.adaptive_pso.supporting_scripts.evolutionary_state_classification_singleton_method as clasfation
+from src.classes.PSOs.Mixins.adaptive_pso.enums.evolutionary_states import EvolutionaryStates
 
 
 class TestEvolutionaryStateClassificationBoundaries(unittest.TestCase):

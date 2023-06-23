@@ -10,8 +10,8 @@ from scipy.linalg import norm
 
 from classes.PSOs.classicPSOswarm import ClassicSwarm
 from classes.PSOs.clanPSOswarm import ClanSwarm
-from classes.PSOs.Mixins.enhanced_information_sharing.enums.global_local_coefficient_types import GlobalLocalCoefficientTypes
-from classes.PSOs.Mixins.enhanced_information_sharing.enums.control_factor_types import ControlFactorTypes
+from classes.PSOs.Mixins.enhanced_information_sharing_pso.enums.global_local_coefficient_types import GlobalLocalCoefficientTypes
+from classes.PSOs.Mixins.enhanced_information_sharing_pso.enums.control_factor_types import ControlFactorTypes
 from classes.PSOs.wall_types import WallTypes
 
 # This strict policy is enacted so as to catch rounding errors (overflows/underflows) as well.
