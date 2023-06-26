@@ -20,9 +20,9 @@ import numpy as np
 
 import numbers
 
-from .supporting_scripts.evolutionary_state_classification_singleton_method import classify_evolutionary_state
-from .supporting_scripts.acceleration_coefficients_adaptation import determine_acceleration_coefficients
-from .supporting_scripts.eliticism_learning_strategy import eliticism_learning_strategy
+from .utils.evolutionary_state_classification_singleton_method import classify_evolutionary_state
+from .utils.acceleration_coefficients_adaptation import determine_acceleration_coefficients
+from .utils.eliticism_learning_strategy import eliticism_learning_strategy
 
 class AdaptivePSO:
     """

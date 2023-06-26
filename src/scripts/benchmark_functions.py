@@ -23,7 +23,7 @@ import numpy as np
 # PSO traditionally follows the minimization problem formulation, which is standard in (mathematical) optimization.
 # It is for this reason that this approach has been followed in this implementation as well.
 
-domain_dimensions = 10
+domain_dimensions = 2
 
 # Unimodal functions:
 # -------------------

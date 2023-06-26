@@ -3,7 +3,7 @@
 
     "objective_function" : "ackley",
     "nr_particles" : 30,
-    "nr_dimensions" : 10,
+    "nr_dimensions" : 2,
 
     "topology" : "classic",
 

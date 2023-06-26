@@ -72,8 +72,8 @@ def __handle_clan_config_file(data : dict):
     clans = []
 
     for c in data['clans']:
-        clans.append(__handle_pso_backbone_config_data(c | {'objective_function': data['objective_function'] }))
-        # Permits to write the `objective_value` field only once in the JSON configuration file.
+        clans.append(__handle_pso_backbone_config_data(c | {'objective_function': data['objective_function'], 'nr_dimensions' : data['nr_dimensions'] }))
+        # The "appended" dictionary consists of the values which are shared among all "classic" PSOs.
 
     clan_pso_instance = ClanPSO(clans)
 

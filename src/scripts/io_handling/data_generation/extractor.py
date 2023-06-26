@@ -44,12 +44,12 @@ def swarm_positions_extractor(swarm : Type[ClanPSO or PSOBackbone]):
 
     """
     
-    if type(swarm) == ClanPSO:
+    if isinstance(swarm, ClanPSO):
         return _clan_pso_writer(swarm)
-    elif type(swarm) == PSOBackbone:
+    elif isinstance(swarm, PSOBackbone):
         return _backbone_pso_writer(swarm)
     else:
-        NotImplementedError('The current implementation of the software can only handle "PSOBackbone" and "ClanPSO" variations.')
+        raise NotImplementedError('The current implementation of the software can only handle "PSOBackbone" and "ClanPSO" variations.')
 
 
     
@@ -62,7 +62,7 @@ def _backbone_pso_writer(swarm : Type[PSOBackbone]):
                                 columns=[f'dimension{i+1}' for i in range(positions.shape[1])])
     
     # (Manually) providing the (obvious) information that a single swarm is a single clan.
-    positions_df.index = pd.MultiIndex.from_product(['clan1', positions_df.index])
+    positions_df.index = pd.MultiIndex.from_product([['clan1'], positions_df.index], names=['clan', 'particle'])
 
     return positions_df
 
@@ -72,9 +72,11 @@ def _clan_pso_writer(swarm : Type[ClanPSO]):
     for ci in range(len(swarm.clans)):
         positions = swarm.clans[ci].swarm_positions
 
-        clan_df = pd.DataFrame(positions,
-                                    index=pd.MultiIndex.from_product([[f'clan{ci+1}'], [f'particle{i+1}' for i in range(positions.shape[0])]]),
-                                    columns=[f'dimension{i+1}' for i in range(positions.shape[1])])
+        clan_df = pd.DataFrame(
+            positions,
+            index=pd.MultiIndex.from_product([[f'clan{ci+1}'], [f'particle{i+1}' for i in range(positions.shape[0])]], names=['clan', 'particle']),
+            columns=[f'dimension{i+1}' for i in range(positions.shape[1])],
+        )
         
         list_of_clan_df.append(clan_df)
 

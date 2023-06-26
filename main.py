@@ -20,8 +20,10 @@ Code for my Bachelor's Thesis in the Informatics department of the Aristotle Uni
 import argparse, json
 
 import numpy as np
+import pandas as pd
 
 from src.scripts.io_handling.config_initialization_handler import handle_config_file_data
+from src.scripts.io_handling.data_generation.extractor import swarm_positions_extractor
 import src.scripts.benchmark_functions as bf 
 
 
@@ -51,27 +53,38 @@ def main():
 
         maximum_iterations = data['max_iterations']
         objective_function = getattr(bf, data['objective_function'] + '_function')
+        bf.domain_dimensions = data['nr_dimensions']
 
 
         pso_instance = handle_config_file_data(data)
+
 
 
     current_gbest_value = pso_instance.gbest_value.copy()
     current_error = np.linalg.norm(pso_instance.gbest_position - objective_function['goal_point'], ord=2)
 
 
+    df_time_list = []
+
+
     i = 1
-    while i <= maximum_iterations and current_error > numerical_precision_termination_criterion:
+    while i <= maximum_iterations:
         pso_instance.step()
         if  pso_instance.gbest_value < current_gbest_value:
             print(f'Update the gbest to {pso_instance.gbest_value} at position {pso_instance.gbest_position}, iteration = {i + 1}')
             current_gbest_value = pso_instance.gbest_value
             current_error = np.linalg.norm(pso_instance.gbest_position - objective_function['goal_point'], ord=2)
 
+        # Log
+        df_time_list.append(pd.concat([swarm_positions_extractor(pso_instance)], keys=[f'iteration{i}'], names=['iteration']))
+        # Move to next iteration
         i += 1
 
 
-    print(pso_instance.gbest_value, pso_instance.gbest_position)
+    
+    pd.concat(df_time_list).to_csv('testMain.csv')
+
+
 
     
 

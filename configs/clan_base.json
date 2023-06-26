@@ -2,11 +2,11 @@
     "max_iterations" : 2000,
     "objective_function" : "ackley",
     "topology" : "clan",
+    "nr_dimensions" : 2,
 
     "clans" : [
     {
         "nr_particles" : 30,
-        "nr_dimensions" : 10,
 
         "classes" : {
             "standard" : {
@@ -44,7 +44,6 @@
 
     {
         "nr_particles" : 30,
-        "nr_dimensions" : 10,
 
         "classes" : {
             "standard" : {
@@ -82,7 +81,6 @@
 
     {
         "nr_particles" : 30,
-        "nr_dimensions" : 10,
 
         "classes" : {
             "standard" : {
@@ -120,7 +118,6 @@
 
     {
         "nr_particles" : 30,
-        "nr_dimensions" : 10,
 
         "classes" : {
             "standard" : {
