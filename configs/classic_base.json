@@ -2,12 +2,21 @@
     "max_iterations" : 2000,
 
     "objective_function" : "ackley",
-    "nr_particles" : 30,
+    "nr_particles" : 4,
     "nr_dimensions" : 2,
 
     "topology" : "classic",
 
     "classes" : {
+        "adaptive" : {
+            "module_path" : "src.classes.PSOs.Mixins.adaptive_pso.adaptive_pso",
+            "class_name" : "AdaptivePSO",
+            "kwargs" : {
+                "c_min" : 1.5,
+                "c_max" : 2.5
+            }
+        },
+
         "standard" : {
             "module_path" : "src.classes.PSOs.Mixins.standard_pso.standard_pso",
             "class_name" : "StandardPSO",
@@ -26,15 +35,6 @@
                 "global_local_coefficient_method" : "linear",
                 "c3_k" : 0.2,
                 "control_factor_method" : "adaptive"
-            }
-        },
-
-        "adaptive" : {
-            "module_path" : "src.classes.PSOs.Mixins.adaptive_pso.adaptive_pso",
-            "class_name" : "AdaptivePSO",
-            "kwargs" : {
-                "c_min" : 1.5,
-                "c_max" : 2.5
             }
         }
     }

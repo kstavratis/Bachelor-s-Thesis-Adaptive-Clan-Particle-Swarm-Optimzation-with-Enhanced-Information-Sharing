@@ -76,7 +76,7 @@ class AdaptivePSO:
         self.c1, self.c2 = determine_acceleration_coefficients(self._evolutionary_state, self.c1, self.c2, self.__c_min, self.__c_max)
 
         # Apply eliticism learning strategy (ELS)
-        index_of_gbest = np.where(np.all(self.pbest_positions == self.gbest_position, axis=1))[0]
+        index_of_gbest = np.where(np.all(self.pbest_positions == self.gbest_position, axis=1))[0] # Search particle which found gbest at some point.
         # There is the possibility that more than one particles have the same `pbest_positions`.
         # Such an example could be when more than one particles have reached the (local) optimum.
         if index_of_gbest.size > 1:
@@ -84,10 +84,11 @@ class AdaptivePSO:
         index_of_gbest = index_of_gbest.item()
 
         self.swarm_positions = eliticism_learning_strategy(
-            self._evolutionary_state, self.swarm_positions, index_of_gbest,
+            self._evolutionary_state, self.swarm_positions,
+            index_of_gbest, self.gbest_position,
             self._objective_function, self._domain_boundaries,
             self._current_iteration, self._max_iterations
-            )
+        )
 
     def __classify_evolutionary_state(self, f_evol):
         # Sanity check
