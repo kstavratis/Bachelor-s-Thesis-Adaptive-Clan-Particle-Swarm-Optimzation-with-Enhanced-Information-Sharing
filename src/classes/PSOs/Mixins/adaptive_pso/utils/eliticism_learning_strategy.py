@@ -68,27 +68,28 @@ def eliticism_learning_strategy(evolutionary_state : EvolutionaryStates,
         sigma = 1 - (1 - 0.1) * (t_current / t_max)
         elitist_learning_rate = random_generator.normal(0, sigma)
 
+        # "The ELS randomly chooses one dimension of gBest’s historical best position [...]" page 9/20, below Fig 7.
 
-        # ==================== DOES NOT FOLLOW THE PAPER PERFECTLY, BUT IT BEHAVES RIDICULOUSLY GOOD START ====================
-        # 'mutated_position' variable initialization. To be finalized in the following lines of code.
-        mutated_position = x[x_mutation_index] # Creates a view, i.e. `mutated_position` points to particle which at some point had gbest.
-        # Storing the objective value of the best particle before applying the perturbation/mutation
-
-        previous_objective_value = objective_function(np.expand_dims(mutated_position, axis=0)) # Objective function expects a 2D array.
-        # Applying the perturbation to all dimensions
-        mutated_position += domain_dimension_range * elitist_learning_rate
-        # ==================== DOES NOT FOLLOW THE PAPER PERFECTLY, BUT IT BEHAVES RIDICULOUSLY GOOD START ====================
-
-
-        # # ==================== FAITHFUL TO THE PAPER, BUT DOES NOT BEHAVE AS GOOD START ====================
+        # # ==================== DOES NOT FOLLOW THE PAPER PERFECTLY, BUT IT BEHAVES RIDICULOUSLY GOOD START ====================
         # # 'mutated_position' variable initialization. To be finalized in the following lines of code.
-        # mutated_position = gbest_position.copy()
+        # mutated_position = x[x_mutation_index] # Creates a view, i.e. `mutated_position` points to particle which at some point had gbest.
         # # Storing the objective value of the best particle before applying the perturbation/mutation
 
         # previous_objective_value = objective_function(np.expand_dims(mutated_position, axis=0)) # Objective function expects a 2D array.
-        # # Applying the perturbation to the random dimension
-        # mutated_position[mutation_dimension] += domain_dimension_range * elitist_learning_rate
-        # # ==================== FAITHFUL TO THE PAPER, BUT DOES NOT BEHAVE AS GOOD START ====================
+        # # Applying the perturbation to all dimensions
+        # mutated_position += domain_dimension_range * elitist_learning_rate
+        # # ==================== DOES NOT FOLLOW THE PAPER PERFECTLY, BUT IT BEHAVES RIDICULOUSLY GOOD START ====================
+
+
+        # ==================== FAITHFUL TO THE PAPER, BUT DOES NOT BEHAVE AS GOOD START ====================
+        # 'mutated_position' variable initialization. To be finalized in the following lines of code.
+        mutated_position = gbest_position.copy()
+        # Storing the objective value of the best particle before applying the perturbation/mutation
+
+        previous_objective_value = objective_function(np.expand_dims(mutated_position, axis=0)) # Objective function expects a 2D array.
+        # Applying the perturbation to the random dimension
+        mutated_position[mutation_dimension] += domain_dimension_range * elitist_learning_rate
+        # ==================== FAITHFUL TO THE PAPER, BUT DOES NOT BEHAVE AS GOOD START ====================
 
         # Making sure that the particle will still be inside the search space after the mutation.
 

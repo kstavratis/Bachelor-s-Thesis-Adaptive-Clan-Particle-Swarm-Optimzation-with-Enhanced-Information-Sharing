@@ -1,9 +1,11 @@
 {
+    "nr_experiments" : 32,
+    
     "max_iterations" : 2000,
 
-    "objective_function" : "ackley",
-    "nr_particles" : 4,
-    "nr_dimensions" : 2,
+    "objective_function" : "sphere",
+    "nr_particles" : 30,
+    "nr_dimensions" : 30,
 
     "topology" : "classic",
 

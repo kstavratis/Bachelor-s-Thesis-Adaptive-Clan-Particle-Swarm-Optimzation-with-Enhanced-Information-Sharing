@@ -294,6 +294,44 @@ class PSOBackbone:
         # For example, in the standard PSO, the "update_weights" function could refer to the linear decrease of the inertia weight ω.
         pass
 
+    def get_reached_gbest_particle(self, random : bool = True):
+        """
+        Returns the particle which at some (previous) iteration reached the gbest of the swarm.
+
+        Parameters
+        ----------
+        random : bool
+            In cases where multiple particles reached the gbest position at some point,
+            this value determines how the particle is chosen.
+                True ->  One of the particles that had reached gbest is picked at random.
+                False -> The first (index-wise) particle which satisfies the goal is returned.
+
+        Returns
+        -------
+        : int
+            Index (0-indexed) of the particle which at some point held the best (lowest) objective value
+
+        : np.array
+            A copy of the vector representing the particle which at some point held the best (lowest) objective value
+            NOTE: shape = (nr_dimensions,)
+
+        """
+
+        index_of_gbest = np.where(np.all(self.pbest_positions == self.gbest_position, axis=1))[0] # Search particle which found gbest at some point.
+        # There is the possibility that more than one particles have the same `pbest_positions`.
+        # Such an example could be when more than one particles have reached the (local) optimum.
+        if index_of_gbest.size > 1:
+            if random:
+                index_of_gbest = np.random.default_rng().choice(index_of_gbest) # Choose a random particle which reached gbest at some point.
+            else:
+                index_of_gbest = np.array([index_of_gbest[0]]) # Choose the first (index-wise) appearance/
+
+        index_of_gbest = index_of_gbest.item()
+        best_particle = self.swarm_positions[index_of_gbest].copy()
+
+        return index_of_gbest, best_particle
+
+
     def get_current_best_particle(self):
         """
         Returns the particle which holds the best (lowest) objective value **at the current configuation**.

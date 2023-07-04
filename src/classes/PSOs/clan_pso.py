@@ -92,13 +92,20 @@ class ClanPSO:
 
         # Proceed to prepare the conference of leaders.
 
+        # "For each iteration, each clan performs a search and marks the particle that *had reached* the best position of the entire clan"
+        # ~ https://doi.org/10.1108/17563780910959875 and https://doi.org/10.1109/SIS.2011.5952569
         # Collect best particles of each clan
-        # (Programming) NOTE: np.array() creates a new array!
-        # The c.gbest_position s are not referenced anymore! Have to do this manually!
-        temp = [c.get_current_best_particle() for c in self.clans]
+
+        temp = [c.get_reached_gbest_particle() for c in self.clans]
         clan_leader_indices = [t[0] for t in temp]
         clan_leaders = np.array([t[1] for t in temp])
         conference_pso_kwargs['input_swarm_positions'] = clan_leaders
+        
+        ## The following assigns different leaders than what is mentioned in the paper.
+        # temp = [c.get_current_best_particle() for c in self.clans]
+        # clan_leader_indices = [t[0] for t in temp]
+        # clan_leaders = np.array([t[1] for t in temp])
+        # conference_pso_kwargs['input_swarm_positions'] = clan_leaders
 
 
         # Determine the PSO variation of the conference of leaders.
@@ -127,16 +134,12 @@ class ClanPSO:
 
         # Update the locations of gbest in each clan.
         for i in range(conference_instance.swarm_positions.shape[0]):
-            #! `self.clans[i].gbest_position = conference_instance.swarm_positions[i]`
-            #! This assignment is not true! The position to which the clan leader moved is not necessarily better
-            #! than the placement it had before the conference of leaders.
-            #! The PARTICLE where gbest_position resided in may have moved to a worse position,
-            #! Therefore, what must be changed is the position of the clan leader, not the clan's `gbest_position`!
-            self.clans[i].swarm_positions[clan_leader_indices[i]] = conference_instance.swarm_positions[i]
+            self.clans[i].swarm_positions[clan_leader_indices[i]] = conference_instance.swarm_positions[i] # Update movement of clan leaders.
             self.clans[i]._update_pbest_and_gbest() #* This operation is expensive, because all particles are re-evaluated, but only one particle has changed!
 
         # Update the the globablly(!) best value and position of the search space
-        self.gbest_position, self.gbest_value = conference_instance.gbest_position, conference_instance.gbest_value
+        if conference_instance.gbest_value < self.gbest_value:
+            self.gbest_position, self.gbest_value = conference_instance.gbest_position, conference_instance.gbest_value
         # NOTE: Why is this global?
         # 1) The "conference_instance" before the iteration --step() function call-- contains the best particles of the clans.
         #   Therefore, in there resides the single best value that has been found by the swarm (it's one of the leaders).

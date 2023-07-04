@@ -23,25 +23,31 @@ from typing import Type
 from src.classes.PSOs.pso_backbone import PSOBackbone
 from src.classes.PSOs.clan_pso import ClanPSO
 
-def swarm_positions_extractor(swarm : Type[ClanPSO or PSOBackbone]):
+def swarm_positions_extractor(swarm : Type[ClanPSO or PSOBackbone]) -> pd.DataFrame:
     """
     Parameters
     ----------
-    swarm : Type[ClanPSO or PSOBackbone]
+    `swarm` : `Type[ClanPSO or PSOBackbone]`
         A swarm instance.
         Currently, the swarms supported are `PSOBackbone` and `ClanPSO` classes.
 
     Returns
     -------
-    pd.DataFrame
+    `pd.DataFrame`
         A dataframe containing the positions of the swarm at the current configuration in the following format.\n
+        ```
         -----------------------------------------------------------------\n
                 |               | dimension1    |   ... |   dimensionD  |\n
         clanID  |   particle1   |               |   ... |   ...         |\n
                 |   ...         |               |   ... |   ...         |\n
                 |   particleP   |               |   ... |   ...         |\n
         -----------------------------------------------------------------\n
-
+        ```
+        
+    Errors
+    ------
+    `NotImplementedError` : An error is raised in cases where a non-expected swarm instance is provided as input.
+    Currently, the instances of PSO supported are: `PSOBackbone`, `ClanPSO`.
     """
     
     if isinstance(swarm, ClanPSO):
@@ -53,7 +59,7 @@ def swarm_positions_extractor(swarm : Type[ClanPSO or PSOBackbone]):
 
 
     
-def _backbone_pso_writer(swarm : Type[PSOBackbone]):
+def _backbone_pso_writer(swarm : Type[PSOBackbone]) -> pd.DataFrame:
 
     positions = swarm.swarm_positions
     
@@ -66,7 +72,7 @@ def _backbone_pso_writer(swarm : Type[PSOBackbone]):
 
     return positions_df
 
-def _clan_pso_writer(swarm : Type[ClanPSO]):
+def _clan_pso_writer(swarm : Type[ClanPSO]) -> pd.DataFrame:
 
     list_of_clan_df = []
     for ci in range(len(swarm.clans)):
@@ -81,3 +87,15 @@ def _clan_pso_writer(swarm : Type[ClanPSO]):
         list_of_clan_df.append(clan_df)
 
     return pd.concat(list_of_clan_df, axis=0)
+
+
+def gbest_extractor(swarm : Type[ClanPSO or PSOBackbone]) -> pd.DataFrame:
+
+    gb = swarm.gbest_position
+
+    gbest_df = pd.DataFrame(
+        gb.reshape(1, -1), # By default, 1D arrays are made a column in pd.DataFrame. Therefore, reshaping.
+        columns=[f'dimension{i+1}' for i in range(gb.size)],
+    )
+
+    return gbest_df

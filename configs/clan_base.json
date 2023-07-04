@@ -1,6 +1,8 @@
 {
+    "nr_experiments" : 32,
+
     "max_iterations" : 2000,
-    "objective_function" : "ackley",
+    "objective_function" : "sphere",
     "topology" : "clan",
     "nr_dimensions" : 2,
 

@@ -1,114 +1,85 @@
 """
-Copyright (C) 2021  Konstantinos Stavratis
-For the full notice of the program, see "main.py"
+Copyright (C) 2023  Konstantinos Stavratis
+e-mail: kostauratis@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from time import process_time
-from typing import Any, List, Tuple
-from numpy import inf, array, mean
-from scipy.linalg import norm
+from src.scripts.io_handling.config_initialization_handler import handle_config_file_data
+from src.scripts.io_handling.data_generation.extractor import swarm_positions_extractor, gbest_extractor
+from src.scripts.io_handling.data_generation.logger import log_pso
+import src.scripts.benchmark_functions as bf 
 
-from classes.PSOs.classicPSOswarm import ClassicSwarm
-from classes.PSOs.clanPSOswarm import ClanSwarm
-from classes.PSOs.Mixins.enhanced_information_sharing_pso.enums.global_local_coefficient_types import GlobalLocalCoefficientTypes
-from classes.PSOs.Mixins.enhanced_information_sharing_pso.enums.control_factor_types import ControlFactorTypes
-from classes.PSOs.wall_types import WallTypes
+from ..io_handling.data_generation.logger import log_pso
 
-# This strict policy is enacted so as to catch rounding errors (overflows/underflows) as well.
-import warnings
-warnings.filterwarnings("error")
-
-loop_stop_condition_limit = 5e-15
+import numpy as np
+import pandas as pd
 
 
-def experiment(objective_function: Any, spawn_boundaries: List[List[float]],
-               objective_function_goal_point: array,
-               maximum_iterations: int,
-               swarm_size: int = 40, is_clan: bool = False, number_of_clans: int = 4, c1: float = 2.0, c2: float = 2.0,
-               is_adaptive: bool = False,
-               eis: Tuple[Tuple[GlobalLocalCoefficientTypes, float or None], Tuple[ControlFactorTypes, float or None]] =
-               ((GlobalLocalCoefficientTypes.NONE, None), (ControlFactorTypes.NONE, None)),
-               search_and_velocity_boundaries: List[List[float]] = None, wt: WallTypes = WallTypes.NONE):
-    """
-    :param objective_function:
-    :param spawn_boundaries:
-    :param maximum_iterations:
-    :param swarm_size:
-    :param is_clan:
-    :param number_of_clans:
-    :param c1:
-    :param c2:
-    :param is_adaptive:
-    :param eis:
-    :param search_and_velocity_boundaries:
-    :param wt:
+def run(data):
+    # Hyperparameter declarations
+    maximum_iterations = None
+    objective_function = None
 
-    :return:
-    """
+    # Variable declarations
+    current_error, numerical_precision_termination_criterion = None , 1e-14
 
-    # global experiment_swarm
+    # Variable declarations
+    pso_instance = None
 
-    if not is_clan:
-        experiment_swarm = ClassicSwarm(swarm_or_fitness_function=objective_function,
-                                        spawn_boundaries=spawn_boundaries,
-                                        swarm_size=swarm_size,
-                                        maximum_iterations=maximum_iterations,
-                                        is_adaptive=is_adaptive, eis=eis, current_iteration=0,
-                                        search_and_velocity_boundaries=search_and_velocity_boundaries, wt=wt)
 
-    if is_clan:
-        experiment_swarm = ClanSwarm(fitness_function=objective_function,
-                                     spawn_boundaries=spawn_boundaries,
-                                     swarm_size=swarm_size // number_of_clans, number_of_clans=number_of_clans,
-                                     maximum_iterations=maximum_iterations,
-                                     c1=c1, c2=c2,
-                                     is_adaptive=is_adaptive, eis=eis, current_iteration=0,
-                                     search_and_velocity_boundaries=search_and_velocity_boundaries, wt=wt)
+    maximum_iterations = data['max_iterations']
+    objective_function = getattr(bf, data['objective_function'] + '_function')
+    bf.domain_dimensions = data['nr_dimensions']
 
-    loop_times = []
 
-    # START EXPERIMENT
-    experiment_start = process_time()
+    pso_instance = handle_config_file_data(data)
 
-    iteration = 0
-    loop_stop_condition_value = inf
-    
 
-    while not (loop_stop_condition_value < loop_stop_condition_limit) and iteration < maximum_iterations:
-        loop_start = process_time()
 
-        try:
-            experiment_swarm.update_swarm()
-        # Stopping process when rounding errors (overflow or underflow) appear.
-        except FloatingPointError:
-            iteration += 1
-            loop_end = process_time()
-            loop_times.append(loop_end - loop_start)
-            break
-        except RuntimeWarning:
-            iteration += 1
-            loop_end = process_time()
-            loop_times.append(loop_end - loop_start)
-            break
+    current_gbest_value = pso_instance.gbest_value.copy()
+    current_error = np.linalg.norm(pso_instance.gbest_position - objective_function['goal_point'], ord=2)
 
-            
-        loop_stop_condition_value = experiment_swarm.calculate_swarm_distance_from_swarm_centroid()
-        iteration += 1
 
-        loop_end = process_time()
-        loop_times.append(loop_end - loop_start)
+    df_positions_list = []
+    df_gbests_list = []
+    df_gbest_values_list = [pd.DataFrame([current_gbest_value], index=['iteration0'])]
 
-    experiment_end = process_time()
-    # END EXPERIMENT
 
-    precision = None
-    if not is_clan:
-        precision = norm(experiment_swarm.global_best_position - objective_function_goal_point)
-    if is_clan:
-        precision = norm(experiment_swarm.find_population_global_best_position() - objective_function_goal_point)
+    i = 1
+    while i <= maximum_iterations:
+        pso_instance.step()
+        if  pso_instance.gbest_value < current_gbest_value:
+            current_gbest_value = pso_instance.gbest_value
+            # current_error = np.linalg.norm(pso_instance.gbest_position - objective_function['goal_point'], ord=2)
 
-    iterations = iteration
-    experiment_average_iteration_cpu_time = mean(loop_times)
-    experiment_total_cpu_time = experiment_end - experiment_start
 
-    return precision, iterations, experiment_average_iteration_cpu_time, experiment_total_cpu_time
+
+        # Log START
+
+        # All particles positions
+        df_positions_list.append(pd.concat([swarm_positions_extractor(pso_instance)], keys=[f'iteration{i}'], names=['iteration']))
+        # gbest positions
+        entry = gbest_extractor(pso_instance) ; entry.index = [f'iteration{i}'] # Rename the index from default (incrementing integer) to iterationID.
+        df_gbests_list.append(entry)
+        # gbest values
+        df_gbest_values_list.append(pd.DataFrame([current_gbest_value], index=[f'iteration{i}']))
+
+        # Log FINISH
+        # Move to next iteration
+        i += 1
+
+
+    # Log the results of the experiment
+    log_pso(data, ['positions', 'gbest_positions', 'gbest_values'], [df_positions_list, df_gbests_list, df_gbest_values_list])

@@ -99,9 +99,8 @@ def __handle_clan_config_file(data : dict):
     }
 
     # Fixing the stepping behaviour of the clan swarm in all iterations.
-    #! WARNING:
-    #! This may go contrary to the initial vision of allowing the user to determine the behaviour of the conference of the leaders
-    #! at each individual step.
+    #! WARNING: This may go contrary to the initial vision
+    #! of allowing the user to determine the behaviour of the conference of the leaders at each individual step.
     #! This part needs to be removed and its dependencies altered to achieve the aforementioned vision.
     clan_pso_instance.step = functools.partial(clan_pso_instance.step, conference_behaviour_classes_pointers, conference_behaviour_kwargs)
 
