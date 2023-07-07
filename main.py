@@ -30,8 +30,10 @@ def main():
                                      description='Executes experiments of PSO as decreed by the input configuration file.')
     
 
-    parser.add_argument('configuration_file_path', nargs='?', type=str, default='configs/clan_base.json')
-    parser.add_argument('-c', '--concurrent')
+    parser.add_argument('configuration_file_path', nargs='?', type=str, default='configs/clan/clan_base.json')
+    parser.add_argument('-c', '--concurrent', action='store_true',
+                        help='Determine whether the experiments will be conducted in parallel (True) or in a single thread (False) (default : False)'
+                        )
     args = parser.parse_args()
     filepath = args.configuration_file_path
 
