@@ -96,17 +96,19 @@ class ClanPSO:
         # ~ https://doi.org/10.1108/17563780910959875 and https://doi.org/10.1109/SIS.2011.5952569
         # Collect best particles of each clan
 
-        temp = [c.get_reached_gbest_particle() for c in self.clans]
+        # # NOTE: Version of how I interpreted the above phrase.
+        # # The particles which historically reached the best position are used.
+        # temp = [c.get_reached_gbest_particle() for c in self.clans]
+        # NOTE: Version of how Alkmini interpreted the above phrase
+        # The particles which has the best position *for this iteration*.
+        temp = [c.get_current_best_particle() for c in self.clans]
+
         clan_leader_indices = [t[0] for t in temp]
         clan_leaders = np.array([t[1] for t in temp])
+        clan_pbest_positions = np.array([self.clans[i].pbest_positions[clan_leader_indices[i]] for i in range(len(self.clans))])
         conference_pso_kwargs['input_swarm_positions'] = clan_leaders
+        conference_pso_kwargs['input_pbest_positions'] = clan_pbest_positions
         
-        ## The following assigns different leaders than what is mentioned in the paper.
-        # temp = [c.get_current_best_particle() for c in self.clans]
-        # clan_leader_indices = [t[0] for t in temp]
-        # clan_leaders = np.array([t[1] for t in temp])
-        # conference_pso_kwargs['input_swarm_positions'] = clan_leaders
-
 
         # Determine the PSO variation of the conference of leaders.
         conference_pso_class_ptr = None # Variable declaration
