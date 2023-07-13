@@ -74,6 +74,7 @@ class PSOBackbone:
     def __init__(self, nr_particles : int, nr_dimensions : int,
                  objective_function, domain_boundaries : np.array,
                  input_swarm_positions : np.array = None,
+                 input_pbest_positions : np.array = None,
                  **kwargs : dict):
         """
         Parameters
@@ -104,12 +105,22 @@ class PSOBackbone:
 
             The inclusion of this parameter overrules parameters `nr_particles` and `nr_dimensions`.\n
             Default value is `None`.
+        
+        input_pbest_positions : np.array
+            A (p, d) 2D array representing custom pbest positions with which the particles will be initialized.
+            - p are the number of particles of the swarm
+            - d are the dimensions of the problem.
+
+            NOTE: The inserted pbest positions are overridden in case that
+            the particles' initialization positions yield a better (lower) objective value.
 
 
         """ 
         super().__init__(**kwargs)
 
         # ==================== INITIALIZE ATTRIBUTES FROM INPUT PARAMETERS START ====================
+        self._objective_function = objective_function
+
         # Handle input swarm, in case it is provided.
         self.swarm_positions = None # Declaring the "self.swarm_positions" attribute.
         if input_swarm_positions is not None and input_swarm_positions.ndim == 2:
@@ -126,12 +137,27 @@ class PSOBackbone:
             # Currently, the initialization is done using a uniform distribution.
             self.swarm_positions = np.random.default_rng().uniform(low=domain_boundaries[:, 0], high=domain_boundaries[:, 1], size=(nr_particles, nr_dimensions))
 
+        # Handle input pbest positions, in case they are provided.
+        self.pbest_positions, self.pbest_values = None, None # Declaring the "pbest" attributes.
+        self.gbest_position, self.gbest_value = None, None # Declaring the "gbest" attributes.
+        if input_pbest_positions is not None and input_swarm_positions.ndim == 2:
+
+            objective_values = self._objective_function(input_pbest_positions)
+            best_objective_value_index = np.argmin(objective_values)
+
+            self.pbest_positions = input_pbest_positions
+            self.pbest_values = objective_values
+
+            self.gbest_value = objective_values[best_objective_value_index]
+            self.gbest_position = np.copy(self.pbest_positions[best_objective_value_index])
+            
+
+            nr_particles, nr_dimensions = input_pbest_positions.shape # Changing the argument values, because they're used later.
+
 
         # Currently, the particles will start with zero velocity.
         self.swarm_velocities = np.zeros(shape=(nr_particles, nr_dimensions))
 
-        
-        self._objective_function = objective_function
 
         if domain_boundaries.ndim == 1:
             domain_boundaries = np.tile(domain_boundaries, (nr_dimensions, 1)) # Repeat the same limit for all domain dimensions.
@@ -171,17 +197,23 @@ class PSOBackbone:
         best_objective_value_index = np.argmin(objective_values)
 
         # STEP 3a
-        self.gbest_value = objective_values[best_objective_value_index]
-        self.gbest_position = np.copy(self.swarm_positions[best_objective_value_index])
-        #! Make sure to copy by value. Simple indexing copies by reference (view).
-        #! For more information, read https://numpy.org/doc/stable/user/basics.copies.html
+        if self.gbest_position is not None: # Insert "if" branch if a `input_pbest_positions` was provided.
+            self.__update_gbest(self.swarm_positions, objective_values)
+        else:
+            self.gbest_value = objective_values[best_objective_value_index]
+            self.gbest_position = np.copy(self.swarm_positions[best_objective_value_index])
+            #! Make sure to copy by value. Simple indexing copies by reference (view).
+            #! For more information, read https://numpy.org/doc/stable/user/basics.copies.html
 
 
         # STEP 2b
-        self.pbest_values = np.copy(objective_values)
-        self.pbest_positions = np.copy(self.swarm_positions)
-        #! Make sure to copy by value. Simple indexing copies by reference (view).
-        #! For more information, read https://numpy.org/doc/stable/user/basics.copies.html
+        if self.pbest_positions is not None: # Insert "if" branch if a `input_pbest_positions` was provided.
+            self.__update_pbest(self.swarm_positions, objective_values)
+        else:
+            self.pbest_values = np.copy(objective_values)
+            self.pbest_positions = np.copy(self.swarm_positions)
+            #! Make sure to copy by value. Simple indexing copies by reference (view).
+            #! For more information, read https://numpy.org/doc/stable/user/basics.copies.html
 
 
 
