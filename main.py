@@ -23,6 +23,10 @@ from concurrent.futures.process import ProcessPoolExecutor
 
 from src.scripts.experiments.experiment import run
 
+# Utility function for progress bar in the case of sequential execution. https://github.com/tqdm/tqdm
+# If the software is running on very low memory requirements, it may be removed as unnecessary.
+from tqdm import tqdm
+
 
 def main():
 
@@ -30,7 +34,7 @@ def main():
                                      description='Executes experiments of PSO as decreed by the input configuration file.')
     
 
-    parser.add_argument('configuration_file_path', nargs='?', type=str, default='configs/clan/clan_base.json')
+    parser.add_argument('configuration_file_path', nargs='?', type=str, default='configs/clan_base.json')
     parser.add_argument('-c', '--concurrent', action='store_true',
                         help='Determine whether the experiments will be conducted in parallel (True) or in a single thread (False) (default : False)'
                         )
@@ -47,10 +51,9 @@ def main():
 
     if args.concurrent:    
         executor = ProcessPoolExecutor()
-        for _ in range(nr_experiments):
-            executor.submit(run, data)
+        list(tqdm(executor.map(run, [data] * nr_experiments), total=nr_experiments))
     else:
-        for _ in range(nr_experiments):
+        for _ in tqdm(range(nr_experiments)):
             run(data)
 
 
