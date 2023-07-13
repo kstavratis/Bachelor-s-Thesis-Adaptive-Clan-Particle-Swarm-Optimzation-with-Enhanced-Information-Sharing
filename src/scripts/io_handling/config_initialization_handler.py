@@ -13,7 +13,7 @@ def handle_config_file_data(data):
     elif topology == 'clan':
         return __handle_clan_config_file(data)
     else:
-        return NotImplementedError(f'Topology {topology} has not been implemented. Currently implemented topologies are ["classic", "clan"].')
+        raise NotImplementedError(f'Topology {topology} has not been implemented. Currently implemented topologies are ["classic", "clan"].')
 
 
 def __handle_pso_backbone_config_data(data : dict):
