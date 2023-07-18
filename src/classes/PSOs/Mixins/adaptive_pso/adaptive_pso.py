@@ -16,6 +16,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import warnings
+
 import numpy as np
 
 import numbers
@@ -146,7 +148,16 @@ class AdaptivePSO:
         d_g, d_min, d_max = d[g], np.min(d), np.max(d)
 
         # NOTE: The evolutionary factor is bound in the values [0,1].
-        evolutionary_factor = (d_max - d_g) / (d_max - d_min)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error')
+            try:
+                evolutionary_factor = (d_max - d_g) / (d_max - d_min)
+            except RuntimeWarning: evolutionary_factor = 0
+            # The only way that a runtime warning will arise in this case is a division by zero.
+            # This would imply that d_min = d_max.
+            # This is only possible when all particles are present on the same point in space.
+            # Consequently, we may confidently claim that the swarm is in a state of (ultimate) convergence.
+            # Therefore, the lowest possible evolutionary factor possible is returned.
         return evolutionary_factor
 
 
