@@ -108,6 +108,11 @@ class ClanPSO:
         clan_pbest_positions = np.array([self.clans[i].pbest_positions[clan_leader_indices[i]] for i in range(len(self.clans))])
         conference_pso_kwargs['input_swarm_positions'] = clan_leaders
         conference_pso_kwargs['input_pbest_positions'] = clan_pbest_positions
+        #! Hard-coding a kwarg is not good practice. Find a way to do this for all possible interesting kwargs...
+        # We wish for knowledge of the current iteration to be transferred down, since it is used in most PSO variations.
+        for clan in self.clans:
+            if '_current_iteration' in dir(clan):
+                conference_pso_kwargs['current_iteration'] = clan._current_iteration
         
 
         # Determine the PSO variation of the conference of leaders.
