@@ -151,7 +151,7 @@ class AdaptivePSO:
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
             try:
-                evolutionary_factor = (d_max - d_g) / (d_max - d_min)
+                evolutionary_factor = (d_g - d_min) / (d_max - d_min)
             except RuntimeWarning: evolutionary_factor = 0
             # The only way that a runtime warning will arise in this case is a division by zero.
             # This would imply that d_min = d_max.
