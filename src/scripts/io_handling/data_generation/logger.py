@@ -16,7 +16,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import os, json
+import os, glob, json
 from functools import reduce
 from threading import BoundedSemaphore
 
@@ -63,14 +63,14 @@ def log_pso(config_data : dict, log_names : list[str], log_lists : list[list[pd.
 
     log_semaphore.acquire()
 
-    current_folders = os.listdir(store_path)
+    current_numeral_folders = [os.path.basename(filename) for filename in glob.glob(f'{store_path}/[0-9]*')]
     experiment_id = '' # Variable declaration
 
-    if not current_folders: # If no experiment has been conducted...
+    if not current_numeral_folders: # If no experiment has been conducted...
         experiment_id = '1'
     else:
         # Assign as value the next integer to the current maximum value (i.e. maximum of folder_id + 1)
-        experiment_id = str(reduce(max, [int(folder_id) for folder_id in os.listdir(store_path)]) + 1)
+        experiment_id = str(reduce(max, [int(folder_id) for folder_id in current_numeral_folders]) + 1)
 
     log_semaphore.release()
 
