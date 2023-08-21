@@ -37,17 +37,17 @@ class PSOBackbone:
 
     `_objective_function` : function
         A (class <function>) pointer to the problem landscape, expressed in a mathematical formula, the PSO is tasked with solving.
-        The function should be conditioned in such a way such that it produces (__nr_particles,) np.array outputs
+        The function should be conditioned in such a way such that it produces (nr_particles,) np.array outputs
         from a (nr_particles, nr_dimensions) 2D np.array. i.e.
         function(np.array(n,m)) -> np.array(n)
 
     `_domain_boundaries` : np.array
         shape == (nr_dimensions, 2) or (2,)\n
-        A 2D array whose i-th row contain the lower (position 0) and higher (position 1) bounds of the search domain for the i-th dimension.
+        A 2D array whose i-th row contains the lower (position 0) and higher (position 1) bounds of the search domain for the i-th dimension.
         In the case of a 1D np.array, the argument is expanded so as to accommodate for all domain dimensions. 
 
     `w` : float
-        The w (ω) value is known as the "inertia weight". w # Math: \omega \in [0, 1]
+        The w (ω) value is known as the "inertia weight". # Math: \omega \in [0, 1]
         The w weight dictates how much of the previously attained velocity will be used in the next iteration of the algorithm
         (0 := not at all, 1 := fully).\n
         Default value is 1.0.
@@ -61,7 +61,7 @@ class PSOBackbone:
     `c2` : float
         The c2 value is known as "social weight" or "social learning factor"
         Its value (in conjunction with c1) determines the behaviour of each particle of the swarm.
-        As a rule of the thumb, the higher the ration c2/c1 is, the more global exploration is encouraged.\n
+        As a rule of the thumb, the higher the ratio c2/c1 is, the more global exploration is encouraged.\n
         Default value is 2.0
     
         
@@ -95,7 +95,7 @@ class PSOBackbone:
             and extracts 1D arrays as the output.
 
         domain_boundaries : np.array
-             A 1D or 2D array whose i-th row contain the lower (position 0) and higher (position 1) bounds of the search domain for the i-th dimension.
+             A 1D or 2D array whose i-th row contains the lower (position 0) and higher (position 1) bounds of the search domain for the i-th dimension.
             In the case of a 1D np.array, the argument is expanded so as to accommodate for all domain dimensions.
 
         input_swarm_positions : np.array
@@ -236,7 +236,7 @@ class PSOBackbone:
         # ==================== INITIALIZE ATTRIBUTES ARBITRARILY START ====================
         self.w = 1.0
         self.c1, self.c2 = 2.0, 2.0
-        # ==================== INITIALIZE ATTRIBUTES FROM ARBITRARILY FINISH ====================
+        # ==================== INITIALIZE ATTRIBUTES ARBITRARILY FINISH ====================
     
     def step(self) -> None:
         """
@@ -262,7 +262,8 @@ class PSOBackbone:
         random_generator = np.random.default_rng()
         # NOTE: Because we are multiplying with random values, whether we do matrix-wise multiplication (@)
         # or element-wise multiplication (*) should be identical.
-        # Element-wise multiplication is used, because it is believed to be computationally cheaper, especially memory-wise.
+        # Element-wise multiplication (Hadamard product) is used,
+        # because it is believed to be computationally cheaper, especially memory-wise.
 
         # # ==================== Matrix-wise multiplication approach START ====================
         # # Reshaping the swarm matrix into a single (column) vector to utilize vectorization of numpy.

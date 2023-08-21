@@ -74,8 +74,7 @@ def log_pso(config_data : dict, log_names : list[str], log_lists : list[list[pd.
 
     log_semaphore.release()
 
-    store_path = '/'.join((store_path, experiment_id))
-
+    store_path = os.sep.join((store_path, experiment_id))
     os.makedirs(store_path, exist_ok=True)
 
 

@@ -47,16 +47,22 @@ def run(data):
     pso_instance = handle_config_file_data(data)
 
 
-
     current_gbest_value = pso_instance.gbest_value.copy()
     current_error = np.linalg.norm(pso_instance.gbest_position - objective_function['goal_point'], ord=2)
 
+    # Initialize the logging data structures with their first entry:
+    # the initial state of the swarm.
+    temp_indx = pd.Index(data=[0], dtype=int, name='iteration')
 
-    df_positions_list = []
-    df_gbests_list = []
-    df_gbest_values_list = [pd.DataFrame([current_gbest_value], index=['iteration0'])]
+    df_positions_list = [pd.concat([swarm_positions_extractor(pso_instance)], keys=[0], names=['iteration'])]
+
+    entry = gbest_extractor(pso_instance) ; entry.index = temp_indx
+    df_gbests_list = [entry]
+
+    df_gbest_values_list = [pd.DataFrame([current_gbest_value], index=temp_indx)]
 
 
+    # Main loop of the algorithm
     i = 1
     while i <= maximum_iterations:
         pso_instance.step()
@@ -67,14 +73,15 @@ def run(data):
 
 
         # Log START
+        temp_indx = pd.Index([i], dtype=int, name='iteration')
 
         # All particles positions
-        df_positions_list.append(pd.concat([swarm_positions_extractor(pso_instance)], keys=[f'iteration{i}'], names=['iteration']))
+        df_positions_list.append(pd.concat([swarm_positions_extractor(pso_instance)], keys=[i], names=['iteration']))
         # gbest positions
-        entry = gbest_extractor(pso_instance) ; entry.index = [f'iteration{i}'] # Rename the index from default (incrementing integer) to iterationID.
+        entry = gbest_extractor(pso_instance) ; entry.index = temp_indx # Rename the index from default (incrementing integer) to iterationID.
         df_gbests_list.append(entry)
         # gbest values
-        df_gbest_values_list.append(pd.DataFrame([current_gbest_value], index=[f'iteration{i}']))
+        df_gbest_values_list.append(pd.DataFrame([current_gbest_value], index=temp_indx))
 
         # Log FINISH
         # Move to next iteration
