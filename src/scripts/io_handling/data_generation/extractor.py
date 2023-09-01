@@ -37,10 +37,10 @@ def swarm_positions_extractor(swarm : Type[ClanPSO or PSOBackbone]) -> pd.DataFr
         A dataframe containing the positions of the swarm at the current configuration in the following format.\n
         ```
         -----------------------------------------------------------------\n
-                |               | dimension1    |   ... |   dimensionD  |\n
-        clanID  |   particle1   |               |   ... |   ...         |\n
+                |               | dimension0    |   ... |   dimensionD-1|\n
+        clanID  |   particle0   |               |   ... |   ...         |\n
                 |   ...         |               |   ... |   ...         |\n
-                |   particleP   |               |   ... |   ...         |\n
+                |   particleP-1 |               |   ... |   ...         |\n
         -----------------------------------------------------------------\n
         ```
         
@@ -63,12 +63,12 @@ def _backbone_pso_writer(swarm : Type[PSOBackbone]) -> pd.DataFrame:
 
     positions = swarm.swarm_positions
     
-    positions_df = pd.DataFrame(positions,
-                                index=[f'particle{i+1}' for i in range(positions.shape[0])],
-                                columns=[f'dimension{i+1}' for i in range(positions.shape[1])])
+    particles_index = pd.Index([i for i in range(positions.shape[0])], dtype=int, name='particle')
+    dimensions_index = pd.Index([i for i in range(positions.shape[1])], dtype=int, name='dimension')
+    positions_df = pd.DataFrame(positions, index=particles_index, columns=dimensions_index)
     
     # (Manually) providing the (obvious) information that a single swarm is a single clan.
-    positions_df.index = pd.MultiIndex.from_product([['clan1'], positions_df.index], names=['clan', 'particle'])
+    positions_df.index = pd.MultiIndex.from_product([[0], positions_df.index], names=['clan', 'particle'])
 
     return positions_df
 
@@ -80,8 +80,8 @@ def _clan_pso_writer(swarm : Type[ClanPSO]) -> pd.DataFrame:
 
         clan_df = pd.DataFrame(
             positions,
-            index=pd.MultiIndex.from_product([[f'clan{ci+1}'], [f'particle{i+1}' for i in range(positions.shape[0])]], names=['clan', 'particle']),
-            columns=[f'dimension{i+1}' for i in range(positions.shape[1])],
+            index=pd.MultiIndex.from_product([[ci], [i for i in range(positions.shape[0])]], names=['clan', 'particle']),
+            columns= pd.Index([i for i in range(positions.shape[1])], dtype=int, name='dimension')
         )
         
         list_of_clan_df.append(clan_df)
