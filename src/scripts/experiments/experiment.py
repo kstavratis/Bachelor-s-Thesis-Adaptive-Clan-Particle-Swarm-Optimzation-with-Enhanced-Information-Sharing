@@ -21,13 +21,17 @@ from src.scripts.io_handling.data_generation.extractor import swarm_positions_ex
 from src.scripts.io_handling.data_generation.logger import log_pso
 import src.scripts.benchmark_functions as bf 
 
+from src.classes.PSOs.pso_backbone import PSOBackbone
+from src.classes.PSOs.clan_pso import ClanPSO
+from src.classes.PSOs.utils import positions_initializers
+
 from ..io_handling.data_generation.logger import log_pso
 
 import numpy as np
 import pandas as pd
 
 
-def run(data):
+def run(data, seed: int):
     # Hyperparameter declarations
     maximum_iterations = None
     objective_function = None
@@ -35,16 +39,23 @@ def run(data):
     # Variable declarations
     current_error, numerical_precision_termination_criterion = None , 1e-14
 
-    # Variable declarations
-    pso_instance = None
-
-
     maximum_iterations = data['max_iterations']
     objective_function = getattr(bf, data['objective_function'] + '_function')
     bf.domain_dimensions = data['nr_dimensions']
 
-
     pso_instance = handle_config_file_data(data)
+    
+    # Set the initial positions of the swarm(s).
+    # This is mainly to account for experiments which we wish to have some control over
+    # (e.g. identical position initializations of experiments or reproducability of results).
+    # If no control is required, then this does not change anything w.r.t. to the algorithm;
+    # with the current implementation, where the swarms are initialized internally,
+    # applying the following lines of code is identical to initializing twice,
+    # which, in a random setting like this, does not change anything.
+    if isinstance(pso_instance, PSOBackbone):
+        pso_instance = positions_initializers.single_swarm_uniform_positions_resetter(pso_instance, seed)
+    elif isinstance(pso_instance, ClanPSO):
+        pso_instance = positions_initializers.clan_swarms_uniform_positions_resetter(pso_instance, seed)
 
 
     current_gbest_value = pso_instance.gbest_value.copy()

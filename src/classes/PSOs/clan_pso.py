@@ -52,7 +52,7 @@ class ClanPSO:
     """
     
     def __init__(self, clans : Iterable[Type[PSOBackbone]]):
-        self.clans = clans
+        self.clans : Iterable[Type[PSOBackbone]] = clans
 
         current_best_particles_of_clans =  [c.get_current_best_particle() for c in clans] # Find clan leaders at initialization
         clan_leaders_objective_values = np.array([c[2] for c in current_best_particles_of_clans])

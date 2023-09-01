@@ -21,6 +21,8 @@ import argparse, json
 
 from concurrent.futures.process import ProcessPoolExecutor
 
+import numpy as np
+
 from src.scripts.experiments.experiment import run
 
 # Utility function for progress bar in the case of sequential execution. https://github.com/tqdm/tqdm
@@ -34,10 +36,15 @@ def main():
                                      description='Executes experiments of PSO as decreed by the input configuration file.')
     
 
-    parser.add_argument('configuration_file_path', nargs='?', type=str, default='configs/clan_base.json')
+    parser.add_argument('configuration_file_path', nargs='?', type=str, default='configs/classic/apso/apso_sphere.json')
     parser.add_argument('-c', '--concurrent', action='store_true',
                         help='Determine whether the experiments will be conducted in parallel (True) or in a single thread (False) (default : False)'
                         )
+    parser.add_argument('-s', '--seed', action='store', type=int, required=False,
+                        help='A seed which determines the random initialization of any swarms created.\
+                        The main purpose of this argument is to ensure a fair comparison of the algorithms\
+                        by having the particles of swarms start at identical initial positions.\
+                        A secondary use is the reproducability of the results.') # Default value is `None`.
     args = parser.parse_args()
     filepath = args.configuration_file_path
 
@@ -48,13 +55,22 @@ def main():
         data = json.load(config_file)
 
     nr_experiments : int = data['nr_experiments']
+    # Seed generator for a single experiment
+    rand_gen = np.random.default_rng(args.seed)
+    infty = np.iinfo(np.int_).max 
 
     if args.concurrent:    
         executor = ProcessPoolExecutor()
-        list(tqdm(executor.map(run, [data] * nr_experiments), total=nr_experiments))
+        list(tqdm(
+            executor.map(run,
+                    [data] * nr_experiments,
+                    rand_gen.integers(infty, size=nr_experiments)
+                ),
+            total=nr_experiments)
+        )
     else:
         for _ in tqdm(range(nr_experiments)):
-            run(data)
+            run(data, rand_gen.integers(infty))
 
 
 if __name__ == "__main__":
