@@ -55,27 +55,20 @@ def determine_acceleration_coefficients(evolutionary_state : EvolutionaryStates,
     acceleration_rate = random_generator.choice(np.array([random_generator.uniform(0.05, 0.10), random_generator.uniform(-0.10, -0.05)]), 1).item()
 
     if c1_strategy == CoefficientOperations.INCREASE:
-        if c1 + acceleration_rate <= c_max:
-            c1 += acceleration_rate
+        c1 += acceleration_rate
     elif c1_strategy == CoefficientOperations.INCREASE_SLIGHTLY:
-        if c1 + 0.5 * acceleration_rate <= c_max:
-            c1 += 0.5 * acceleration_rate
+        c1 += 0.5 * acceleration_rate
     elif c1_strategy == CoefficientOperations.DECREASE:
-        if c1 - acceleration_rate >= c_min:
-            c1 -= acceleration_rate
+        c1 -= acceleration_rate
 
     if c2_strategy == CoefficientOperations.INCREASE:
-        if c2 + acceleration_rate <= c_max:
-            c2 += acceleration_rate
+        c2 += acceleration_rate
     elif c2_strategy == CoefficientOperations.INCREASE_SLIGHTLY:
-        if c2 + 0.5 * acceleration_rate <= c_max:
-            c2 += 0.5 * acceleration_rate
+        c2 += 0.5 * acceleration_rate
     elif c2_strategy == CoefficientOperations.DECREASE:
-        if c2 - acceleration_rate >= c_min:
-            c2 -= acceleration_rate
+        c2 -= acceleration_rate
     elif c2_strategy == CoefficientOperations.DECREASE_SLIGHTLY:
-        if c2 - 0.5 * acceleration_rate >= c_min:
-            c2 -= 0.5 * acceleration_rate
+        c2 -= 0.5 * acceleration_rate
 
     
     # Both acceleration coefficients, c1 and c2, are clamped by the interval [c_min, c_max]

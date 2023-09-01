@@ -217,7 +217,7 @@ class PSOBackbone:
 
 
 
-        # ==================== INITIALIZE ATTRIBUTES FROM INTERNAL FUNCTIONS START ====================
+        # ==================== INITIALIZE ATTRIBUTES FROM INTERNAL FUNCTIONS FINISH ====================
 
         # ==================== Filtering (slowing down) the resulting velocities START ====================
         # Numerous methods to limit the velocities are proposed in the literature.
@@ -289,12 +289,6 @@ class PSOBackbone:
         self.__update_pbest(self.swarm_positions, objective_values)
         self.__update_gbest(self.swarm_positions, objective_values)
 
-
-    # def update_pbest(self):
-    #     self.__update_pbest(self.swarm_positions, self._objective_function(self.swarm_positions))
-
-    # def update_gbest(self):
-    #     self.__update_gbest(self.swarm_positions, self._objective_function(self.swarm_positions))
 
     def __update_pbest(self, candidate_positions : np.array, candidate_objective_values : np.array) -> None:
         # For each particle,
@@ -394,7 +388,18 @@ class PSOBackbone:
         best_particle_value = objective_values[index_of_best_particle]
 
         return index_of_best_particle, best_particle, best_particle_value
+    
+    def reset(self):
+        objective_values = self._objective_function(self.swarm_positions)
 
+        # Reset pbest_positions
+        self.pbest_positions = np.copy(self.swarm_positions)
+        self.pbest_values = np.copy(objective_values)
+
+        # Reset gbest_positions and gbest_value
+        best_objective_value_index = np.argmin(objective_values)
+        self.gbest_value = objective_values[best_objective_value_index]
+        self.gbest_position = np.copy(self.swarm_positions[best_objective_value_index])
 
 
     def get_swarm_centroid(self):

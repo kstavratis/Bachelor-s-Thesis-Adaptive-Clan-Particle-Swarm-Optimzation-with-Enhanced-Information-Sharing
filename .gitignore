@@ -9,3 +9,17 @@
 
 # The "__init__" files are used so that Python can detect modules. No need to include it in the repository.
 __init__.py
+
+# Ignore any custom debug files used in vscode
+.vscode
+
+# In general, configuration files will not be submittable to Git. May be allowed at the end.
+*.json
+
+# The same as above applies for the bash files, which are created for convenience's sake. Will be uploaded at the end.
+*.sh
+
+# The experiments folder will not be uploaded to GitHub, as it can take a large amount of space.
+# To counter this, experiments have been made reproducable instead, with the inclusion of a seed
+# for random number generation.
+experiments
