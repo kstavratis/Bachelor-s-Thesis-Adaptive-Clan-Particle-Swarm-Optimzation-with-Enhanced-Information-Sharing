@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os, glob, json
 from functools import reduce
-from threading import BoundedSemaphore
+from multiprocessing import BoundedSemaphore
 
 import pandas as pd
 
@@ -43,7 +43,7 @@ def log_pso(config_data : dict, log_names : list[str], log_lists : list[list[pd.
         With the current implementation, the fields required from this dictionary are: "classes", "topology", "objective_function" and "nr_particles".
 
     log_names : Iterable[str] (tuple or list)
-        An (ordered) set of strings, each element of which will be the post-fix of the .csv log file that will be created.
+        An (ordered) set of strings, each element of which will be the names of the .csv log files that will be created.
     
     log_lists : Iterable[Iterable[pd.DataFrame]]
         An (ordered) set of data which will be logged in a .csv file.
@@ -72,10 +72,10 @@ def log_pso(config_data : dict, log_names : list[str], log_lists : list[list[pd.
         # Assign as value the next integer to the current maximum value (i.e. maximum of folder_id + 1)
         experiment_id = str(reduce(max, [int(folder_id) for folder_id in current_numeral_folders]) + 1)
 
-    log_semaphore.release()
-
     store_path = os.sep.join((store_path, experiment_id))
-    os.makedirs(store_path, exist_ok=True)
+    os.makedirs(store_path)
+
+    log_semaphore.release()
 
 
     
@@ -108,6 +108,8 @@ def __get_clan_pso_filepath(config_data : dict) -> str:
     #! WARNING: The current implementation assumes that all clans have the same number of particles and have identical behaviour.
     #! The conference of leaders is also assumed to behave identically to the clans.
     #! This is an ad-hoc solution for logging. However, the codebase itself supports different behaviour of each component (i.e. individual clans and conference).
+    #! NOTE: This is to make for much easier and shorter folder names.
+    #! This can be easily modified to capture the full information
     first_clan = config_data['clans'][0] # The first clan will act as a behaviour representative of the whole configuration file. See above WARNING message.
 
     nr_particles_per_clan = first_clan['nr_particles']
