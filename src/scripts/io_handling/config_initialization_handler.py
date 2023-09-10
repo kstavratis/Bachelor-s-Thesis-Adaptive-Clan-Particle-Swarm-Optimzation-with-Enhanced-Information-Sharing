@@ -55,16 +55,18 @@ def __handle_pso_backbone_config_data(data : dict):
         pso_variation_module = importlib.import_module(pso_dict['module_path'])
         classes_pointers.append(getattr(pso_variation_module, pso_dict['class_name']))
 
-        kwargs |= pso_dict['kwargs']
+        kwargs.update(pso_dict['kwargs'])
 
 
     # Adding `PSOBackbone` properties
     classes_pointers.append(PSOBackbone)
-    kwargs |= {
-        'nr_particles' : nr_particles, 'nr_dimensions' : nr_dimensions,
-        'objective_function' : objective_function['formula'],
-        'domain_boundaries' : objective_function['search_domain']
-    }
+    kwargs.update(
+        {
+            'nr_particles' : nr_particles, 'nr_dimensions' : nr_dimensions,
+            'objective_function' : objective_function['formula'],
+            'domain_boundaries' : objective_function['search_domain']
+        }
+    )
 
     # DYNAMICALLY construct the PSO variation based on the configuration file.
     # This is the "revolutionary" part of this framework!
@@ -80,7 +82,7 @@ def __handle_clan_config_file(data : dict):
     clans = []
 
     for c in data['clans']:
-        clans.append(__handle_pso_backbone_config_data(c | {'objective_function': data['objective_function'], 'nr_dimensions' : data['nr_dimensions'] }))
+        clans.append(__handle_pso_backbone_config_data({**c, **{'objective_function': data['objective_function'], 'nr_dimensions' : data['nr_dimensions'] }}))
         # The "appended" dictionary consists of the values which are shared among all "classic" PSOs.
 
     clan_pso_instance = ClanPSO(clans)
@@ -94,7 +96,7 @@ def __handle_clan_config_file(data : dict):
         pso_variation_module = importlib.import_module(pso_dict['module_path'])
         conference_behaviour_classes_pointers.append(getattr(pso_variation_module, pso_dict['class_name']))
 
-        conference_behaviour_kwargs |= pso_dict['kwargs']
+        conference_behaviour_kwargs.update(pso_dict['kwargs'])
 
 
     # Adding `PSOBackbone` properties
@@ -107,11 +109,13 @@ def __handle_clan_config_file(data : dict):
     # and instead name it correctly inside the configuration file
     # (from which `data` is filled in).
     conference_behaviour_classes_pointers.append(PSOBackbone)
-    conference_behaviour_kwargs |= {
-        'nr_particles' : 1, 'nr_dimensions' : 1, # These will be ignored, as clans only take into consideration the already formed clans.
-        'objective_function' : objective_function['formula'],
-        'domain_boundaries' : objective_function['search_domain']
-    }
+    conference_behaviour_kwargs.update(
+        {
+            'nr_particles' : 1, 'nr_dimensions' : 1, # These will be ignored, as clans only take into consideration the already formed clans.
+            'objective_function' : objective_function['formula'],
+            'domain_boundaries' : objective_function['search_domain']
+        }
+    )
 
     # Fixing the stepping behaviour of the clan swarm in all iterations.
     #! WARNING: This may go contrary to the initial vision

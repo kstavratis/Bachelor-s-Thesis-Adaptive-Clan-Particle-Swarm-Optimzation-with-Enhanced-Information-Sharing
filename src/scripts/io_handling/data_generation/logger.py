@@ -22,12 +22,14 @@ from multiprocessing import BoundedSemaphore
 
 import pandas as pd
 
+from typing import List
+
 # The log_semaphore is used so as to disallow two directories being named with the same (number) ID,
 # resulting in one write overwriting the previous experiment.
 # NOTE: The existence of the semaphore is of significance only in the case of running experiments concurrently.
 __log_semaphore = BoundedSemaphore(1)
 
-def log_pso(config_data : dict, log_names : list[str], log_lists : list[list[pd.DataFrame]]):
+def log_pso(config_data : dict, log_names : List[str], log_lists : List[List[pd.DataFrame]]):
     """
     Stores pso experimental results provided in the `/experiments` directory
     (which it creates if it doesn't already exist) in .csv file format.
