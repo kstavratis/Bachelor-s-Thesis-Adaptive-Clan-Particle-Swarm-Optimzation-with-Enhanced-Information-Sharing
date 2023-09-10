@@ -1,6 +1,6 @@
 import importlib, functools
 
-import src.scripts.benchmark_functions as bf
+from src.scripts.benchmark_functions import benchmark_functions as bf
 from src.classes.PSOs.pso_backbone import PSOBackbone
 from src.classes.PSOs.clan_pso import ClanPSO
 
@@ -38,6 +38,13 @@ def __handle_pso_backbone_config_data(data : dict):
     nr_particles, nr_dimensions = int(data['nr_particles']), int(data['nr_dimensions'])
     # Get dictionary of the particular objection function defined inside `benchmark_functions` module.
     objective_function = getattr(bf, f'{data["objective_function"]}' + '_function')
+    # TODO: The hardcoded "_function" removes from the generalization to new,
+    # non-compatible objective function names
+    # e.g. A user might wish to name their function after a neural network architecture,
+    # where the "_function" naming sense wouldn't be very intuitive.
+    # A simple way to overcome this (minor) issue is to remove the hard coded "_function"
+    # and instead name it correctly inside the configuration file
+    # (from which `data` is filled in).
 
     # Variable declarations
     classes_pointers = []
@@ -60,6 +67,7 @@ def __handle_pso_backbone_config_data(data : dict):
     }
 
     # DYNAMICALLY construct the PSO variation based on the configuration file.
+    # This is the "revolutionary" part of this framework!
     class PSOcombination(*classes_pointers):
         def __init__(self, kwargs):
             super().__init__(**kwargs)
@@ -91,6 +99,13 @@ def __handle_clan_config_file(data : dict):
 
     # Adding `PSOBackbone` properties
     objective_function = getattr(bf, f'{data["objective_function"]}' + '_function')
+    # TODO: The hardcoded "_function" removes from the generalization to new,
+    # non-compatible objective function names
+    # e.g. A user might wish to name their function after a neural network architecture,
+    # where the "_function" naming sense wouldn't be very intuitive.
+    # A simple way to overcome this (minor) issue is to remove the hard coded "_function"
+    # and instead name it correctly inside the configuration file
+    # (from which `data` is filled in).
     conference_behaviour_classes_pointers.append(PSOBackbone)
     conference_behaviour_kwargs |= {
         'nr_particles' : 1, 'nr_dimensions' : 1, # These will be ignored, as clans only take into consideration the already formed clans.

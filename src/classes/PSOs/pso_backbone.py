@@ -18,6 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 import numpy as np
+import numpy.typing as npt
+from typing import Callable, Tuple
 
 class PSOBackbone:
     """
@@ -50,19 +52,19 @@ class PSOBackbone:
         The w (ω) value is known as the "inertia weight". # Math: \omega \in [0, 1]
         The w weight dictates how much of the previously attained velocity will be used in the next iteration of the algorithm
         (0 := not at all, 1 := fully).\n
-        Default value is 1.0.
+        Default value is `1.0`.
 
     `c1` : float
         The c1 value is known as "cognitive weight" or "greedy learning factor"
         Its value (in conjunction with c2) determines the behaviour of each particle of the swarm.
         As a rule of thumb, the higher the ratio c1/c2 is, the more local exploitation is encouraged.\n
-        Default value is 2.0
+        Default value is `2.0`.
 
     `c2` : float
         The c2 value is known as "social weight" or "social learning factor"
         Its value (in conjunction with c1) determines the behaviour of each particle of the swarm.
         As a rule of the thumb, the higher the ratio c2/c1 is, the more global exploration is encouraged.\n
-        Default value is 2.0
+        Default value is `2.0`.
     
         
 
@@ -72,9 +74,10 @@ class PSOBackbone:
     """
 
     def __init__(self, nr_particles : int, nr_dimensions : int,
-                 objective_function, domain_boundaries : np.array,
-                 input_swarm_positions : np.array = None,
-                 input_pbest_positions : np.array = None,
+                 objective_function: Callable[[npt.NDArray[np.float_]], npt.NDArray[np.float_]],
+                 domain_boundaries : npt.NDArray[np.float_],
+                 input_swarm_positions : npt.NDArray[np.float_] = None,
+                 input_pbest_positions : npt.NDArray[np.float_] = None,
                  **kwargs : dict):
         """
         Parameters
@@ -98,7 +101,7 @@ class PSOBackbone:
              A 1D or 2D array whose i-th row contains the lower (position 0) and higher (position 1) bounds of the search domain for the i-th dimension.
             In the case of a 1D np.array, the argument is expanded so as to accommodate for all domain dimensions.
 
-        input_swarm_positions : np.array
+        input_swarm_positions : np.array (optional)
             A (p, d) 2D array representing the swarm.
             - p are the number of particles of the swarm
             - d are the dimensions of the problem.
@@ -106,7 +109,7 @@ class PSOBackbone:
             The inclusion of this parameter overrules parameters `nr_particles` and `nr_dimensions`.\n
             Default value is `None`.
         
-        input_pbest_positions : np.array
+        input_pbest_positions : np.array (optional)
             A (p, d) 2D array representing custom pbest positions with which the particles will be initialized.
             - p are the number of particles of the swarm
             - d are the dimensions of the problem.
@@ -228,7 +231,9 @@ class PSOBackbone:
         self.__maximum_speeds[:, 0] = -self.__maximum_speeds[:, 0] #  Allow both positive and negative speeds in the same dimension
         self.__maximum_speeds = np.tile(self.__maximum_speeds, (nr_particles, nr_dimensions // domain_boundaries.shape[0], 1)) # Expand that it limits all dimensions (done in previous commands) of ALL particles
         # NOTE: The final result is `self.__maximum_speeds[particle ID][dimension ID][2] = np.array(minimum of dimension, maximum of dimension)`.
-        # TODO: Remove this as a private variable and develop different limiting methodologies. PRIORITY: LOW
+        # TODO: 1) Remove this as a private variable and
+        # TODO: 2) Develop different velocity limiting methodologies.
+        # PRIORITY: LOW
         # ==================== Filtering (slowing down) the resulting velocities FINISH ====================
 
 
@@ -321,7 +326,7 @@ class PSOBackbone:
         # For example, in the standard PSO, the "update_weights" function could refer to the linear decrease of the inertia weight ω.
         pass
 
-    def get_reached_gbest_particle(self, random : bool = True):
+    def get_reached_gbest_particle(self, random : bool = True) -> Tuple[int, npt.NDArray[np.float_]]:
         """
         Returns the particle which at some (previous) iteration reached the gbest of the swarm.
 
@@ -330,8 +335,9 @@ class PSOBackbone:
         random : bool
             In cases where multiple particles reached the gbest position at some point,
             this value determines how the particle is chosen.
-                True ->  One of the particles that had reached gbest is picked at random.
+                True ->  One of the particles that had reached gbest is picked at random.\n
                 False -> The first (index-wise) particle which satisfies the goal is returned.
+            Default value is `True`.
 
         Returns
         -------
@@ -389,7 +395,10 @@ class PSOBackbone:
 
         return index_of_best_particle, best_particle, best_particle_value
     
-    def reset(self):
+    def forget(self):
+        """
+        `pbest_positions`, `pbest_values`, `gbest_position` & `gbest_value`
+        are set to the current configuration of the swarm.        """
         objective_values = self._objective_function(self.swarm_positions)
 
         # Reset pbest_positions

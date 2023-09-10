@@ -1,6 +1,9 @@
 """
-Code to conduct experiments with the Particle Swarm Optimization (PSO) and some of its variations (including ClanPSO, Adaptive PSO, EIS PSO)
-Code for my Bachelor's Thesis in the Informatics department of the Aristotle University of Thessaloniki (https://www.csd.auth.gr/en/)
+File which is to be run from a command prompt.
+The file can be run (from the root directory) likeso:
+`python main.py -c -s 1234 configs/clan_base.json`
+
+
 Copyright (C) 2023  Konstantinos Stavratis
 e-mail: kostauratis@gmail.com
 
@@ -25,7 +28,7 @@ import numpy as np
 
 from src.scripts.experiments.experiment import run
 
-# Utility function for progress bar in the case of sequential execution. https://github.com/tqdm/tqdm
+# Utility function for progress bar. https://github.com/tqdm/tqdm
 # If the software is running on very low memory requirements, it may be removed as unnecessary.
 from tqdm import tqdm
 
@@ -36,15 +39,19 @@ def main():
                                      description='Executes experiments of PSO as decreed by the input configuration file.')
     
 
-    parser.add_argument('configuration_file_path', nargs='?', type=str, default='configs/classic/apso/apso_sphere.json')
+    parser.add_argument('configuration_file_path', nargs='?', type=str, default='configs/classic_base.json')
     parser.add_argument('-c', '--concurrent', action='store_true',
-                        help='Determine whether the experiments will be conducted in parallel (True) or in a single thread (False) (default : False)'
+                        help='Determine whether the experiments will be conducted in parallel (True)\
+                        or in a single thread (False)\n\
+                        Default value is `False`.'
                         )
     parser.add_argument('-s', '--seed', action='store', type=int, required=False,
                         help='A seed which determines the random initialization of any swarms created.\
-                        The main purpose of this argument is to ensure a fair comparison of the algorithms\
+                        The main purpose of this argument is to ensure a fair comparison (benchmarking)\
+                        of the algorithms\
                         by having the particles of swarms start at identical initial positions.\
-                        A secondary use is the reproducability of the results.') # Default value is `None`.
+                        A secondary use is the reproducability of the results.\n\
+                        Default value is `None`.') # Default value is `None`.
     args = parser.parse_args()
     filepath = args.configuration_file_path
 

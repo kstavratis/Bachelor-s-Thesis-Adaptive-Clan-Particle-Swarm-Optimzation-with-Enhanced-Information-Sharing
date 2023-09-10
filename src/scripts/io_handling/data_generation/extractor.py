@@ -1,4 +1,10 @@
 """
+This file handles extracting attributes of interest from a swarm configuration
+and "packaging" them into `pandas.DataFrame` structures.
+Currently implemented attributes of interest are:
+- the positions of all particles
+- the global best position of the swarm
+
 Copyright (C) 2023  Konstantinos Stavratis
 e-mail: kostauratis@gmail.com
 
@@ -51,15 +57,15 @@ def swarm_positions_extractor(swarm : Type[ClanPSO or PSOBackbone]) -> pd.DataFr
     """
     
     if isinstance(swarm, ClanPSO):
-        return _clan_pso_writer(swarm)
+        return _clan_pso_positions_writer(swarm)
     elif isinstance(swarm, PSOBackbone):
-        return _backbone_pso_writer(swarm)
+        return _backbone_pso_positions_writer(swarm)
     else:
         raise NotImplementedError('The current implementation of the software can only handle "PSOBackbone" and "ClanPSO" variations.')
 
 
     
-def _backbone_pso_writer(swarm : Type[PSOBackbone]) -> pd.DataFrame:
+def _backbone_pso_positions_writer(swarm : Type[PSOBackbone]) -> pd.DataFrame:
 
     positions = swarm.swarm_positions
     
@@ -72,7 +78,7 @@ def _backbone_pso_writer(swarm : Type[PSOBackbone]) -> pd.DataFrame:
 
     return positions_df
 
-def _clan_pso_writer(swarm : Type[ClanPSO]) -> pd.DataFrame:
+def _clan_pso_positions_writer(swarm : Type[ClanPSO]) -> pd.DataFrame:
 
     list_of_clan_df = []
     for ci in range(len(swarm.clans)):
@@ -89,7 +95,7 @@ def _clan_pso_writer(swarm : Type[ClanPSO]) -> pd.DataFrame:
     return pd.concat(list_of_clan_df, axis=0)
 
 
-def gbest_extractor(swarm : Type[ClanPSO or PSOBackbone]) -> pd.DataFrame:
+def gbest_position_extractor(swarm : Type[ClanPSO or PSOBackbone]) -> pd.DataFrame:
 
     gb = swarm.gbest_position
 

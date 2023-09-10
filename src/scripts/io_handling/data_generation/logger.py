@@ -25,11 +25,12 @@ import pandas as pd
 # The log_semaphore is used so as to disallow two directories being named with the same (number) ID,
 # resulting in one write overwriting the previous experiment.
 # NOTE: The existence of the semaphore is of significance only in the case of running experiments concurrently.
-log_semaphore = BoundedSemaphore(1)
+__log_semaphore = BoundedSemaphore(1)
 
 def log_pso(config_data : dict, log_names : list[str], log_lists : list[list[pd.DataFrame]]):
     """
-    Stores pso experimental results provided in the `/experiments` directory (which it creates if it doesn't already exist) in .csv file format.
+    Stores pso experimental results provided in the `/experiments` directory
+    (which it creates if it doesn't already exist) in .csv file format.
     In general, the full path created for the provided data is of the form:
     `/experiments/topology/objective_function/particles/MAX+1/`
     where `MAX` is the folder whose name is the maximum integer before the call of this function.
@@ -61,7 +62,7 @@ def log_pso(config_data : dict, log_names : list[str], log_lists : list[list[pd.
 
     os.makedirs(store_path, exist_ok=True)
 
-    log_semaphore.acquire()
+    __log_semaphore.acquire()
 
     current_numeral_folders = [os.path.basename(filename) for filename in glob.glob(f'{store_path}/[0-9]*')]
     experiment_id = '' # Variable declaration
@@ -75,7 +76,7 @@ def log_pso(config_data : dict, log_names : list[str], log_lists : list[list[pd.
     store_path = os.sep.join((store_path, experiment_id))
     os.makedirs(store_path)
 
-    log_semaphore.release()
+    __log_semaphore.release()
 
 
     

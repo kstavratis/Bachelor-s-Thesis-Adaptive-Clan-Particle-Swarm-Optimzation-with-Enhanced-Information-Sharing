@@ -1,13 +1,24 @@
 """
-Copyright (C) 2021  Konstantinos Stavratis
-For the full notice of the program, see "main.py"
+A file which supports the validity of the `evolutionary_state_classification_singleton_method.py`
+script is implemented correctly by providing normal-case and edge-case use of all possible outcomes.
+
+
+Copyright (C) 2023  Konstantinos Stavratis
 """
 
-import unittest
+# Append the root directory of the project, so as to allow Python
+# to correctly import the required (custom) modules.
+import os, sys
+root_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = root_dir[:root_dir.index('test')]
+sys.path.append(root_dir)
 
 import src.classes.PSOs.Mixins.adaptive_pso.utils.evolutionary_state_classification_singleton_method as clasfation
 from src.classes.PSOs.Mixins.adaptive_pso.enums.evolutionary_states import EvolutionaryStates
 
+
+# Test case definitions start here.
+import unittest
 
 class TestEvolutionaryStateClassificationBoundaries(unittest.TestCase):
 
@@ -17,14 +28,14 @@ class TestEvolutionaryStateClassificationBoundaries(unittest.TestCase):
 
     def test_convergence_state_just_outside_of_left_boundary(self):
         with self.assertRaises(ValueError):
-            clasfation.classify_evolutionary_state(evolutionary_factor=-10 ** (-9))
+            clasfation.classify_evolutionary_state(evolutionary_factor=1e-9)
 
     def test_convergence_state_on_left_boundary(self):
         evolutionary_state = clasfation.classify_evolutionary_state(evolutionary_factor=0)
         self.assertEqual(evolutionary_state, EvolutionaryStates.CONVERGENCE)
 
     def test_convergence_state_near_left_boundary(self):
-        evolutionary_state = clasfation.classify_evolutionary_state(evolutionary_factor =10 ** (-9))
+        evolutionary_state = clasfation.classify_evolutionary_state(evolutionary_factor =1e-9)
         self.assertEqual(evolutionary_state, EvolutionaryStates.CONVERGENCE)
 
     def test_convergence_state_normal_case(self):

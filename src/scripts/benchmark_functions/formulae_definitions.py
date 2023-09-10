@@ -1,4 +1,12 @@
 """
+File where the formulae of the objective/benchmark functions are defined.
+This file is NOT to be confused with `benchmark_functions.py`, where
+additional information is included (e.g. name, goal points, search boundaries,...)
+
+In general, this project expects a formula to be a function (callable),
+which has as input a 2D np.array, where each row represents a candidate solution
+and returns a 1D np.array, where each element is fitness value of the corresponding candidate solution.
+
 Copyright (C) 2023  Konstantinos Stavratis
 e-mail: kostauratis@gmail.com
 
@@ -16,20 +24,22 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+
 import numpy as np
+import numpy.typing as npt
 
-
-# Theorem: min g(x) = -max (-g(x)).
+# In case a maximization problem is to be solved, then a new optimization formula may be defined
+# utlizing the following theorem
+# Theorem: min g(x) = -max (-g(x)),
+# i.e. the negative objective function is defined instead.
 # PSO traditionally follows the minimization problem formulation, which is standard in (mathematical) optimization.
 # It is for this reason that this approach has been followed in this implementation as well.
-
-domain_dimensions = 30
 
 # Unimodal functions:
 # -------------------
 
 # Min: f(0,0,...,0) = 0, where 0 is repeated n times, where n is the domain dimensions.
-def sphere_function_formula(x: np.array) -> float:
+def sphere_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
     Arguments
     ---------
@@ -47,7 +57,7 @@ def sphere_function_formula(x: np.array) -> float:
     return np.sum(np.square(x), axis=1)
 
 # Min: f(0,0,...,0) = 0, where 0 is repeated n times, where n is the domain dimensions.
-def quadric_function_formula(x: np.array) -> float:
+def quadric_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
     Arguments
     ---------
@@ -67,7 +77,7 @@ def quadric_function_formula(x: np.array) -> float:
 
 # Min: f(0,0,...,0) = 0, where 0 is repeated n times, where n is the domain dimensions.
 # The function can be defined on any input domain but it is usually evaluated on xi∈[−100,100]for i=1,…,n
-def schwefel222_function_formula(x: np.array) -> float:
+def schwefel222_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
     Arguments
     ---------
@@ -86,7 +96,7 @@ def schwefel222_function_formula(x: np.array) -> float:
 
 
 # Min: f(1,1,...,1) = 0  , where 1 is repeated n times, where n is the domain dimensions.
-def rosenbrock_function_formula(x: np.array) -> float:
+def rosenbrock_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
     Arguments
     ---------
@@ -114,7 +124,7 @@ def rosenbrock_function_formula(x: np.array) -> float:
 # Because the Rastrigin function is a non-negative function (with f(x) = 0 <=> x = 0),
 # instead of utilizing the theorem above for solving the minimalization problem,
 # the inverse function is used as the objective function instead.
-def rastrigin_function_formula(x: np.array) -> float:
+def rastrigin_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
      Arguments
     ---------
@@ -135,7 +145,7 @@ def rastrigin_function_formula(x: np.array) -> float:
 
 
 # Ackley function's domain is x[i] ∈ [-5, 5] for all i and its minimum is at f(0,...0) = 0.
-def ackley_function_formula(x: np.array, a: float = 20, b: float = 0.2, c: float = 2*np.pi) -> float:
+def ackley_function_formula(x: npt.NDArray[np.float_], a: float = 20, b: float = 0.2, c: float = 2*np.pi) -> npt.NDArray[np.float_]:
     """
      Arguments
     ---------
@@ -157,7 +167,7 @@ def ackley_function_formula(x: np.array, a: float = 20, b: float = 0.2, c: float
              + a + np.e
 
 
-def salomon_function_formula(x: np.array) -> float:
+def salomon_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
      Arguments
     ---------
@@ -176,7 +186,7 @@ def salomon_function_formula(x: np.array) -> float:
     return 1 - np.cos(2*np.pi*root_norm_of_x) + 0.1*root_norm_of_x
 
 
-def alpinen1_function_formula(x: np.array) -> float:
+def alpinen1_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
      Arguments
     ---------
@@ -195,75 +205,3 @@ def alpinen1_function_formula(x: np.array) -> float:
 
 def styblinski_tang_function_formula(x: list) -> float:
     return np.sum(x[i]**4 -16*x[i]**2 + 5*x[i] for i in range(len(x)))/2
-
-
-
-
-
-
-
-# Defining dictionaries containing crucial information for each benchmark function.
-# This is for code readability, as well as reusability in 'main.py' file.
-sphere_function = {
-    'name' : 'sphere',
-    'formula': sphere_function_formula,
-    'search_domain': np.tile(np.array([-10 ** 2, 10 ** 2]), (domain_dimensions, 1)),
-    'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
-    'goal_point': np.zeros(domain_dimensions)
-}
-
-quadric_function = {
-    'name' : 'quadric',
-    'formula': quadric_function_formula,
-    'search_domain': np.tile(np.array([-10 ** 2, 10 ** 2]), (domain_dimensions, 1)),
-    'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
-    'goal_point': np.zeros(domain_dimensions)
-}
-
-schwefel222_function = {
-    'name' : 'schwefel222',
-    'formula': schwefel222_function_formula,
-    'search_domain': np.tile(np.array([-10, 10]), (domain_dimensions, 1)),
-    'search_and_velocity_boundaries': [[-10, 10], [-0.2 * 10, 0.2 * 10]],
-    'goal_point': np.zeros(domain_dimensions)
-}
-
-rosenbrock_function = {
-    'name' : 'rosenbrock',
-    'formula': rosenbrock_function_formula,
-    'search_domain': np.tile(np.array([-10, 10]), (domain_dimensions, 1)),
-    'search_and_velocity_boundaries': [[-10, 10], [-0.2 * 10, 0.2 * 10]],
-    'goal_point': np.ones(domain_dimensions)
-}
-
-rastrigin_function = {
-    'name' : 'rastrigin',
-    'formula': rastrigin_function_formula,
-    'search_domain': np.tile(np.array([-5.12, 5.12]), (domain_dimensions, 1)),
-    'search_and_velocity_boundaries': [[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
-    'goal_point': np.zeros(domain_dimensions)
-}
-
-ackley_function = {
-    'name' : 'ackley',
-    'formula': ackley_function_formula,
-    'search_domain': np.tile(np.array([-32, 32]), (domain_dimensions, 1)),
-    'search_and_velocity_boundaries': [[-32, 32], [-0.2 * 32, 0.2 * 32]],
-    'goal_point': np.zeros(domain_dimensions)
-}
-
-salomon_function = {
-    'name' : 'salomon',
-    'formula': salomon_function_formula,
-    'search_domain': np.tile(np.array([-10**2, 10**2]), (domain_dimensions, 1)),
-    'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
-    'goal_point': np.zeros(domain_dimensions)
-}
-
-alpinen1_function = {
-    'name' : 'alpinen1',
-    'formula': alpinen1_function_formula,
-    'search_domain': np.tile(np.array([0, 10]), (domain_dimensions, 1)),
-    'search_and_velocity_boundaries': [[0, 10], [-0.2 * 10, 0.2 * 10]],
-    'goal_point': np.zeros(domain_dimensions)
-}

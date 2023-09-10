@@ -13,7 +13,7 @@ def single_swarm_uniform_positions_resetter(swarm : PSOBackbone, seed : int = No
         high=db[:, 1],
         size=swarm.swarm_positions.shape
     )
-    swarm.reset()
+    swarm.forget()
 
     return swarm
 

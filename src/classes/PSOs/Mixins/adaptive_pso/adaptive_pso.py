@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import warnings
 
 import numpy as np
+import numpy.typing as npt
 
 import numbers
 
@@ -92,7 +93,7 @@ class AdaptivePSO:
             self._current_iteration, self._max_iterations
         )
 
-    def __classify_evolutionary_state(self, f_evol):
+    def __classify_evolutionary_state(self, f_evol : float):
         # Sanity check
         if (isinstance(f_evol, numbers.Real)):
             return classify_evolutionary_state(f_evol)
@@ -108,7 +109,7 @@ class AdaptivePSO:
         return 1 / (1 + 1.5 * np.exp(-2.6 * f_evol))  # ∈[0.4, 0.9]  ∀f_evol ∈[0,1]
     
 
-    def __compute_evolutionary_factor(self, d : np.array) -> float:
+    def __compute_evolutionary_factor(self, d : npt.NDArray[np.float_]) -> float:
         """
         Parameters
         ----------
@@ -151,8 +152,8 @@ class AdaptivePSO:
         with warnings.catch_warnings():
             warnings.filterwarnings('error')
             try:
-                evolutionary_factor = (d_g - d_min) / (d_max - d_min)
-            except RuntimeWarning: evolutionary_factor = 0
+                evolutionary_factor : float = (d_g - d_min) / (d_max - d_min)
+            except RuntimeWarning: evolutionary_factor = 0.0
             # The only way that a runtime warning will arise in this case is a division by zero.
             # This would imply that d_min = d_max.
             # This is only possible when all particles are present on the same point in space.
