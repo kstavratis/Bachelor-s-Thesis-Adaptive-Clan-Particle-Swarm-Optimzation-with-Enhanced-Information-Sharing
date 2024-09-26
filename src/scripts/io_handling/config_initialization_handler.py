@@ -1,3 +1,24 @@
+"""
+This file is responsible for the main loop of Particle Swarm Optimization (PSO).
+
+Copyright (C) 2024  Konstantinos Stavratis
+e-mail: kostauratis@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
+
 import importlib, functools
 
 from src.scripts.benchmark_functions import benchmark_functions as bf
@@ -37,14 +58,7 @@ def __handle_pso_backbone_config_data(data : dict):
 
     nr_particles, nr_dimensions = int(data['nr_particles']), int(data['nr_dimensions'])
     # Get dictionary of the particular objection function defined inside `benchmark_functions` module.
-    objective_function = getattr(bf, f'{data["objective_function"]}' + '_function')
-    # TODO: The hardcoded "_function" removes from the generalization to new,
-    # non-compatible objective function names
-    # e.g. A user might wish to name their function after a neural network architecture,
-    # where the "_function" naming sense wouldn't be very intuitive.
-    # A simple way to overcome this (minor) issue is to remove the hard coded "_function"
-    # and instead name it correctly inside the configuration file
-    # (from which `data` is filled in).
+    objective_function = getattr(bf, f'{data["objective_function"]}')
 
     # Variable declarations
     classes_pointers = []
@@ -100,14 +114,8 @@ def __handle_clan_config_file(data : dict):
 
 
     # Adding `PSOBackbone` properties
-    objective_function = getattr(bf, f'{data["objective_function"]}' + '_function')
-    # TODO: The hardcoded "_function" removes from the generalization to new,
-    # non-compatible objective function names
-    # e.g. A user might wish to name their function after a neural network architecture,
-    # where the "_function" naming sense wouldn't be very intuitive.
-    # A simple way to overcome this (minor) issue is to remove the hard coded "_function"
-    # and instead name it correctly inside the configuration file
-    # (from which `data` is filled in).
+    objective_function = getattr(bf, f'{data["objective_function"]}')
+    
     conference_behaviour_classes_pointers.append(PSOBackbone)
     conference_behaviour_kwargs.update(
         {

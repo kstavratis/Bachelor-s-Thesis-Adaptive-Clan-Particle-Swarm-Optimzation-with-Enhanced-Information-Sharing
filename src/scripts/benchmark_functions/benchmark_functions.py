@@ -1,5 +1,5 @@
 """
-Copyright (C) 2023  Konstantinos Stavratis
+Copyright (C) 2024  Konstantinos Stavratis
 e-mail: kostauratis@gmail.com
 
 This program is free software: you can redistribute it and/or modify
@@ -28,36 +28,36 @@ __functions_constructors_list = []
 # Defining dictionaries containing crucial information for each benchmark function.
 # This is for code readability, as well as reusability in 'main.py' file.
 
-sphere_function = None
+sphere : dict = None
 def __sphere_function_constructor() -> dict:
-    global sphere_function
-    sphere_function = {
+    global sphere
+    sphere = {
        'name' : 'sphere',
-        'formula': fd.sphere_function_formula,
+        'formula': fd.sphere_formula,
         'search_domain': np.tile(np.array([-10 ** 2, 10 ** 2]), (domain_dimensions, 1)),
         'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
         'goal_point': np.zeros(domain_dimensions) 
     }
 __functions_constructors_list.append(__sphere_function_constructor)
 
-quadric_function = None
+quadric : dict = None
 def __quadric_function_constructor() -> dict:
-    global quadric_function
-    quadric_function = {
+    global quadric
+    quadric = {
         'name' : 'quadric',
-        'formula': fd.quadric_function_formula,
+        'formula': fd.quadric_formula,
         'search_domain': np.tile(np.array([-10 ** 2, 10 ** 2]), (domain_dimensions, 1)),
         'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
         'goal_point': np.zeros(domain_dimensions)
     }
 __functions_constructors_list.append(__quadric_function_constructor)
 
-schwefel222_function = None
+schwefel222 : dict = None
 def __schwefel222_function_constructor() -> dict:
-    global schwefel222_function
-    schwefel222_function = {
+    global schwefel222
+    schwefel222 = {
         'name' : 'schwefel222',
-        'formula': fd.schwefel222_function_formula,
+        'formula': fd.schwefel222_formula,
         'search_domain': np.tile(np.array([-10, 10]), (domain_dimensions, 1)),
         'search_and_velocity_boundaries': [[-10, 10], [-0.2 * 10, 0.2 * 10]],
         'goal_point': np.zeros(domain_dimensions)
@@ -65,60 +65,60 @@ def __schwefel222_function_constructor() -> dict:
 __functions_constructors_list.append(__schwefel222_function_constructor)
 
 
-rosenbrock_function = None
+rosenbrock : dict = None
 def __rosenbrock_function_constructor() -> dict:
-    global rosenbrock_function
-    rosenbrock_function = {
+    global rosenbrock
+    rosenbrock = {
         'name' : 'rosenbrock',
-        'formula': fd.rosenbrock_function_formula,
+        'formula': fd.rosenbrock_formula,
         'search_domain': np.tile(np.array([-10, 10]), (domain_dimensions, 1)),
         'search_and_velocity_boundaries': [[-10, 10], [-0.2 * 10, 0.2 * 10]],
         'goal_point': np.ones(domain_dimensions)
     }
 __functions_constructors_list.append(__rosenbrock_function_constructor)
 
-rastrigin_function = None
+rastrigin : dict = None
 def __rastrigin_function_constructor() -> dict:
-    global rastrigin_function
-    rastrigin_function = {
+    global rastrigin
+    rastrigin = {
         'name' : 'rastrigin',
-        'formula': fd.rastrigin_function_formula,
+        'formula': fd.rastrigin_formula,
         'search_domain': np.tile(np.array([-5.12, 5.12]), (domain_dimensions, 1)),
         'search_and_velocity_boundaries': [[-5.12, 5.12], [-0.2 * 5.12, 0.2 * 5.12]],
         'goal_point': np.zeros(domain_dimensions)
     }
 __functions_constructors_list.append(__rastrigin_function_constructor)
 
-ackley_function = None
+ackley : dict = None
 def __ackley_function_constructor() -> dict:
-    global ackley_function
-    ackley_function = {
+    global ackley
+    ackley = {
         'name' : 'ackley',
-        'formula': fd.ackley_function_formula,
+        'formula': fd.ackley_formula,
         'search_domain': np.tile(np.array([-32, 32]), (domain_dimensions, 1)),
         'search_and_velocity_boundaries': [[-32, 32], [-0.2 * 32, 0.2 * 32]],
         'goal_point': np.zeros(domain_dimensions)
     }
 __functions_constructors_list.append(__ackley_function_constructor)
 
-salomon_function = None
+salomon : dict = None
 def __salomon_function_constructor() -> dict:
-    global salomon_function
-    salomon_function = {
+    global salomon
+    salomon = {
         'name' : 'salomon',
-        'formula': fd.salomon_function_formula,
+        'formula': fd.salomon_formula,
         'search_domain': np.tile(np.array([-10**2, 10**2]), (domain_dimensions, 1)),
         'search_and_velocity_boundaries': [[-100, 100], [-0.2 * 100, 0.2 * 100]],
         'goal_point': np.zeros(domain_dimensions)
     }
 __functions_constructors_list.append(__salomon_function_constructor)
 
-alpinen1_function = None
+alpinen1 : dict = None
 def __alpinen1_function_constructor() -> dict:
-    global alpinen1_function
-    alpinen1_function = {
+    global alpinen1
+    alpinen1 = {
         'name' : 'alpinen1',
-        'formula': fd.alpinen1_function_formula,
+        'formula': fd.alpinen1_formula,
         'search_domain': np.tile(np.array([0, 10]), (domain_dimensions, 1)),
         'search_and_velocity_boundaries': [[0, 10], [-0.2 * 10, 0.2 * 10]],
         'goal_point': np.zeros(domain_dimensions)

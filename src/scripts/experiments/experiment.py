@@ -1,7 +1,7 @@
 """
 This file is responsible for the main loop of Particle Swarm Optimization (PSO).
 
-Copyright (C) 2023  Konstantinos Stavratis
+Copyright (C) 2024  Konstantinos Stavratis
 e-mail: kostauratis@gmail.com
 
 This program is free software: you can redistribute it and/or modify
@@ -56,7 +56,7 @@ def run(data : dict, seed: int):
     bf.domain_dimensions = data['nr_dimensions'] ; bf.reset_benchmark_functions_dictionaries()
     # The benchmark functions are reset, so as to account for the change in the number of dimensions
     # (e.g. `bf.function_name['goal_point']`, `bf.function_name['search_domain']` ) 
-    objective_function = getattr(bf, data['objective_function'] + '_function')
+    objective_function = getattr(bf, data['objective_function'])
     #* Order between the last two (physical) lines matter!
     #* The benchmark functions must be reset first
     #* before assigning the result into the local variable `objective_function`

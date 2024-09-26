@@ -7,7 +7,7 @@ In general, this project expects a formula to be a function (callable),
 which has as input a 2D np.array, where each row represents a candidate solution
 and returns a 1D np.array, where each element is fitness value of the corresponding candidate solution.
 
-Copyright (C) 2023  Konstantinos Stavratis
+Copyright (C) 2024  Konstantinos Stavratis
 e-mail: kostauratis@gmail.com
 
 This program is free software: you can redistribute it and/or modify
@@ -39,7 +39,7 @@ import numpy.typing as npt
 # -------------------
 
 # Min: f(0,0,...,0) = 0, where 0 is repeated n times, where n is the domain dimensions.
-def sphere_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+def sphere_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
     Arguments
     ---------
@@ -57,7 +57,7 @@ def sphere_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]
     return np.sum(np.square(x), axis=1)
 
 # Min: f(0,0,...,0) = 0, where 0 is repeated n times, where n is the domain dimensions.
-def quadric_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+def quadric_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
     Arguments
     ---------
@@ -77,7 +77,7 @@ def quadric_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_
 
 # Min: f(0,0,...,0) = 0, where 0 is repeated n times, where n is the domain dimensions.
 # The function can be defined on any input domain but it is usually evaluated on xi∈[−100,100]for i=1,…,n
-def schwefel222_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+def schwefel222_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
     Arguments
     ---------
@@ -96,7 +96,7 @@ def schwefel222_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.fl
 
 
 # Min: f(1,1,...,1) = 0  , where 1 is repeated n times, where n is the domain dimensions.
-def rosenbrock_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+def rosenbrock_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
     Arguments
     ---------
@@ -124,7 +124,7 @@ def rosenbrock_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.flo
 # Because the Rastrigin function is a non-negative function (with f(x) = 0 <=> x = 0),
 # instead of utilizing the theorem above for solving the minimalization problem,
 # the inverse function is used as the objective function instead.
-def rastrigin_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+def rastrigin_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
      Arguments
     ---------
@@ -145,7 +145,7 @@ def rastrigin_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.floa
 
 
 # Ackley function's domain is x[i] ∈ [-5, 5] for all i and its minimum is at f(0,...0) = 0.
-def ackley_function_formula(x: npt.NDArray[np.float_], a: float = 20, b: float = 0.2, c: float = 2*np.pi) -> npt.NDArray[np.float_]:
+def ackley_formula(x: npt.NDArray[np.float_], a: float = 20, b: float = 0.2, c: float = 2*np.pi) -> npt.NDArray[np.float_]:
     """
      Arguments
     ---------
@@ -167,7 +167,7 @@ def ackley_function_formula(x: npt.NDArray[np.float_], a: float = 20, b: float =
              + a + np.e
 
 
-def salomon_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+def salomon_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
      Arguments
     ---------
@@ -186,7 +186,7 @@ def salomon_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_
     return 1 - np.cos(2*np.pi*root_norm_of_x) + 0.1*root_norm_of_x
 
 
-def alpinen1_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+def alpinen1_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     """
      Arguments
     ---------
@@ -203,5 +203,5 @@ def alpinen1_function_formula(x: npt.NDArray[np.float_]) -> npt.NDArray[np.float
     """
     return np.sum(np.absolute(x * np.sin(x) + 0.1 * x), axis=1)
 
-def styblinski_tang_function_formula(x: list) -> float:
+def styblinski_tang_formula(x: list) -> float:
     return np.sum(x[i]**4 -16*x[i]**2 + 5*x[i] for i in range(len(x)))/2

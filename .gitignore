@@ -22,4 +22,4 @@ __init__.py
 # The experiments folder will not be uploaded to GitHub, as it can take a large amount of space.
 # To counter this, experiments have been made reproducable instead, with the inclusion of a seed
 # for random number generation.
-experiments
+/experiments
