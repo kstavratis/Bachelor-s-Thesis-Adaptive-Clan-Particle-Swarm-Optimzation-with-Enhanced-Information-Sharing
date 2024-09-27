@@ -89,6 +89,7 @@ def add_dataset(filenames: list[str]):
     dfs = []
 
     for filename in filenames:
+        # The 0-th column is the 'iteration' id column
         df = pd.read_csv(filename, index_col=[0])
         dfs.append(df)
     
@@ -131,7 +132,7 @@ app = Dash(__name__)
 
 
 app.layout = html.Center([
-    html.H1(children='Particle Swarm Optimization Experiment Plotter', style={'textAlign':'center'}),
+    html.H1(children='pymixinswarms Experiment Plotter', style={'textAlign':'center'}),
 
     # ==================== User input START ====================
     html.Div([
@@ -168,19 +169,24 @@ app.layout = html.Center([
         ),
 
         html.Div([
+            'Objective value range ',
             dcc.Input(id='obj-val-lb', type='number', placeholder='Objective value lower bound', value=0),
             ' - ',
             dcc.Input(id='obj-val-ub', type='number', placeholder='Objective value upper bound', value=10**10)
         ]
         ),
 
-        dcc.RangeSlider(id='iterations-range-slider', className='',
-            min=0, max=2000,
-            step=1,
-            #marks={},
-            value=[0, 2000],
-            allowCross=False
-        ),
+        html.Div([
+            'Iterations',
+            dcc.RangeSlider(id='iterations-range-slider', className='',
+                min=0, max=2000,
+                step=1,
+                marks=None,
+                value=[0, 2000],
+                allowCross=False,
+                tooltip={'placement' : 'bottom', 'always_visible': True}
+            ),
+        ])
     ])
     # ==================== Output (graphs) FINISH ====================
 ])
