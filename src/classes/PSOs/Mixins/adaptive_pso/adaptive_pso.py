@@ -1,5 +1,5 @@
 """
-Copyright (C) 2023  Konstantinos Stavratis
+Copyright (C) 2024  Konstantinos Stavratis
 e-mail: kostauratis@gmail.com
 
 This program is free software: you can redistribute it and/or modify
@@ -30,10 +30,8 @@ from .utils.eliticism_learning_strategy import eliticism_learning_strategy
 class AdaptivePSO:
     """
     The Adaptive Particle Swarm Optimization (APSO) as described in the paper:
-    "Zhan, Zhi-Hui & Zhang, Jun & Li, Yun & Chung, Henry. (2010).
-    Adaptive Particle Swarm Optimization.
-    Systems, Man, and Cybernetics, Part B: Cybernetics, IEEE Transactions on. 39. 1362 - 1381. 10.1109/TSMCB.2009.2015956.
-    "
+    "Zhan, Zhi-Hui & Zhang, Jun & Li, Yun & Chung, Henry. (2009).
+    Adaptive Particle Swarm Optimization (https://doi.org/10.1109/TSMCB.2009.2015956)".
 
     As a short overview of the paper, the adaptivity of the swarm is done as follows:
     STEP 1: Compute the evolutionary factor of the swarm.
@@ -49,7 +47,7 @@ class AdaptivePSO:
     Attributes
     ----------
     `c_min` : `float`
-        Lower bound below which the c1 and c2 learning factors of the swarm are clampled
+        Lower bound below which the c1 and c2 learning factors of the swarm are clamped
         The value the paper proposes is 1.5
     
     `c_max` : `float`

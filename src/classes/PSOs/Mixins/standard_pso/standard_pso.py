@@ -1,5 +1,5 @@
 """
-Copyright (C) 2023  Konstantinos Stavratis
+Copyright (C) 2024  Konstantinos Stavratis
 e-mail: kostauratis@gmail.com
 
 This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@ class StandardPSO:
 
         super().__init__(**kwargs) # Call constructor of the exact immediate ancestor in the class hierarchy.
     
-    def _update_weights_and_acceleration_coefficients(self):
+    def _update_weights_and_acceleration_coefficients(self) -> None:
         """
         In standard PSO, the inertia weight linearly decreases from the maximum value of ω to its minimum value.
         # Math: \omega = \omega_{max} - (\omega_{max} - \omega_{min}) \frac{t}{t_{max}}

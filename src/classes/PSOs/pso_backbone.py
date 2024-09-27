@@ -98,7 +98,7 @@ class PSOBackbone:
             and extracts 1D arrays as the output.
 
         domain_boundaries : np.array
-             A 1D or 2D array whose i-th row contains the lower (position 0) and higher (position 1) bounds of the search domain for the i-th dimension.
+            A 1D or 2D array whose i-th row contains the lower (index 0) and higher (index 1) bounds of the search domain for the i-th dimension.
             In the case of a 1D np.array, the argument is expanded so as to accommodate for all domain dimensions.
 
         input_swarm_positions : np.array (optional)
@@ -121,6 +121,12 @@ class PSOBackbone:
         """ 
         super().__init__(**kwargs)
 
+        # ==================== INPUT PARAMETERS CORRECTION START ====================
+        if domain_boundaries.ndim == 1:
+            domain_boundaries = np.tile(domain_boundaries, (nr_dimensions, 1)) # Repeat the same limit for all domain dimensions.
+        self._domain_boundaries = domain_boundaries
+        # ==================== INPUT PARAMETERS CORRECTION FINISH ====================
+
         # ==================== INITIALIZE ATTRIBUTES FROM INPUT PARAMETERS START ====================
         self._objective_function = objective_function
 
@@ -131,14 +137,23 @@ class PSOBackbone:
             nr_particles, nr_dimensions = input_swarm_positions.shape # Changing the argument values, because they're used later.
         else:
             # Dynamic sanity checks.
-            assert isinstance(nr_particles, int), f'Argument "nr_particles" is expected to be an integer. Received a {type(nr_particles)} instead.'
-            assert isinstance(nr_dimensions, int), f'Argument "nr_dimensions" is expected to be an integer. Received a {type(nr_dimensions)} instead.'
-            assert nr_particles > 0, f'Argument "nr_particles" must be natural (a.k.a positive integer) number. {nr_particles} was provided instead.'
-            assert nr_dimensions > 0, f'Argument "nr_particles" must be natural (a.k.a positive integer) number. {nr_dimensions} was provided instead.'
+            if not isinstance(nr_particles, int):
+                raise TypeError(f'Argument "nr_particles" is expected to be an integer. Received a {type(nr_particles)} instead.')
+            if not isinstance(nr_dimensions, int):
+                raise TypeError(f'Argument "nr_dimensions" is expected to be an integer. Received a {type(nr_dimensions)} instead.')
+            if nr_particles < 1:
+                raise ValueError(f'Argument "nr_particles" must be natural (a.k.a positive integer) number. {nr_particles} was provided instead.')
+            if nr_dimensions < 1:
+                raise ValueError(f'Argument "nr_particles" must be natural (a.k.a positive integer) number. {nr_dimensions} was provided instead.')
 
             # Initialize a random swarm of particles, represented by a 2D numpy array of dimensions [nr_particles, nr_dimensions]
             # Currently, the initialization is done using a uniform distribution.
-            self.swarm_positions = np.random.default_rng().uniform(low=domain_boundaries[:, 0], high=domain_boundaries[:, 1], size=(nr_particles, nr_dimensions))
+            # TODO: Allow for more initialization schemes.
+            self.swarm_positions = np.random.default_rng().uniform(
+                low=self._domain_boundaries[:, 0],
+                high=self._domain_boundaries[:, 1],
+                size=(nr_particles, nr_dimensions)
+            )
 
         # Handle input pbest positions, in case they are provided.
         self.pbest_positions, self.pbest_values = None, None # Declaring the "pbest" attributes.
@@ -159,12 +174,8 @@ class PSOBackbone:
 
 
         # Currently, the particles will start with zero velocity.
+        # TODO: Allow for non-zero velocity initialization.
         self.swarm_velocities = np.zeros(shape=(nr_particles, nr_dimensions))
-
-
-        if domain_boundaries.ndim == 1:
-            domain_boundaries = np.tile(domain_boundaries, (nr_dimensions, 1)) # Repeat the same limit for all domain dimensions.
-        self._domain_boundaries = domain_boundaries
 
         # ==================== INITIALIZE ATTRIBUTES FROM INPUT PARAMETERS FINISH ====================
 
@@ -239,8 +250,8 @@ class PSOBackbone:
 
 
         # ==================== INITIALIZE ATTRIBUTES ARBITRARILY START ====================
-        self.w = 1.0
-        self.c1, self.c2 = 2.0, 2.0
+        self.w : float = 1.0
+        self.c1 : float = 2.0; self.c2 : float = 2.0
         # ==================== INITIALIZE ATTRIBUTES ARBITRARILY FINISH ====================
     
     def step(self) -> None:
@@ -251,7 +262,7 @@ class PSOBackbone:
         """
         self._update_weights_and_acceleration_coefficients()
         self._step_velocities()
-        # Filtering (slowing down) the resulting velocities
+        # Clamping (slowing down) the resulting velocities
         np.clip(self.swarm_velocities, self.__maximum_speeds[:, :, 0], self.__maximum_speeds[:, :, 1], out=self.swarm_velocities)
         # Translate the swarm positions according to the updated velocities.
         self.swarm_positions += self.swarm_velocities
@@ -288,7 +299,9 @@ class PSOBackbone:
 
         self.swarm_velocities = self.w * self.swarm_velocities + cognitive_velocities + social_velocities
 
-    # I have the function updating both, so as to evaluate the objective function only once, thus reducing computational time.
+    # This function updates both `pbest` and `gbest`,
+    # so as to evaluate the objective function only once,
+    # thus reducing computational time.
     def _update_pbest_and_gbest(self):
         objective_values = self._objective_function(self.swarm_positions)
         self.__update_pbest(self.swarm_positions, objective_values)
@@ -304,7 +317,10 @@ class PSOBackbone:
         update_mask = candidate_objective_values < self.pbest_values
 
         self.pbest_values[update_mask] = candidate_objective_values[update_mask]
-        self.pbest_positions[update_mask] = candidate_positions[update_mask] #* IMPORTANT: boolean indexing returns copy, not view.
+        self.pbest_positions[update_mask] = candidate_positions[update_mask]
+        #* IMPORTANT: boolean indexing returns copy, not view.
+        # Source: https://numpy.org/doc/stable/user/basics.indexing.html#advanced-indexing
+        # Source: https://numpy.org/doc/stable/user/basics.indexing.html#boolean-array-indexing
 
 
     def __update_gbest(self, candidate_positions : np.array, candidate_objective_values : np.array) -> None:
@@ -398,7 +414,8 @@ class PSOBackbone:
     def forget(self):
         """
         `pbest_positions`, `pbest_values`, `gbest_position` & `gbest_value`
-        are set to the current configuration of the swarm.        """
+        are set to the current configuration of the swarm. 
+        """
         objective_values = self._objective_function(self.swarm_positions)
 
         # Reset pbest_positions
@@ -412,9 +429,25 @@ class PSOBackbone:
 
 
     def get_swarm_centroid(self):
+        """
+        Return the average (centroid) position of the swarm.
+
+        Returns
+        -------
+        : np.array
+            shape == (nr_dimensions, )
+        """
         return np.mean(self.swarm_positions, axis=0)
     
     def std_of_swarm_from_centroid(self):
+        """
+        Returns the standard deviation per search space dimension.
+
+        Returns
+        -------
+        : np.array
+            shape == (nr_dimensions, )
+        """
         swarm_centroid = self.get_swarm_centroid()
         result = np.std(np.linalg.norm(swarm_centroid - self.swarm_positions, axis=1, ord=2))
         # TODO: See whether the return value is a scalar or an array.

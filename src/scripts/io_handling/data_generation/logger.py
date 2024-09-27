@@ -32,7 +32,7 @@ __log_semaphore = BoundedSemaphore(1)
 def log_pso(config_data : dict, log_names : List[str], log_lists : List[List[pd.DataFrame]]):
     """
     Stores pso experimental results provided in the `/experiments` directory
-    (which it creates if it doesn't already exist) in .csv file format.
+    (which it creates if it doesn't already exist) in CSV file format.
     In general, the full path created for the provided data is of the form:
     `/experiments/topology/objective_function/particles/MAX+1/`
     where `MAX` is the folder whose name is the maximum integer before the call of this function.
