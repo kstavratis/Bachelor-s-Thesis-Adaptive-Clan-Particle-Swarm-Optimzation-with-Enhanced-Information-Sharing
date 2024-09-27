@@ -66,12 +66,10 @@ def swarm_positions_extractor(swarm : Type[ClanPSO or PSOBackbone]) -> pd.DataFr
 
     
 def _backbone_pso_positions_writer(swarm : Type[PSOBackbone]) -> pd.DataFrame:
-
-    positions = swarm.swarm_positions
     
-    particles_index = pd.Index([i for i in range(positions.shape[0])], dtype=int, name='particle')
-    dimensions_index = pd.Index([i for i in range(positions.shape[1])], dtype=int, name='dimension')
-    positions_df = pd.DataFrame(positions, index=particles_index, columns=dimensions_index)
+    particles_index = pd.Index([i for i in range(swarm.nr_particles)], dtype=int, name='particle')
+    dimensions_index = pd.Index([i for i in range(swarm.nr_dimensions)], dtype=int, name='dimension')
+    positions_df = pd.DataFrame(swarm.swarm_positions, index=particles_index, columns=dimensions_index)
     
     # (Manually) providing the (obvious) information that a single swarm is a single clan.
     positions_df.index = pd.MultiIndex.from_product([[0], positions_df.index], names=['clan', 'particle'])
@@ -81,13 +79,12 @@ def _backbone_pso_positions_writer(swarm : Type[PSOBackbone]) -> pd.DataFrame:
 def _clan_pso_positions_writer(swarm : Type[ClanPSO]) -> pd.DataFrame:
 
     list_of_clan_df = []
-    for ci in range(len(swarm.clans)):
-        positions = swarm.clans[ci].swarm_positions
+    for clan_index, clan in enumerate(swarm.clans):
 
         clan_df = pd.DataFrame(
-            positions,
-            index=pd.MultiIndex.from_product([[ci], [i for i in range(positions.shape[0])]], names=['clan', 'particle']),
-            columns= pd.Index([i for i in range(positions.shape[1])], dtype=int, name='dimension')
+            clan.swarm_positions,
+            index=pd.MultiIndex.from_product([[clan_index], [i for i in range(clan.nr_particles)]], names=['clan', 'particle']),
+            columns= pd.Index([i for i in range(clan.nr_dimensions)], dtype=int, name='dimension')
         )
         
         list_of_clan_df.append(clan_df)

@@ -41,7 +41,7 @@ class AdaptivePSO:
     STEP 3: Update the inertia weight ω as a function of the evolutionary factor # Math: \omega = \frac{1}{1 + 1.5\exp{(-2.6 \cdot f_{evol})}} 
 
     IMPORTANT: This mixin requires to be incorporated into a set of classes which contains
-    "self._current_iteration" and "self._maximum_iterations" variables.
+    `self.current_iteration` and `self.maximum_iterations` attributes.
     One such example is the "StandardPSO" class (mixin).
     
     Attributes
@@ -88,7 +88,7 @@ class AdaptivePSO:
             self._evolutionary_state, self.swarm_positions,
             index_of_gbest, self.gbest_position,
             self._objective_function, self._domain_boundaries,
-            self._current_iteration, self._max_iterations
+            self.current_iteration, self.max_iterations
         )
 
     def __classify_evolutionary_state(self, f_evol : float):

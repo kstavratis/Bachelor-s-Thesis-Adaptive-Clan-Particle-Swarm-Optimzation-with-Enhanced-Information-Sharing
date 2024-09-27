@@ -1,5 +1,5 @@
 """
-Copyright (C) 2023  Konstantinos Stavratis
+Copyright (C) 2024  Konstantinos Stavratis
 e-mail: kostauratis@gmail.com
 
 This program is free software: you can redistribute it and/or modify
@@ -174,7 +174,7 @@ class EnhancedInformationSharingPSO:
             self.c3 = self._c3_k * (
                         EnhancedInformationSharingPSO.c3_start\
                             - (EnhancedInformationSharingPSO.c3_start - EnhancedInformationSharingPSO.c3_end) *\
-                                (self._current_iteration / self._max_iterations)
+                                (self.current_iteration / self.max_iterations)
             )
 
         elif self._global_local_coefficient_method == glct.ADAPTIVE:

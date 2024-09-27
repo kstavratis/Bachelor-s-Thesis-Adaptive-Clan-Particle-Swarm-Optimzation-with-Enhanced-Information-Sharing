@@ -1,5 +1,5 @@
 """
-Copyright (C) 2023  Konstantinos Stavratis
+Copyright (C) 2024  Konstantinos Stavratis
 e-mail: kostauratis@gmail.com
 
 This program is free software: you can redistribute it and/or modify
@@ -111,8 +111,11 @@ class ClanPSO:
         #! Hard-coding a kwarg is not good practice. Find a way to do this for all possible interesting kwargs...
         # We wish for knowledge of the current iteration to be transferred down, since it is used in most PSO variations.
         for clan in self.clans:
-            if '_current_iteration' in dir(clan):
-                conference_pso_kwargs['current_iteration'] = clan._current_iteration
+            # if hasattr(clan, 'current_iteration'):
+            try:
+                conference_pso_kwargs['current_iteration'] = clan.current_iteration
+            except AttributeError():
+                pass
         
 
         # Determine the PSO variation of the conference of leaders.
@@ -140,7 +143,7 @@ class ClanPSO:
 
 
         # Update the locations of gbest in each clan.
-        for i in range(conference_instance.swarm_positions.shape[0]):
+        for i in range(conference_instance.nr_particles):
             self.clans[i].swarm_positions[clan_leader_indices[i]] = conference_instance.swarm_positions[i] # Update movement of clan leaders.
             self.clans[i]._update_pbest_and_gbest() #* This operation is expensive, because all particles are re-evaluated, but only one particle has changed!
 

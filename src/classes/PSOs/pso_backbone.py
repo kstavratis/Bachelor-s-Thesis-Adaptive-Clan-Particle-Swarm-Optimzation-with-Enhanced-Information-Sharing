@@ -1,5 +1,5 @@
 """
-Copyright (C) 2023  Konstantinos Stavratis
+Copyright (C) 2024  Konstantinos Stavratis
 e-mail: kostauratis@gmail.com
 
 This program is free software: you can redistribute it and/or modify
@@ -72,6 +72,56 @@ class PSOBackbone:
     such that desirable properties (exploration, convergence, stability) are achieved.
     The recommended way of building additional PSO schemes is by implementing them as Python "Mixins".
     """
+
+    # ==================== Properties START ====================
+    @property
+    def nr_particles(self) -> int:
+        '''
+        Number of particles that the swarm contains.
+        '''
+        return self.swarm_positions.shape[0]
+    
+    @property
+    def nr_dimensions(self) -> int:
+        '''
+        Number of dimensions of the search space. 
+        '''
+        return self.swarm_positions.shape[1]
+    
+
+
+
+    @property
+    def gbest_value(self) -> float:
+        return self._gbest_value
+    
+    @gbest_value.setter
+    def gbest_value(self, value):
+
+        if (value > self.gbest_value):
+            raise ValueError('`gbest_value` should only be replaced by a lower values.'
+                             f'However, {value} > {self.gbest_value}')
+        
+        self._gbest_value = value
+
+
+
+
+    @property
+    def pbest_values(self) -> npt.NDArray[np.float_]:
+        return self._pbest_values
+    
+    @pbest_values.setter
+    def pbest_values(self, values: npt.NDArray[np.float_]):
+
+        criterion_mask = values > self.pbest_values 
+        if (criterion_mask).any():
+            raise ValueError('`pbest_values` values most only be updated to lower ones.' +
+                             f'However {values[criterion_mask]} > {self.pbest_values[criterion_mask]} (element-wise).')
+        
+        self._pbest_values = values
+    # ==================== Properties FINISH ====================
+    
 
     def __init__(self, nr_particles : int, nr_dimensions : int,
                  objective_function: Callable[[npt.NDArray[np.float_]], npt.NDArray[np.float_]],
@@ -156,8 +206,8 @@ class PSOBackbone:
             )
 
         # Handle input pbest positions, in case they are provided.
-        self.pbest_positions, self.pbest_values = None, None # Declaring the "pbest" attributes.
-        self.gbest_position, self.gbest_value = None, None # Declaring the "gbest" attributes.
+        self.pbest_positions, self._pbest_values = None, np.inf * np.ones(nr_particles) # Declaring the "pbest" attributes.
+        self.gbest_position, self._gbest_value = None, np.inf # Declaring the "gbest" attributes.
         if input_pbest_positions is not None and input_swarm_positions.ndim == 2:
 
             objective_values = self._objective_function(input_pbest_positions)
@@ -284,10 +334,10 @@ class PSOBackbone:
         # # ==================== Matrix-wise multiplication approach START ====================
         # # Reshaping the swarm matrix into a single (column) vector to utilize vectorization of numpy.
         # # Both representations (3D matrix x 2D matrix, larger 2D matrix, large 1D vector) are equivalent.
-        # R1 = np.diag(random_generator.uniform(size=self.__nr_particles * self.__nr_dimensions))
-        # R2 = np.diag(random_generator.uniform(size=self.__nr_particles * self.__nr_dimensions))
-        # cognitive_velocities = (R1 @ (self.pbest_positions - self.swarm_positions).flatten()).reshape(self.__nr_particles, self.__nr_dimensions)
-        # social_velocities = (R2 @ (self.gbest_position - self.swarm_positions).flatten()).reshape(self.__nr_particles, self.__nr_dimensions)
+        # R1 = np.diag(random_generator.uniform(size=self.nr_particles * self.nr_dimensions))
+        # R2 = np.diag(random_generator.uniform(size=self.nr_particles * self.nr_dimensions))
+        # cognitive_velocities = (R1 @ (self.pbest_positions - self.swarm_positions).flatten()).reshape(self.nr_particles, self.nr_dimensions)
+        # social_velocities = (R2 @ (self.gbest_position - self.swarm_positions).flatten()).reshape(self.nr_particles, self.nr_dimensions)
         # # ==================== Matrix-wise multiplication approach FINISH ====================
 
         # ==================== Element-wise multiplication approach START ====================
@@ -420,11 +470,11 @@ class PSOBackbone:
 
         # Reset pbest_positions
         self.pbest_positions = np.copy(self.swarm_positions)
-        self.pbest_values = np.copy(objective_values)
+        self._pbest_values = np.copy(objective_values) # Bypass the property setter!
 
         # Reset gbest_positions and gbest_value
         best_objective_value_index = np.argmin(objective_values)
-        self.gbest_value = objective_values[best_objective_value_index]
+        self._gbest_value = objective_values[best_objective_value_index] # Bypass the property setter!
         self.gbest_position = np.copy(self.swarm_positions[best_objective_value_index])
 
 
