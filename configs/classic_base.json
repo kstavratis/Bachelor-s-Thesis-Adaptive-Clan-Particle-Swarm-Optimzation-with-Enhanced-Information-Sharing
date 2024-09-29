@@ -11,8 +11,7 @@
 
     "classes" : {
         "adaptive" : {
-            "module_path" : "src.classes.PSOs.Mixins.adaptive_pso.adaptive_pso",
-            "class_name" : "AdaptivePSO",
+            "class_path" : "src.classes.PSOs.Mixins.adaptive_pso.adaptive_pso.AdaptivePSO",
             "kwargs" : {
                 "c_min" : 1.5,
                 "c_max" : 2.5
@@ -20,8 +19,7 @@
         },
 
         "standard" : {
-            "module_path" : "src.classes.PSOs.Mixins.standard_pso.standard_pso",
-            "class_name" : "StandardPSO",
+            "class_path" : "src.classes.PSOs.Mixins.standard_pso.standard_pso.StandardPSO",
             "kwargs" : {
                 "w_min" : 0.4,
                 "w_max" : 0.9,
@@ -30,8 +28,7 @@
         },
 
         "eis" : {
-            "module_path" : "src.classes.PSOs.Mixins.enhanced_information_sharing_pso.enhanced_information_sharing_pso",
-            "class_name" : "EnhancedInformationSharingPSO",
+            "class_path" : "src.classes.PSOs.Mixins.enhanced_information_sharing_pso.enhanced_information_sharing_pso.EnhancedInformationSharingPSO",
             "kwargs" : {
                 "c3" : 1.0,
                 "global_local_coefficient_method" : "linear",

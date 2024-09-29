@@ -51,9 +51,6 @@ def __handle_pso_backbone_config_data(data : dict):
         is the combination of the variations provided in the configuration file.\n
         WARNING: The order in which each variation is inserted in the configuration file *matters*
         for the behaviour!
-    
-    : class
-        A pointer to the generated class representing the novel PSO variation built by the configuration file.
     """
 
     nr_particles, nr_dimensions = int(data['nr_particles']), int(data['nr_dimensions'])
@@ -66,8 +63,11 @@ def __handle_pso_backbone_config_data(data : dict):
 
     for key in data['classes']:
         pso_dict = data['classes'][key]
-        pso_variation_module = importlib.import_module(pso_dict['module_path'])
-        classes_pointers.append(getattr(pso_variation_module, pso_dict['class_name']))
+
+        # module_path, class_name
+        module_path, class_name = pso_dict['class_path'].rsplit('.', 1)
+        pso_variation_module = importlib.import_module(module_path)
+        classes_pointers.append(getattr(pso_variation_module, class_name))
 
         kwargs.update(pso_dict['kwargs'])
 
@@ -88,7 +88,7 @@ def __handle_pso_backbone_config_data(data : dict):
         def __init__(self, kwargs):
             super().__init__(**kwargs)
 
-    return PSOcombination(kwargs) # , PSOcombination, kwargs
+    return PSOcombination(kwargs)
 
 
 def __handle_clan_config_file(data : dict):
