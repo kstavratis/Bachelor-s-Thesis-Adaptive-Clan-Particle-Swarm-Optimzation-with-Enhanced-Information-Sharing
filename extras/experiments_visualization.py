@@ -1,5 +1,6 @@
 # Needed imports
 import os
+from typing import List
 
 import pandas as pd
 
@@ -84,7 +85,7 @@ def select_csv_files_root_dir(dummy_input):
 
     return pathname
 
-def add_dataset(filenames: list[str]):
+def add_dataset(filenames: List[str]):
 
     dfs = []
 
